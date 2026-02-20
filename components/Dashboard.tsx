@@ -4,17 +4,21 @@ import { Activity, Wind, Droplet, ArrowRight, Camera, AlertCircle, CheckCircle2,
 import { api } from '../services/api';
 import { getQuickStat } from '../services/geminiService';
 import { WaterQualityReport } from '../types';
+import { TRANSLATIONS } from '../constants';
 
 interface DashboardProps {
     onChangeTab: (tab: string) => void;
     onOpenAssistant: () => void;
+    language: 'en' | 'hi';
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, onOpenAssistant }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, onOpenAssistant, language }) => {
     const [reports, setReports] = useState<WaterQualityReport[]>([]);
     const [chartData, setChartData] = useState<{name: string, value: number}[]>([]);
     const [aiSummary, setAiSummary] = useState("Initializing regional data streams...");
     const [loading, setLoading] = useState(true);
+    
+    const t = TRANSLATIONS[language];
 
     useEffect(() => {
         const loadData = async () => {
@@ -57,15 +61,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, onOpenAssista
           <div className="space-y-6">
               <div className="inline-block">
                   <span className="text-[#1CA7A6] font-bold uppercase tracking-widest text-xs mb-2 block">
-                      Government AI Initiative
+                      {t.hero.label}
                   </span>
                   <h1 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight">
-                      Empowering Every Citizen’s Voice in <span className="text-[#0B1F3B]">Water Governance</span>
+                      {t.hero.titleStart} <span className="text-[#0B1F3B]">{t.hero.titleEnd}</span>
                   </h1>
               </div>
               
               <p className="text-slate-600 text-lg leading-relaxed max-w-lg">
-                  A bilingual AI voice assistant that helps citizens report water pollution, track complaints, and access governance services instantly.
+                  {t.hero.desc}
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
@@ -74,13 +78,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, onOpenAssista
                       className="h-14 px-8 bg-[#0B1F3B] text-white rounded-xl font-medium shadow-lg hover:translate-y-[-2px] hover:shadow-xl transition-all btn-press flex items-center justify-center gap-3"
                   >
                       <Mic size={20} className="animate-pulse" />
-                      Start Voice Assistant
+                      {t.hero.btnPrimary}
                   </button>
                   <button 
                       onClick={() => onChangeTab('admin')}
                       className="h-14 px-8 bg-white border border-slate-200 text-slate-700 rounded-xl font-medium hover:bg-slate-50 hover:border-slate-300 transition-all btn-press flex items-center justify-center gap-2"
                   >
-                      Learn How It Works
+                      {t.hero.btnSecondary}
                       <ArrowRight size={18} />
                   </button>
               </div>
@@ -129,13 +133,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, onOpenAssista
       <div className="pt-8 border-t border-slate-200">
           <div className="flex justify-between items-end mb-8 px-4 md:px-0">
               <div>
-                  <h2 className="text-xl font-bold text-slate-900">Live Basin Monitoring</h2>
-                  <p className="text-slate-500 text-sm mt-1">Real-time sensor data & community reports</p>
+                  <h2 className="text-xl font-bold text-slate-900">{t.dashboard.liveMonitor}</h2>
+                  <p className="text-slate-500 text-sm mt-1">{t.dashboard.liveMonitorSub}</p>
               </div>
               <div className="hidden md:flex gap-2">
                    <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-xs font-medium border border-emerald-100">
                         <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-                        System Operational
+                        {t.dashboard.systemOp}
                    </div>
               </div>
           </div>
@@ -146,13 +150,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, onOpenAssista
                   <Activity size={20} />
               </div>
               <div className="flex-1">
-                  <h3 className="font-semibold text-slate-900 text-sm mb-0.5">AI Situation Analysis</h3>
+                  <h3 className="font-semibold text-slate-900 text-sm mb-0.5">{t.dashboard.aiAnalysis}</h3>
                   <p className="text-slate-600 text-sm">
                       {loading ? "Analyzing sensor streams..." : aiSummary}
                   </p>
               </div>
               <button onClick={() => onChangeTab('analyze')} className="text-sm font-medium text-[#1CA7A6] hover:text-teal-700 whitespace-nowrap flex items-center gap-1">
-                  View Full Report <ChevronRight size={16} />
+                  {t.dashboard.viewReport} <ChevronRight size={16} />
               </button>
           </div>
 
@@ -161,8 +165,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, onOpenAssista
             <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                 <div className="flex justify-between items-center mb-6">
                     <div>
-                        <h3 className="font-bold text-slate-800 text-sm">Water Quality Trend</h3>
-                        <p className="text-xs text-slate-400">7-Day Composite Index</p>
+                        <h3 className="font-bold text-slate-800 text-sm">{t.dashboard.chartTitle}</h3>
+                        <p className="text-xs text-slate-400">{t.dashboard.chartSub}</p>
                     </div>
                 </div>
                 <div className="h-[280px] w-full">
@@ -189,7 +193,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, onOpenAssista
 
             {/* Quick Stats Column */}
             <div className="space-y-4">
-                 <h3 className="font-bold text-slate-800 text-sm mb-4">Key Parameters</h3>
+                 <h3 className="font-bold text-slate-800 text-sm mb-4">{t.dashboard.keyParams}</h3>
                  <StatCard label="Dissolved Oxygen" value="5.2 mg/L" trend="Stable" icon={Wind} color="blue" />
                  <StatCard label="Turbidity" value="32 NTU" trend="Improving" icon={Droplet} color="cyan" />
                  <StatCard label="Pending Alerts" value="3" trend="Action Req." icon={AlertCircle} color="amber" />
@@ -197,8 +201,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, onOpenAssista
                  <div className="bg-[#0B1F3B] p-5 rounded-2xl text-white mt-4 relative overflow-hidden group cursor-pointer" onClick={() => onChangeTab('analyze')}>
                     <div className="relative z-10">
                         <Camera className="mb-3 text-[#1CA7A6]" size={24} />
-                        <h4 className="font-bold text-lg">Submit Report</h4>
-                        <p className="text-white/60 text-xs mt-1">Upload photos for AI analysis</p>
+                        <h4 className="font-bold text-lg">{t.dashboard.submitReport}</h4>
+                        <p className="text-white/60 text-xs mt-1">{t.dashboard.uploadPhoto}</p>
                     </div>
                     <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -mr-8 -mt-8 transition-transform group-hover:scale-150"></div>
                  </div>
@@ -208,7 +212,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, onOpenAssista
       
       {/* Recent Activity List */}
       <div className="px-4 md:px-0">
-          <h3 className="font-bold text-slate-800 text-lg mb-4">Recent Citizen Reports</h3>
+          <h3 className="font-bold text-slate-800 text-lg mb-4">{t.dashboard.recentReports}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {loading ? (
                 [1,2,3].map(i => <div key={i} className="h-24 bg-slate-100 rounded-xl animate-pulse"></div>)
