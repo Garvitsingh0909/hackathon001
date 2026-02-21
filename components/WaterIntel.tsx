@@ -113,16 +113,29 @@ export const WaterIntel = () => {
                             {/* Render Google Maps Grounding Sources if available in chunks */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {stations.chunks?.map((chunk, idx) => {
-                                    if(chunk.web?.uri && chunk.web?.title) {
+                                    if (chunk.web?.uri && chunk.web?.title) {
                                        return (
                                         <div key={idx} className="border border-slate-200 rounded-xl p-4 hover:shadow-md transition-shadow">
                                             <h4 className="font-bold text-slate-800">{chunk.web.title}</h4>
                                             <a href={chunk.web.uri} target="_blank" rel="noreferrer" className="text-blue-600 text-sm flex items-center gap-1 mt-2">
-                                                View on Maps <ArrowRight size={12} />
+                                                View Source <ArrowRight size={12} />
                                             </a>
                                         </div>
                                        )
                                     }
+                                    if (chunk.maps?.uri && chunk.maps?.title) {
+                                        return (
+                                         <div key={idx} className="border border-slate-200 rounded-xl p-4 hover:shadow-md transition-shadow bg-blue-50/50">
+                                             <div className="flex items-start justify-between">
+                                                 <h4 className="font-bold text-slate-800">{chunk.maps.title}</h4>
+                                                 <MapPin size={16} className="text-blue-500 mt-1" />
+                                             </div>
+                                             <a href={chunk.maps.uri} target="_blank" rel="noreferrer" className="text-blue-600 text-sm flex items-center gap-1 mt-2">
+                                                 View on Maps <ArrowRight size={12} />
+                                             </a>
+                                         </div>
+                                        )
+                                     }
                                     return null;
                                 })}
                             </div>

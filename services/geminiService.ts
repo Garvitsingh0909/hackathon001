@@ -1,4 +1,4 @@
-import { GoogleGenAI, Modality, Type } from "@google/genai";
+import { GoogleGenAI, Modality, Type, ThinkingLevel } from "@google/genai";
 import { API_KEY, MODELS } from "../constants";
 
 const ai = new GoogleGenAI({ apiKey: API_KEY });
@@ -54,7 +54,7 @@ export const chatWithThinking = async (history: {role: string, parts: {text: str
             model: MODELS.CHAT,
             history: history,
             config: {
-                thinkingConfig: { thinkingBudget: 32768 } // Max thinking for deep reasoning
+                thinkingConfig: { thinkingLevel: ThinkingLevel.HIGH } // Max thinking for deep reasoning
             }
         });
 
