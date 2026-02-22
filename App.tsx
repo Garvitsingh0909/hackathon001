@@ -8,6 +8,7 @@ import { Assistant } from './components/Assistant';
 import { Footer } from './components/Footer';
 import { Activity, Camera, Map as MapIcon, Home, Mic, LayoutDashboard } from 'lucide-react';
 import { TRANSLATIONS } from './constants';
+import { AnimatePresence, motion } from 'motion/react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('home');
@@ -29,7 +30,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 font-sans">
+    <div className="min-h-screen flex flex-col bg-slate-50 font-sans selection:bg-blue-100 selection:text-blue-900">
       <Navbar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
@@ -38,24 +39,38 @@ export default function App() {
       />
       
       {/* Main Container - Centered and Max Width restricted for big screens */}
-      <main className="flex-grow pt-20 pb-24 md:pb-12 px-0 md:px-4 w-full max-w-6xl mx-auto transition-all duration-300">
-        {renderContent()}
+      <main className="flex-grow pt-28 pb-24 md:pb-12 px-4 w-full max-w-7xl mx-auto transition-all duration-300">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="w-full"
+          >
+            {renderContent()}
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       {/* Floating Assistant Button */}
-      <button 
+      <motion.button 
+        whileHover={{ scale: 1.05, y: -2 }}
+        whileTap={{ scale: 0.95 }}
         onClick={() => setIsAssistantOpen(true)}
-        className="fixed bottom-24 right-6 md:bottom-12 md:right-12 w-16 h-16 bg-[#0B1F3B] text-white rounded-full shadow-xl shadow-blue-900/30 flex items-center justify-center hover:scale-105 transition-transform z-40 btn-press animate-pulse-ring"
+        className="fixed bottom-24 right-6 md:bottom-10 md:right-10 w-16 h-16 bg-gradient-to-br from-[#0B1F3B] to-blue-900 text-white rounded-2xl shadow-2xl shadow-blue-900/40 flex items-center justify-center z-40 btn-press group border border-white/10"
         aria-label="Open Voice Assistant"
       >
-        <Mic size={28} />
-      </button>
+        <div className="absolute inset-0 rounded-2xl bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        <Mic size={28} className="group-hover:animate-pulse" />
+      </motion.button>
 
       {/* Voice Assistant Modal */}
       <Assistant isOpen={isAssistantOpen} onClose={() => setIsAssistantOpen(false)} />
 
       {/* Mobile Bottom Navigation - Glassmorphism */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t border-slate-200 md:hidden z-40 px-6 py-3 flex justify-between items-center shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+      <div className="fixed bottom-4 left-4 right-4 bg-white/90 backdrop-blur-xl border border-white/20 md:hidden z-40 px-6 py-3 flex justify-between items-center shadow-xl shadow-slate-200/50 rounded-2xl">
         <NavBtn icon={Home} label={t.home} active={activeTab === 'home'} onClick={() => setActiveTab('home')} />
         <NavBtn icon={Camera} label={t.analyze} active={activeTab === 'analyze'} onClick={() => setActiveTab('analyze')} />
         <NavBtn icon={LayoutDashboard} label={t.admin} active={activeTab === 'admin'} onClick={() => setActiveTab('admin')} />
@@ -70,8 +85,15 @@ export default function App() {
 const NavBtn = ({ icon: Icon, label, active, onClick }: any) => (
   <button 
     onClick={onClick}
-    className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${active ? 'text-[#0B1F3B] bg-blue-50' : 'text-slate-400 hover:text-slate-600'}`}
+    className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all relative ${active ? 'text-[#0B1F3B]' : 'text-slate-400 hover:text-slate-600'}`}
   >
+    {active && (
+      <motion.div 
+        layoutId="mobileNavIndicator"
+        className="absolute inset-0 bg-blue-50 rounded-xl -z-10"
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      />
+    )}
     <Icon size={20} strokeWidth={active ? 2.5 : 2} />
     <span className="text-[10px] font-medium tracking-wide">{label}</span>
   </button>

@@ -66,52 +66,62 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose }) => {
     return (
         <div className="fixed inset-0 z-50 flex items-end justify-center pointer-events-none">
             {/* Backdrop */}
-            <div className="absolute inset-0 bg-black/20 backdrop-blur-sm pointer-events-auto transition-opacity" onClick={onClose}></div>
+            <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm pointer-events-auto transition-opacity" onClick={onClose}></div>
 
             {/* Bottom Sheet */}
-            <div className="bg-white w-full max-w-2xl mx-auto rounded-t-3xl shadow-2xl pointer-events-auto transform transition-transform duration-300 animate-slide-up flex flex-col h-[85vh] md:h-[600px]">
+            <div className="bg-white/95 backdrop-blur-xl w-full max-w-2xl mx-auto rounded-t-[2.5rem] shadow-2xl pointer-events-auto transform transition-transform duration-300 animate-slide-up flex flex-col h-[85vh] md:h-[700px] border-t border-white/20">
                 
                 {/* Handle / Header */}
-                <div className="flex justify-center pt-3 pb-2 cursor-pointer" onClick={onClose}>
-                    <div className="w-12 h-1.5 bg-slate-200 rounded-full"></div>
+                <div className="flex justify-center pt-4 pb-2 cursor-pointer" onClick={onClose}>
+                    <div className="w-16 h-1.5 bg-slate-300 rounded-full"></div>
                 </div>
-                <div className="px-6 pb-4 border-b border-slate-100 flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-600 rounded-xl text-white shadow-lg shadow-blue-200">
-                            <Bot size={24} />
+                <div className="px-8 pb-6 border-b border-slate-200/50 flex justify-between items-center">
+                    <div className="flex items-center gap-4">
+                        <div className="p-3 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl text-white shadow-lg shadow-blue-500/30">
+                            <Bot size={28} />
                         </div>
                         <div>
-                            <h3 className="font-bold text-slate-800 text-lg">Assistant</h3>
-                            <p className="text-xs text-slate-500">Gemini 3.0 Pro Thinking</p>
+                            <h3 className="font-bold text-slate-900 text-xl font-display">Assistant</h3>
+                            <div className="flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                <p className="text-xs text-slate-500 font-medium">Gemini 3.0 Pro Thinking</p>
+                            </div>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full text-slate-500">
-                        <X size={20} />
+                    <button onClick={onClose} className="p-3 hover:bg-slate-100 rounded-full text-slate-500 transition-colors">
+                        <X size={24} />
                     </button>
                 </div>
 
                 {/* Messages Area */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/50">
+                <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8 bg-slate-50/50">
                     {messages.map((msg) => (
                         <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`max-w-[85%] p-4 rounded-2xl shadow-sm ${
+                            <div className={`max-w-[85%] p-5 rounded-3xl shadow-sm ${
                                 msg.role === 'user' 
-                                    ? 'bg-blue-900 text-white rounded-br-none' 
-                                    : 'bg-white border border-slate-100 text-slate-700 rounded-bl-none'
+                                    ? 'bg-[#0B1F3B] text-white rounded-br-sm' 
+                                    : 'bg-white border border-slate-100 text-slate-700 rounded-bl-sm'
                             }`}>
-                                <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                                {msg.role === 'user' ? (
+                                    <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                                ) : (
+                                    <TypingEffect text={msg.text} />
+                                )}
+                                <p className={`text-[10px] mt-2 font-medium ${msg.role === 'user' ? 'text-blue-300' : 'text-slate-400'}`}>
+                                    {msg.timestamp.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                </p>
                             </div>
                         </div>
                     ))}
                     {isThinking && (
                         <div className="flex justify-start">
-                            <div className="bg-white border border-slate-100 px-4 py-3 rounded-2xl rounded-bl-none flex items-center gap-2 shadow-sm">
-                                <div className="flex gap-1">
-                                    <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
-                                    <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
-                                    <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
+                            <div className="bg-white border border-slate-100 px-6 py-4 rounded-3xl rounded-bl-sm flex items-center gap-3 shadow-sm">
+                                <div className="flex gap-1.5">
+                                    <div className="w-2.5 h-2.5 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
+                                    <div className="w-2.5 h-2.5 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
+                                    <div className="w-2.5 h-2.5 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
                                 </div>
-                                <span className="text-xs text-slate-400 font-medium ml-2">Reasoning...</span>
+                                <span className="text-sm text-slate-500 font-medium ml-2">Reasoning...</span>
                             </div>
                         </div>
                     )}
@@ -119,30 +129,51 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose }) => {
                 </div>
 
                 {/* Input Area */}
-                <div className="p-4 bg-white border-t border-slate-100 pb-8 md:pb-4">
+                <div className="p-6 bg-white border-t border-slate-100 pb-8 md:pb-6">
                     <div className="relative flex items-center gap-3">
-                        <div className="p-3 bg-red-50 text-red-500 rounded-full cursor-pointer hover:bg-red-100 transition-colors" title="Voice Input (Simulated)">
-                            <Mic size={20} />
+                        <div className="p-4 bg-red-50 text-red-500 rounded-2xl cursor-pointer hover:bg-red-100 transition-colors group" title="Voice Input (Simulated)">
+                            <Mic size={24} className="group-hover:scale-110 transition-transform" />
                         </div>
                         <input
                             type="text"
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                            placeholder="Type a query or tap mic..."
-                            className="flex-1 bg-slate-100 border-none rounded-xl px-5 py-3.5 text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all outline-none"
+                            placeholder="Ask about water quality, regulations..."
+                            className="flex-1 bg-slate-100 border-none rounded-2xl px-6 py-4 text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all outline-none text-lg"
                             autoFocus
                         />
                         <button 
                             onClick={handleSend}
                             disabled={!input.trim() || isThinking}
-                            className="p-3 bg-blue-900 text-white rounded-xl hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                            className="p-4 bg-[#0B1F3B] text-white rounded-2xl hover:bg-blue-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-blue-900/20 hover:shadow-xl hover:-translate-y-1"
                         >
-                            <Send size={20} />
+                            <Send size={24} />
                         </button>
                     </div>
                 </div>
             </div>
         </div>
     );
+};
+
+const TypingEffect = ({ text }: { text: string }) => {
+    const [displayedText, setDisplayedText] = useState('');
+    
+    useEffect(() => {
+        setDisplayedText('');
+        let i = 0;
+        const timer = setInterval(() => {
+            if (i < text.length) {
+                setDisplayedText((prev) => prev + text.charAt(i));
+                i++;
+            } else {
+                clearInterval(timer);
+            }
+        }, 15); // Speed of typing
+
+        return () => clearInterval(timer);
+    }, [text]);
+
+    return <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{displayedText}</p>;
 };

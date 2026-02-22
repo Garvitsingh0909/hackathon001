@@ -1,10 +1,15 @@
 import { GoogleGenAI, Modality, Type, ThinkingLevel } from "@google/genai";
 import { API_KEY, MODELS } from "../constants";
 
+if (!API_KEY) {
+  console.error("GEMINI_API_KEY is missing. Please set it in your environment variables.");
+}
+
 const ai = new GoogleGenAI({ apiKey: API_KEY });
 
 // 1. Analyze Image (Gemini 3 Pro)
 export const analyzeWaterImage = async (base64Image: string, mimeType: string = 'image/jpeg') => {
+  if (!API_KEY) throw new Error("API Key not configured");
   try {
     const response = await ai.models.generateContent({
       model: MODELS.IMAGE_ANALYSIS,
@@ -49,6 +54,7 @@ export const analyzeWaterImage = async (base64Image: string, mimeType: string = 
 
 // 2. Chat with Thinking (Gemini 3 Pro)
 export const chatWithThinking = async (history: {role: string, parts: {text: string}[]}[], message: string) => {
+    if (!API_KEY) throw new Error("API Key not configured");
     try {
         const chat = ai.chats.create({
             model: MODELS.CHAT,
@@ -68,6 +74,7 @@ export const chatWithThinking = async (history: {role: string, parts: {text: str
 
 // 3. Search Grounding (Gemini 3 Flash)
 export const searchWaterNews = async (query: string) => {
+    if (!API_KEY) throw new Error("API Key not configured");
     try {
         const response = await ai.models.generateContent({
             model: MODELS.SEARCH,
@@ -89,6 +96,7 @@ export const searchWaterNews = async (query: string) => {
 
 // 4. Maps Grounding (Gemini 2.5 Flash)
 export const findNearbyStations = async (lat: number, lng: number) => {
+    if (!API_KEY) throw new Error("API Key not configured");
     try {
         const response = await ai.models.generateContent({
             model: MODELS.MAPS,
@@ -119,6 +127,7 @@ export const findNearbyStations = async (lat: number, lng: number) => {
 
 // 5. Text to Speech (Gemini 2.5 Flash TTS)
 export const generateSpeech = async (text: string) => {
+    if (!API_KEY) throw new Error("API Key not configured");
     try {
         const response = await ai.models.generateContent({
             model: MODELS.TTS,
@@ -143,6 +152,7 @@ export const generateSpeech = async (text: string) => {
 
 // 6. Fast Response (Gemini 2.5 Flash Lite)
 export const getQuickStat = async (dataContext: string) => {
+    if (!API_KEY) return "Status update unavailable (API Key missing).";
     try {
         const response = await ai.models.generateContent({
             model: MODELS.FAST,

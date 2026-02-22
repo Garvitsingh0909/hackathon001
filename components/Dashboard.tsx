@@ -5,6 +5,7 @@ import { api } from '../services/api';
 import { getQuickStat } from '../services/geminiService';
 import { WaterQualityReport } from '../types';
 import { TRANSLATIONS } from '../constants';
+import { motion } from 'motion/react';
 
 interface DashboardProps {
     onChangeTab: (tab: string) => void;
@@ -53,217 +54,303 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, onOpenAssista
         return 'border-l-4 border-l-emerald-500';
     };
 
+    const container = {
+        hidden: { opacity: 0 },
+        show: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1
+            }
+        }
+    };
+
+    const item = {
+        hidden: { opacity: 0, y: 20 },
+        show: { opacity: 1, y: 0 }
+    };
+
   return (
-    <div className="space-y-12 animate-slide-up">
+    <motion.div 
+        variants={container}
+        initial="hidden"
+        animate="show"
+        className="space-y-8 pt-6"
+    >
       
-      {/* 1. HERO SECTION (Governance Design) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center px-4 md:px-0 pt-4 md:pt-0">
-          <div className="space-y-6">
-              <div className="inline-block">
-                  <span className="text-[#1CA7A6] font-bold uppercase tracking-widest text-xs mb-2 block">
-                      {t.hero.label}
-                  </span>
-                  <h1 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight">
-                      {t.hero.titleStart} <span className="text-[#0B1F3B]">{t.hero.titleEnd}</span>
-                  </h1>
-              </div>
-              
-              <p className="text-slate-600 text-lg leading-relaxed max-w-lg">
-                  {t.hero.desc}
-              </p>
+      {/* 1. HERO SECTION (Modern & Clean) */}
+      <motion.div variants={item} className="relative overflow-hidden rounded-3xl bg-[#0B1F3B] text-white p-8 md:p-12 shadow-2xl shadow-blue-900/20">
+          {/* Background Elements */}
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#1CA7A6] rounded-full blur-[120px] opacity-20 -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+          <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-blue-600 rounded-full blur-[100px] opacity-20 translate-y-1/3 -translate-x-1/3 pointer-events-none"></div>
+          
+          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div className="space-y-6">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/10 backdrop-blur-md">
+                    <span className="w-2 h-2 rounded-full bg-[#1CA7A6] animate-pulse"></span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-white/80">{t.hero.label}</span>
+                </div>
+                
+                <h1 className="text-4xl md:text-6xl font-bold leading-[1.1] font-display">
+                    {t.hero.titleStart} <br/>
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#1CA7A6] to-emerald-400">{t.hero.titleEnd}</span>
+                </h1>
+                
+                <p className="text-blue-100/80 text-lg leading-relaxed max-w-lg font-light">
+                    {t.hero.desc}
+                </p>
 
-              <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                  <button 
-                      onClick={onOpenAssistant}
-                      className="h-14 px-8 bg-[#0B1F3B] text-white rounded-xl font-medium shadow-lg hover:translate-y-[-2px] hover:shadow-xl transition-all btn-press flex items-center justify-center gap-3"
-                  >
-                      <Mic size={20} className="animate-pulse" />
-                      {t.hero.btnPrimary}
-                  </button>
-                  <button 
-                      onClick={() => onChangeTab('admin')}
-                      className="h-14 px-8 bg-white border border-slate-200 text-slate-700 rounded-xl font-medium hover:bg-slate-50 hover:border-slate-300 transition-all btn-press flex items-center justify-center gap-2"
-                  >
-                      {t.hero.btnSecondary}
-                      <ArrowRight size={18} />
-                  </button>
-              </div>
-          </div>
+                <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                    <button 
+                        onClick={onOpenAssistant}
+                        className="h-12 px-6 bg-white text-[#0B1F3B] rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center gap-2 group"
+                    >
+                        <Mic size={18} className="group-hover:text-[#1CA7A6] transition-colors" />
+                        {t.hero.btnPrimary}
+                    </button>
+                    <button 
+                        onClick={() => onChangeTab('admin')}
+                        className="h-12 px-6 bg-transparent border border-white/20 text-white rounded-xl font-medium hover:bg-white/10 transition-all flex items-center justify-center gap-2"
+                    >
+                        {t.hero.btnSecondary}
+                        <ArrowRight size={18} />
+                    </button>
+                </div>
+            </div>
 
-          {/* Hero Visual / Illustration area */}
-          <div className="hidden lg:flex justify-center items-center relative h-[400px]">
-              {/* Abstract decorative elements */}
-              <div className="absolute w-96 h-96 bg-blue-100/50 rounded-full blur-3xl -z-10 top-0 right-0"></div>
-              <div className="absolute w-72 h-72 bg-teal-100/30 rounded-full blur-3xl -z-10 bottom-0 left-10"></div>
-              
-              <div className="relative z-10 p-8 border border-white/40 bg-white/40 backdrop-blur-sm rounded-3xl shadow-xl">
-                  {/* Minimal Interface Mockup */}
-                  <div className="bg-white rounded-2xl p-6 shadow-sm w-80 space-y-4 border border-slate-100">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
-                                <div className="w-2 h-4 bg-blue-600 rounded-full animate-[bounce_1s_infinite]"></div>
-                                <div className="w-2 h-6 bg-blue-600 rounded-full animate-[bounce_1.2s_infinite] mx-1"></div>
-                                <div className="w-2 h-3 bg-blue-600 rounded-full animate-[bounce_0.8s_infinite]"></div>
+            {/* Hero Visual */}
+            <div className="hidden lg:flex justify-end">
+                <div className="relative w-80 h-80">
+                    <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-white/5 rounded-2xl backdrop-blur-md border border-white/10 rotate-3 transform transition-transform hover:rotate-0 duration-500"></div>
+                    <div className="absolute inset-0 bg-[#0f2545] rounded-2xl border border-white/10 shadow-2xl p-6 flex flex-col justify-between -rotate-3 transform transition-transform hover:rotate-0 duration-500">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400">
+                                    <Activity size={20} />
+                                </div>
+                                <div>
+                                    <div className="text-xs text-white/40 uppercase tracking-wider font-bold">Status</div>
+                                    <div className="text-sm font-semibold text-white">Monitoring Active</div>
+                                </div>
                             </div>
-                            <div>
-                                <div className="h-2 w-24 bg-slate-200 rounded mb-1"></div>
-                                <div className="h-2 w-16 bg-slate-100 rounded"></div>
+                            <div className="px-2 py-1 rounded bg-emerald-500/20 text-emerald-400 text-xs font-bold border border-emerald-500/20">
+                                98% Uptime
                             </div>
                         </div>
-                        <div className="space-y-2">
-                             <div className="p-3 bg-slate-50 rounded-lg rounded-tl-none text-xs text-slate-600">
-                                Reporting high turbidity near Ghat 4.
+                        
+                        <div className="space-y-3">
+                            <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                                <div className="h-full bg-[#1CA7A6] w-[70%] rounded-full"></div>
+                            </div>
+                            <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                                <div className="h-full bg-blue-500 w-[45%] rounded-full"></div>
+                            </div>
+                            <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                                <div className="h-full bg-purple-500 w-[60%] rounded-full"></div>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-4 pt-4 border-t border-white/10">
+                             <div className="text-center">
+                                 <div className="text-2xl font-bold text-white font-display">24</div>
+                                 <div className="text-[10px] text-white/40 uppercase">Sensors</div>
                              </div>
-                             <div className="p-3 bg-blue-600 text-white rounded-lg rounded-tr-none text-xs ml-auto w-fit">
-                                Report logged. Reference #402.
+                             <div className="w-[1px] h-8 bg-white/10"></div>
+                             <div className="text-center">
+                                 <div className="text-2xl font-bold text-white font-display">12</div>
+                                 <div className="text-[10px] text-white/40 uppercase">Alerts</div>
+                             </div>
+                             <div className="w-[1px] h-8 bg-white/10"></div>
+                             <div className="text-center">
+                                 <div className="text-2xl font-bold text-[#1CA7A6] font-display">A+</div>
+                                 <div className="text-[10px] text-white/40 uppercase">Quality</div>
                              </div>
                         </div>
-                        <div className="pt-2 flex justify-center">
-                            <div className="w-12 h-12 rounded-full border-2 border-[#1CA7A6]/20 flex items-center justify-center">
-                                <div className="w-8 h-8 bg-[#1CA7A6] rounded-full animate-ripple opacity-50 absolute"></div>
-                                <Mic size={20} className="text-[#1CA7A6] relative z-10" />
-                            </div>
-                        </div>
-                  </div>
-              </div>
-          </div>
-      </div>
-
-      {/* 2. LIVE DASHBOARD DATA */}
-      <div className="pt-8 border-t border-slate-200">
-          <div className="flex justify-between items-end mb-8 px-4 md:px-0">
-              <div>
-                  <h2 className="text-xl font-bold text-slate-900">{t.dashboard.liveMonitor}</h2>
-                  <p className="text-slate-500 text-sm mt-1">{t.dashboard.liveMonitorSub}</p>
-              </div>
-              <div className="hidden md:flex gap-2">
-                   <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-xs font-medium border border-emerald-100">
-                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-                        {t.dashboard.systemOp}
-                   </div>
-              </div>
-          </div>
-
-          {/* AI Insight Bar */}
-          <div className="bg-white mx-4 md:mx-0 p-5 rounded-2xl shadow-sm border border-slate-200 mb-8 flex flex-col md:flex-row gap-4 items-start md:items-center">
-              <div className="p-2.5 bg-blue-50 text-[#0B1F3B] rounded-lg shrink-0">
-                  <Activity size={20} />
-              </div>
-              <div className="flex-1">
-                  <h3 className="font-semibold text-slate-900 text-sm mb-0.5">{t.dashboard.aiAnalysis}</h3>
-                  <p className="text-slate-600 text-sm">
-                      {loading ? "Analyzing sensor streams..." : aiSummary}
-                  </p>
-              </div>
-              <button onClick={() => onChangeTab('analyze')} className="text-sm font-medium text-[#1CA7A6] hover:text-teal-700 whitespace-nowrap flex items-center gap-1">
-                  {t.dashboard.viewReport} <ChevronRight size={16} />
-              </button>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 px-4 md:px-0">
-            {/* Main Chart */}
-            <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                <div className="flex justify-between items-center mb-6">
-                    <div>
-                        <h3 className="font-bold text-slate-800 text-sm">{t.dashboard.chartTitle}</h3>
-                        <p className="text-xs text-slate-400">{t.dashboard.chartSub}</p>
                     </div>
                 </div>
-                <div className="h-[280px] w-full">
+            </div>
+          </div>
+      </motion.div>
+
+      {/* 2. BENTO GRID DASHBOARD */}
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          
+          {/* AI Insight - Spans 2 cols */}
+          <motion.div variants={item} className="md:col-span-2 lg:col-span-2 bg-white rounded-3xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-shadow relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full blur-3xl -mr-10 -mt-10 transition-opacity opacity-50 group-hover:opacity-100"></div>
+              <div className="relative z-10">
+                <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 bg-blue-100 text-blue-700 rounded-lg">
+                        <Activity size={20} />
+                    </div>
+                    <h3 className="font-bold text-slate-800 font-display">{t.dashboard.aiAnalysis}</h3>
+                </div>
+                <p className="text-slate-600 leading-relaxed mb-6">
+                    {loading ? "Analyzing sensor streams..." : aiSummary}
+                </p>
+                <button onClick={() => onChangeTab('analyze')} className="text-sm font-semibold text-[#1CA7A6] hover:text-teal-700 flex items-center gap-1 group/btn">
+                    {t.dashboard.viewReport} <ArrowRight size={16} className="group-hover/btn:translate-x-1 transition-transform" />
+                </button>
+              </div>
+          </motion.div>
+
+          {/* Quick Action: Report */}
+          <motion.div 
+            variants={item}
+            onClick={() => onChangeTab('analyze')}
+            className="bg-[#1CA7A6] rounded-3xl p-6 shadow-lg shadow-teal-900/10 text-white cursor-pointer hover:scale-[1.02] transition-transform relative overflow-hidden group"
+          >
+              <div className="absolute -bottom-4 -right-4 text-white/10 group-hover:scale-110 transition-transform duration-500">
+                  <Camera size={120} />
+              </div>
+              <div className="relative z-10 h-full flex flex-col justify-between">
+                  <div className="p-2 bg-white/20 w-fit rounded-lg backdrop-blur-sm">
+                      <Camera size={24} />
+                  </div>
+                  <div>
+                      <h3 className="font-bold text-xl font-display mb-1">{t.dashboard.submitReport}</h3>
+                      <p className="text-white/80 text-sm">{t.dashboard.uploadPhoto}</p>
+                  </div>
+              </div>
+          </motion.div>
+
+          {/* Stat Card 1 */}
+          <motion.div variants={item}>
+            <StatCard label="Dissolved Oxygen" value="5.2 mg/L" trend="Stable" icon={Wind} color="blue" />
+          </motion.div>
+          
+          {/* Stat Card 2 */}
+          <motion.div variants={item}>
+            <StatCard label="Turbidity" value="32 NTU" trend="Improving" icon={Droplet} color="cyan" />
+          </motion.div>
+
+          {/* Main Chart - Spans 2 cols */}
+          <motion.div variants={item} className="md:col-span-2 lg:col-span-2 bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+                <div className="flex justify-between items-center mb-6">
+                    <div>
+                        <h3 className="font-bold text-slate-800 font-display">{t.dashboard.chartTitle}</h3>
+                        <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">{t.dashboard.chartSub}</p>
+                    </div>
+                    <div className="flex gap-2">
+                        <span className="w-2 h-2 rounded-full bg-[#0B1F3B]"></span>
+                        <span className="text-xs text-slate-500">Index</span>
+                    </div>
+                </div>
+                <div className="h-[250px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData}>
+                    <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                         <defs>
                         <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#0B1F3B" stopOpacity={0.1}/>
+                            <stop offset="5%" stopColor="#0B1F3B" stopOpacity={0.2}/>
                             <stop offset="95%" stopColor="#0B1F3B" stopOpacity={0}/>
                         </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 11, fill: '#64748b'}} dy={10} />
-                        <YAxis axisLine={false} tickLine={false} tick={{fontSize: 11, fill: '#64748b'}} />
-                        <Tooltip 
-                            contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.08)'}}
-                            cursor={{stroke: '#cbd5e1', strokeWidth: 1}}
+                        <XAxis 
+                            dataKey="name" 
+                            axisLine={false} 
+                            tickLine={false} 
+                            tick={{fontSize: 11, fill: '#64748b', fontWeight: 500}} 
+                            dy={10} 
                         />
-                        <Area type="monotone" dataKey="value" stroke="#0B1F3B" strokeWidth={2} fillOpacity={1} fill="url(#colorValue)" />
+                        <YAxis 
+                            axisLine={false} 
+                            tickLine={false} 
+                            tick={{fontSize: 11, fill: '#64748b', fontWeight: 500}} 
+                        />
+                        <Tooltip content={<CustomTooltip />} cursor={{stroke: '#cbd5e1', strokeWidth: 1, strokeDasharray: '4 4'}} />
+                        <Area 
+                            type="monotone" 
+                            dataKey="value" 
+                            stroke="#0B1F3B" 
+                            strokeWidth={3} 
+                            fillOpacity={1} 
+                            fill="url(#colorValue)" 
+                            animationDuration={1500}
+                        />
                     </AreaChart>
                     </ResponsiveContainer>
                 </div>
-            </div>
+          </motion.div>
 
-            {/* Quick Stats Column */}
-            <div className="space-y-4">
-                 <h3 className="font-bold text-slate-800 text-sm mb-4">{t.dashboard.keyParams}</h3>
-                 <StatCard label="Dissolved Oxygen" value="5.2 mg/L" trend="Stable" icon={Wind} color="blue" />
-                 <StatCard label="Turbidity" value="32 NTU" trend="Improving" icon={Droplet} color="cyan" />
-                 <StatCard label="Pending Alerts" value="3" trend="Action Req." icon={AlertCircle} color="amber" />
-                 
-                 <div className="bg-[#0B1F3B] p-5 rounded-2xl text-white mt-4 relative overflow-hidden group cursor-pointer" onClick={() => onChangeTab('analyze')}>
-                    <div className="relative z-10">
-                        <Camera className="mb-3 text-[#1CA7A6]" size={24} />
-                        <h4 className="font-bold text-lg">{t.dashboard.submitReport}</h4>
-                        <p className="text-white/60 text-xs mt-1">{t.dashboard.uploadPhoto}</p>
-                    </div>
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-2xl -mr-8 -mt-8 transition-transform group-hover:scale-150"></div>
-                 </div>
-            </div>
-          </div>
-      </div>
-      
-      {/* Recent Activity List */}
-      <div className="px-4 md:px-0">
-          <h3 className="font-bold text-slate-800 text-lg mb-4">{t.dashboard.recentReports}</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {loading ? (
-                [1,2,3].map(i => <div key={i} className="h-24 bg-slate-100 rounded-xl animate-pulse"></div>)
-            ) : (
-                reports.slice(0, 3).map((report) => (
-                    <div key={report.id} className={`p-4 bg-white border border-slate-200 shadow-sm rounded-xl hover:shadow-md transition-shadow relative overflow-hidden ${getStatusColor(report.overallScore)}`}>
-                        <div className="flex justify-between items-start mb-2 relative z-10">
-                            <h4 className="font-semibold text-slate-900 text-sm truncate pr-2">{report.locationName}</h4>
-                            <span className="text-[10px] font-bold bg-slate-50 text-slate-500 px-2 py-1 rounded border border-slate-100">{report.status}</span>
-                        </div>
-                        <div className="flex justify-between items-end relative z-10 mt-4">
-                            <div className="flex items-center gap-1 text-xs text-slate-400">
-                                <Clock size={12} />
-                                {new Date(report.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+          {/* Recent Activity - Spans 2 cols */}
+          <motion.div variants={item} className="md:col-span-2 lg:col-span-2 bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col">
+              <div className="flex justify-between items-center mb-6">
+                  <h3 className="font-bold text-slate-800 font-display">{t.dashboard.recentReports}</h3>
+                  <button className="text-xs font-bold text-slate-400 hover:text-[#0B1F3B] uppercase tracking-wider transition-colors">View All</button>
+              </div>
+              
+              <div className="space-y-3 flex-1">
+                {loading ? (
+                    [1,2].map(i => <div key={i} className="h-16 bg-slate-50 rounded-xl animate-pulse"></div>)
+                ) : (
+                    reports.slice(0, 3).map((report) => (
+                        <div key={report.id} className="group flex items-center justify-between p-4 bg-slate-50 hover:bg-white border border-transparent hover:border-slate-100 rounded-2xl transition-all duration-300 hover:shadow-md cursor-pointer">
+                            <div className="flex items-center gap-4">
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shadow-sm ${report.overallScore < 50 ? 'bg-red-500' : report.overallScore < 75 ? 'bg-amber-500' : 'bg-emerald-500'}`}>
+                                    {report.overallScore}
+                                </div>
+                                <div>
+                                    <h4 className="font-semibold text-slate-900 text-sm">{report.locationName}</h4>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                        <span className="text-[10px] font-medium text-slate-500 flex items-center gap-1">
+                                            <Clock size={10} />
+                                            {new Date(report.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                        </span>
+                                        <span className="w-1 h-1 rounded-full bg-slate-300"></span>
+                                        <span className="text-[10px] font-medium text-slate-500">{report.status}</span>
+                                    </div>
+                                </div>
                             </div>
                             <div className="text-right">
-                                <span className={`text-xl font-bold ${report.overallScore < 50 ? 'text-red-600' : 'text-slate-700'}`}>{report.overallScore}</span>
-                                <span className="text-[10px] text-slate-400 block -mt-1">Health Index</span>
+                                <ChevronRight size={18} className="text-slate-300 group-hover:text-[#0B1F3B] transition-colors" />
                             </div>
                         </div>
-                    </div>
-                ))
-            )}
-          </div>
+                    ))
+                )}
+              </div>
+          </motion.div>
+
       </div>
-    </div>
+    </motion.div>
   );
 };
 
 const StatCard = ({ label, value, trend, icon: Icon, color }: any) => {
     const colorClasses: Record<string, string> = {
-        blue: 'bg-blue-50 text-blue-700',
-        cyan: 'bg-cyan-50 text-cyan-700',
-        amber: 'bg-amber-50 text-amber-700',
-        emerald: 'bg-emerald-50 text-emerald-700'
+        blue: 'bg-blue-50 text-blue-600',
+        cyan: 'bg-cyan-50 text-cyan-600',
+        amber: 'bg-amber-50 text-amber-600',
+        emerald: 'bg-emerald-50 text-emerald-600'
     };
 
     return (
-        <div className="bg-white p-4 rounded-xl border border-slate-200 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${colorClasses[color] || 'bg-slate-50 text-slate-700'}`}>
-                    <Icon size={18} />
+        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+            <div className="flex justify-between items-start mb-4">
+                <div className={`p-3 rounded-2xl ${colorClasses[color]}`}>
+                    <Icon size={20} />
                 </div>
-                <div>
-                    <p className="text-slate-500 text-xs font-medium uppercase tracking-wider">{label}</p>
-                    <h3 className="text-lg font-bold text-slate-900">{value}</h3>
-                </div>
+                <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${trend === 'Stable' || trend === 'Improving' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
+                    {trend}
+                </span>
             </div>
-            <span className="text-[10px] font-medium bg-slate-50 text-slate-600 px-2 py-1 rounded">
-                {trend}
-            </span>
+            <div>
+                <h3 className="text-2xl font-bold text-slate-900 font-display mb-1">{value}</h3>
+                <p className="text-slate-500 text-xs font-medium uppercase tracking-wider">{label}</p>
+            </div>
         </div>
     );
+};
+
+const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+        return (
+            <div className="bg-white/90 backdrop-blur-md p-4 rounded-2xl shadow-xl border border-white/20 ring-1 ring-black/5">
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{label}</p>
+                <p className="text-lg font-bold text-[#0B1F3B] font-display">
+                    {payload[0].value} <span className="text-xs font-medium text-slate-500">Index</span>
+                </p>
+            </div>
+        );
+    }
+    return null;
 };
