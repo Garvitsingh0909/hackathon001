@@ -45,7 +45,7 @@ export const AnalysisModule = () => {
         setResult(submittedReport);
     } catch (error) {
         console.error("Analysis error", error);
-        alert("Failed to analyze image.");
+        alert("Failed to analyze image. Please try again.");
     } finally {
         setLoading(false);
     }
@@ -110,7 +110,7 @@ export const AnalysisModule = () => {
             </div>
             <div>
                 <h2 className="text-3xl font-bold text-slate-900 font-display">AI Sample Analysis</h2>
-                <p className="text-slate-500 text-sm font-medium">Gemini 3.0 Pro Vision Protocol</p>
+                <p className="text-slate-500 text-sm font-medium">Gemini 2.5 Flash Vision Protocol</p>
             </div>
           </div>
           <p className="text-slate-600 max-w-xl leading-relaxed">

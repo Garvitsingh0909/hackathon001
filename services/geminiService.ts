@@ -2,12 +2,12 @@ import { GoogleGenAI, Modality, Type, ThinkingLevel } from "@google/genai";
 import { API_KEY, MODELS } from "../constants";
 
 if (!API_KEY) {
-  console.error("GEMINI_API_KEY is missing. Please set it in your environment variables.");
+  console.error("GEMINI_API_KEY is missing.");
 }
 
 const ai = new GoogleGenAI({ apiKey: API_KEY });
 
-// 1. Analyze Image (Gemini 3 Pro)
+// 1. Analyze Image (Real API)
 export const analyzeWaterImage = async (base64Image: string, mimeType: string = 'image/jpeg') => {
   if (!API_KEY) throw new Error("API Key not configured");
   try {
@@ -43,7 +43,6 @@ export const analyzeWaterImage = async (base64Image: string, mimeType: string = 
     });
 
     const text = response.text || "{}";
-    // Clean up markdown if present despite instructions
     const jsonStr = text.replace(/```json\n?|\n?```/g, '').trim();
     return JSON.parse(jsonStr);
   } catch (error) {
@@ -54,19 +53,19 @@ export const analyzeWaterImage = async (base64Image: string, mimeType: string = 
         foamDetected: false,
         turbidity: "Unknown",
         color: "Unknown",
-        overallScore: 50,
-        recommendation: "Analysis failed. Please try again with a clearer image.",
+        overallScore: 0,
+        recommendation: "Analysis failed. Please try again.",
         details: "Could not process the image."
     };
   }
 };
 
-// 2. Normal Chat (Gemini 3 Flash - Fast & Capable)
+// 2. Chat (Real API)
 export const chatNormal = async (history: {role: string, parts: {text: string}[]}[], message: string) => {
     if (!API_KEY) throw new Error("API Key not configured");
     try {
         const chat = ai.chats.create({
-            model: MODELS.SEARCH, // Using Flash for speed and general capability
+            model: MODELS.CHAT,
             history: history,
         });
 
@@ -78,27 +77,7 @@ export const chatNormal = async (history: {role: string, parts: {text: string}[]
     }
 };
 
-// 2.1 Chat with Thinking (Gemini 3 Pro - Optional/Advanced)
-export const chatWithThinking = async (history: {role: string, parts: {text: string}[]}[], message: string) => {
-    if (!API_KEY) throw new Error("API Key not configured");
-    try {
-        const chat = ai.chats.create({
-            model: MODELS.CHAT,
-            history: history,
-            config: {
-                thinkingConfig: { thinkingLevel: ThinkingLevel.HIGH } // Max thinking for deep reasoning
-            }
-        });
-
-        const result = await chat.sendMessage({ message });
-        return result.text;
-    } catch (error) {
-        console.error("Chat failed:", error);
-        throw error;
-    }
-};
-
-// 3. Search Grounding (Gemini 3 Flash)
+// 3. Search Grounding (Real API)
 export const searchWaterNews = async (query: string) => {
     if (!API_KEY) throw new Error("API Key not configured");
     try {
@@ -120,7 +99,7 @@ export const searchWaterNews = async (query: string) => {
     }
 };
 
-// 4. Maps Grounding (Gemini 2.5 Flash)
+// 4. Maps Grounding (Real API)
 export const findNearbyStations = async (lat: number, lng: number) => {
     if (!API_KEY) throw new Error("API Key not configured");
     try {
@@ -140,7 +119,6 @@ export const findNearbyStations = async (lat: number, lng: number) => {
             }
         });
         
-        // Maps tool output often contains text + grounding chunks with map URIs
         return {
             text: response.text,
             chunks: response.candidates?.[0]?.groundingMetadata?.groundingChunks
@@ -151,7 +129,7 @@ export const findNearbyStations = async (lat: number, lng: number) => {
     }
 };
 
-// 5. Text to Speech (Gemini 2.5 Flash TTS)
+// 5. Text to Speech (Real API)
 export const generateSpeech = async (text: string) => {
     if (!API_KEY) throw new Error("API Key not configured");
     try {
@@ -162,7 +140,7 @@ export const generateSpeech = async (text: string) => {
                 responseModalities: [Modality.AUDIO],
                 speechConfig: {
                     voiceConfig: {
-                        prebuiltVoiceConfig: { voiceName: 'Kore' } // 'Kore' is usually a good neutral voice
+                        prebuiltVoiceConfig: { voiceName: 'Kore' }
                     }
                 }
             }
@@ -176,7 +154,7 @@ export const generateSpeech = async (text: string) => {
     }
 };
 
-// 6. Fast Response (Gemini 2.5 Flash Lite)
+// 6. Fast Response (Real API)
 export const getQuickStat = async (dataContext: string) => {
     if (!API_KEY) return "Status update unavailable (API Key missing).";
     try {

@@ -1,4 +1,4 @@
-export const API_KEY = process.env.API_KEY || '';
+export const API_KEY = 'AIzaSyAGpQZq48_YEix0QBNchvQaaFCLCarptlU';
 
 export const MODELS = {
     IMAGE_ANALYSIS: 'gemini-2.5-flash',

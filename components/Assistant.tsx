@@ -13,7 +13,7 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose }) => {
         {
             id: '1',
             role: 'model',
-            text: "Welcome to JalDrishti Assistant. Ask me about river health, recent alerts, or regulatory compliance.",
+            text: "Hello! I am JalDrishti, your water governance assistant. \n\nYou can ask me about:\n💧 Water quality alerts\n📜 Government regulations\n📸 How to analyze a sample",
             timestamp: new Date()
         }
     ]);
@@ -88,10 +88,10 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose }) => {
                             <Bot size={28} />
                         </div>
                         <div>
-                            <h3 className="font-bold text-slate-900 dark:text-white text-xl font-display">Assistant</h3>
+                            <h3 className="font-bold text-slate-900 dark:text-white text-xl font-display">JalDrishti Assistant</h3>
                             <div className="flex items-center gap-2">
                                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Gemini 3.0 Flash</p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Gemini 2.5 Flash</p>
                             </div>
                         </div>
                     </div>

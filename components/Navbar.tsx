@@ -30,7 +30,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, languag
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab('home')}>
                 <div className="relative h-10 w-10 flex items-center justify-center">
                     <img 
-                        src="/logo.png" 
+                        src="/logo.svg" 
                         alt="JalDrishti AI" 
                         className="h-full w-full object-contain"
                         onError={(e) => {
