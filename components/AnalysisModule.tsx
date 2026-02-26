@@ -18,15 +18,56 @@ export const AnalysisModule = () => {
     }
   }, []);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
+  const resizeImage = (file: File): Promise<string> => {
+    return new Promise((resolve) => {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setImage(reader.result as string);
-        setResult(null);
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          
+          // Max dimension 1024px
+          const MAX_SIZE = 1024;
+          if (width > height) {
+            if (width > MAX_SIZE) {
+              height *= MAX_SIZE / width;
+              width = MAX_SIZE;
+            }
+          } else {
+            if (height > MAX_SIZE) {
+              width *= MAX_SIZE / height;
+              height = MAX_SIZE;
+            }
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', 0.8)); // Compress to JPEG 80%
+        };
+        img.src = e.target?.result as string;
       };
       reader.readAsDataURL(file);
+    });
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setLoading(true);
+      try {
+        const resizedImage = await resizeImage(file);
+        setImage(resizedImage);
+        setResult(null);
+      } catch (error) {
+        console.error("Image processing failed", error);
+        alert("Failed to process image.");
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -36,6 +77,14 @@ export const AnalysisModule = () => {
     try {
         const base64Data = image.split(',')[1];
         const analysisResult = await analyzeWaterImage(base64Data);
+        
+        // Check for invalid image result
+        if (analysisResult.overallScore === 0 && analysisResult.details.includes("not appear to be a water sample")) {
+            alert(analysisResult.details);
+            setResult(null);
+            return;
+        }
+
         // Simulate submitting to backend
         const submittedReport = await api.submitReport({
             ...analysisResult,
