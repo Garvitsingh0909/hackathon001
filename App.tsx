@@ -14,6 +14,15 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('home');
   const [isAssistantOpen, setIsAssistantOpen] = useState(false);
   const [language, setLanguage] = useState<'en' | 'hi'>('en');
+  const [darkMode, setDarkMode] = useState(false);
+
+  React.useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
 
   const t = TRANSLATIONS[language].nav;
 
@@ -30,12 +39,14 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 font-sans selection:bg-blue-100 selection:text-blue-900">
+    <div className={`min-h-screen flex flex-col font-sans selection:bg-blue-100 selection:text-blue-900 ${darkMode ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-900'}`}>
       <Navbar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
         language={language} 
-        setLanguage={setLanguage} 
+        setLanguage={setLanguage}
+        darkMode={darkMode}
+        toggleDarkMode={() => setDarkMode(!darkMode)}
       />
       
       {/* Main Container - Centered and Max Width restricted for big screens */}
@@ -70,11 +81,11 @@ export default function App() {
       <Assistant isOpen={isAssistantOpen} onClose={() => setIsAssistantOpen(false)} />
 
       {/* Mobile Bottom Navigation - Glassmorphism */}
-      <div className="fixed bottom-4 left-4 right-4 bg-white/90 backdrop-blur-xl border border-white/20 md:hidden z-40 px-6 py-3 flex justify-between items-center shadow-xl shadow-slate-200/50 rounded-2xl">
-        <NavBtn icon={Home} label={t.home} active={activeTab === 'home'} onClick={() => setActiveTab('home')} />
-        <NavBtn icon={Camera} label={t.analyze} active={activeTab === 'analyze'} onClick={() => setActiveTab('analyze')} />
-        <NavBtn icon={LayoutDashboard} label={t.admin} active={activeTab === 'admin'} onClick={() => setActiveTab('admin')} />
-        <NavBtn icon={MapIcon} label={t.intel} active={activeTab === 'intel'} onClick={() => setActiveTab('intel')} />
+      <div className={`fixed bottom-4 left-4 right-4 backdrop-blur-xl border md:hidden z-40 px-6 py-3 flex justify-between items-center shadow-xl rounded-2xl ${darkMode ? 'bg-slate-900/90 border-white/10 shadow-black/50' : 'bg-white/90 border-white/20 shadow-slate-200/50'}`}>
+        <NavBtn icon={Home} label={t.home} active={activeTab === 'home'} onClick={() => setActiveTab('home')} darkMode={darkMode} />
+        <NavBtn icon={Camera} label={t.analyze} active={activeTab === 'analyze'} onClick={() => setActiveTab('analyze')} darkMode={darkMode} />
+        <NavBtn icon={LayoutDashboard} label={t.admin} active={activeTab === 'admin'} onClick={() => setActiveTab('admin')} darkMode={darkMode} />
+        <NavBtn icon={MapIcon} label={t.intel} active={activeTab === 'intel'} onClick={() => setActiveTab('intel')} darkMode={darkMode} />
       </div>
 
       <Footer />
@@ -82,15 +93,15 @@ export default function App() {
   );
 }
 
-const NavBtn = ({ icon: Icon, label, active, onClick }: any) => (
+const NavBtn = ({ icon: Icon, label, active, onClick, darkMode }: any) => (
   <button 
     onClick={onClick}
-    className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all relative ${active ? 'text-[#0B1F3B]' : 'text-slate-400 hover:text-slate-600'}`}
+    className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all relative ${active ? (darkMode ? 'text-blue-400' : 'text-[#0B1F3B]') : (darkMode ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-600')}`}
   >
     {active && (
       <motion.div 
         layoutId="mobileNavIndicator"
-        className="absolute inset-0 bg-blue-50 rounded-xl -z-10"
+        className={`absolute inset-0 rounded-xl -z-10 ${darkMode ? 'bg-white/5' : 'bg-blue-50'}`}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
       />
     )}

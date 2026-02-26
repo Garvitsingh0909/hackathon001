@@ -33,26 +33,52 @@ export const analyzeWaterImage = async (base64Image: string, mimeType: string = 
                 "recommendation": string (short actionable advice),
                 "details": string (2-3 sentences explaining the visual findings)
             }
-            Return ONLY valid JSON.`
+            Return ONLY valid JSON. Do not include markdown code blocks.`
           }
         ]
       },
       config: {
         responseMimeType: "application/json",
-        // Thinking is good for complex reasoning but strict JSON is safer without it for now unless needed
-        // We will use standard generation for structured output reliability
       }
     });
 
     const text = response.text || "{}";
-    return JSON.parse(text);
+    // Clean up markdown if present despite instructions
+    const jsonStr = text.replace(/```json\n?|\n?```/g, '').trim();
+    return JSON.parse(jsonStr);
   } catch (error) {
     console.error("Analysis failed:", error);
-    throw error;
+    // Return a fallback result instead of crashing
+    return {
+        algaeLevel: "Unknown",
+        foamDetected: false,
+        turbidity: "Unknown",
+        color: "Unknown",
+        overallScore: 50,
+        recommendation: "Analysis failed. Please try again with a clearer image.",
+        details: "Could not process the image."
+    };
   }
 };
 
-// 2. Chat with Thinking (Gemini 3 Pro)
+// 2. Normal Chat (Gemini 3 Flash - Fast & Capable)
+export const chatNormal = async (history: {role: string, parts: {text: string}[]}[], message: string) => {
+    if (!API_KEY) throw new Error("API Key not configured");
+    try {
+        const chat = ai.chats.create({
+            model: MODELS.SEARCH, // Using Flash for speed and general capability
+            history: history,
+        });
+
+        const result = await chat.sendMessage({ message });
+        return result.text;
+    } catch (error) {
+        console.error("Chat failed:", error);
+        return "I'm having trouble connecting right now. Please try again.";
+    }
+};
+
+// 2.1 Chat with Thinking (Gemini 3 Pro - Optional/Advanced)
 export const chatWithThinking = async (history: {role: string, parts: {text: string}[]}[], message: string) => {
     if (!API_KEY) throw new Error("API Key not configured");
     try {

@@ -2,9 +2,9 @@ export interface WaterQualityReport {
     id: string;
     locationName: string;
     coordinates: { lat: number; lng: number };
-    algaeLevel: 'None' | 'Low' | 'Moderate' | 'High' | 'Critical';
+    algaeLevel: 'None' | 'Low' | 'Moderate' | 'High' | 'Critical' | 'Unknown';
     foamDetected: boolean;
-    turbidity: 'Clear' | 'Slightly Cloudy' | 'Cloudy' | 'Opaque';
+    turbidity: 'Clear' | 'Slightly Cloudy' | 'Cloudy' | 'Opaque' | 'Unknown';
     overallScore: number;
     recommendation: string;
     details: string;

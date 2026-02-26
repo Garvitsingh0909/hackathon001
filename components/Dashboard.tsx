@@ -78,7 +78,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, onOpenAssista
     >
       
       {/* 1. HERO SECTION (Modern & Clean) */}
-      <motion.div variants={item} className="relative overflow-hidden rounded-3xl bg-[#0B1F3B] text-white p-8 md:p-12 shadow-2xl shadow-blue-900/20">
+      <motion.div variants={item} className="relative overflow-hidden rounded-3xl bg-[#0B1F3B] dark:bg-slate-800 text-white p-8 md:p-12 shadow-2xl shadow-blue-900/20">
           {/* Background Elements */}
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#1CA7A6] rounded-full blur-[120px] opacity-20 -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
           <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-blue-600 rounded-full blur-[100px] opacity-20 translate-y-1/3 -translate-x-1/3 pointer-events-none"></div>
@@ -121,7 +121,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, onOpenAssista
             <div className="hidden lg:flex justify-end">
                 <div className="relative w-80 h-80">
                     <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-white/5 rounded-2xl backdrop-blur-md border border-white/10 rotate-3 transform transition-transform hover:rotate-0 duration-500"></div>
-                    <div className="absolute inset-0 bg-[#0f2545] rounded-2xl border border-white/10 shadow-2xl p-6 flex flex-col justify-between -rotate-3 transform transition-transform hover:rotate-0 duration-500">
+                    <div className="absolute inset-0 bg-[#0f2545] dark:bg-slate-900 rounded-2xl border border-white/10 shadow-2xl p-6 flex flex-col justify-between -rotate-3 transform transition-transform hover:rotate-0 duration-500">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400">
@@ -175,19 +175,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, onOpenAssista
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
           
           {/* AI Insight - Spans 2 cols */}
-          <motion.div variants={item} className="md:col-span-2 lg:col-span-2 bg-white rounded-3xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-shadow relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full blur-3xl -mr-10 -mt-10 transition-opacity opacity-50 group-hover:opacity-100"></div>
+          <motion.div variants={item} className="md:col-span-2 lg:col-span-2 bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition-shadow relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 dark:bg-blue-900/20 rounded-full blur-3xl -mr-10 -mt-10 transition-opacity opacity-50 group-hover:opacity-100"></div>
               <div className="relative z-10">
                 <div className="flex items-center gap-3 mb-4">
-                    <div className="p-2 bg-blue-100 text-blue-700 rounded-lg">
+                    <div className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-lg">
                         <Activity size={20} />
                     </div>
-                    <h3 className="font-bold text-slate-800 font-display">{t.dashboard.aiAnalysis}</h3>
+                    <h3 className="font-bold text-slate-800 dark:text-white font-display">{t.dashboard.aiAnalysis}</h3>
                 </div>
-                <p className="text-slate-600 leading-relaxed mb-6">
+                <p className="text-slate-600 dark:text-slate-300 leading-relaxed mb-6">
                     {loading ? "Analyzing sensor streams..." : aiSummary}
                 </p>
-                <button onClick={() => onChangeTab('analyze')} className="text-sm font-semibold text-[#1CA7A6] hover:text-teal-700 flex items-center gap-1 group/btn">
+                <button onClick={() => onChangeTab('analyze')} className="text-sm font-semibold text-[#1CA7A6] hover:text-teal-700 dark:hover:text-teal-400 flex items-center gap-1 group/btn">
                     {t.dashboard.viewReport} <ArrowRight size={16} className="group-hover/btn:translate-x-1 transition-transform" />
                 </button>
               </div>
@@ -224,15 +224,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, onOpenAssista
           </motion.div>
 
           {/* Main Chart - Spans 2 cols */}
-          <motion.div variants={item} className="md:col-span-2 lg:col-span-2 bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+          <motion.div variants={item} className="md:col-span-2 lg:col-span-2 bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-700">
                 <div className="flex justify-between items-center mb-6">
                     <div>
-                        <h3 className="font-bold text-slate-800 font-display">{t.dashboard.chartTitle}</h3>
+                        <h3 className="font-bold text-slate-800 dark:text-white font-display">{t.dashboard.chartTitle}</h3>
                         <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">{t.dashboard.chartSub}</p>
                     </div>
                     <div className="flex gap-2">
-                        <span className="w-2 h-2 rounded-full bg-[#0B1F3B]"></span>
-                        <span className="text-xs text-slate-500">Index</span>
+                        <span className="w-2 h-2 rounded-full bg-[#0B1F3B] dark:bg-blue-500"></span>
+                        <span className="text-xs text-slate-500 dark:text-slate-400">Index</span>
                     </div>
                 </div>
                 <div className="h-[250px] w-full">
@@ -244,7 +244,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, onOpenAssista
                             <stop offset="95%" stopColor="#0B1F3B" stopOpacity={0}/>
                         </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" className="dark:stroke-slate-700" />
                         <XAxis 
                             dataKey="name" 
                             axisLine={false} 
@@ -273,36 +273,36 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, onOpenAssista
           </motion.div>
 
           {/* Recent Activity - Spans 2 cols */}
-          <motion.div variants={item} className="md:col-span-2 lg:col-span-2 bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col">
+          <motion.div variants={item} className="md:col-span-2 lg:col-span-2 bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col">
               <div className="flex justify-between items-center mb-6">
-                  <h3 className="font-bold text-slate-800 font-display">{t.dashboard.recentReports}</h3>
-                  <button className="text-xs font-bold text-slate-400 hover:text-[#0B1F3B] uppercase tracking-wider transition-colors">View All</button>
+                  <h3 className="font-bold text-slate-800 dark:text-white font-display">{t.dashboard.recentReports}</h3>
+                  <button className="text-xs font-bold text-slate-400 hover:text-[#0B1F3B] dark:hover:text-white uppercase tracking-wider transition-colors">View All</button>
               </div>
               
               <div className="space-y-3 flex-1">
                 {loading ? (
-                    [1,2].map(i => <div key={i} className="h-16 bg-slate-50 rounded-xl animate-pulse"></div>)
+                    [1,2].map(i => <div key={i} className="h-16 bg-slate-50 dark:bg-slate-700 rounded-xl animate-pulse"></div>)
                 ) : (
                     reports.slice(0, 3).map((report) => (
-                        <div key={report.id} className="group flex items-center justify-between p-4 bg-slate-50 hover:bg-white border border-transparent hover:border-slate-100 rounded-2xl transition-all duration-300 hover:shadow-md cursor-pointer">
+                        <div key={report.id} className="group flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-700/50 hover:bg-white dark:hover:bg-slate-700 border border-transparent hover:border-slate-100 dark:hover:border-slate-600 rounded-2xl transition-all duration-300 hover:shadow-md cursor-pointer">
                             <div className="flex items-center gap-4">
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shadow-sm ${report.overallScore < 50 ? 'bg-red-500' : report.overallScore < 75 ? 'bg-amber-500' : 'bg-emerald-500'}`}>
                                     {report.overallScore}
                                 </div>
                                 <div>
-                                    <h4 className="font-semibold text-slate-900 text-sm">{report.locationName}</h4>
+                                    <h4 className="font-semibold text-slate-900 dark:text-white text-sm">{report.locationName}</h4>
                                     <div className="flex items-center gap-2 mt-0.5">
-                                        <span className="text-[10px] font-medium text-slate-500 flex items-center gap-1">
+                                        <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1">
                                             <Clock size={10} />
                                             {new Date(report.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                                         </span>
-                                        <span className="w-1 h-1 rounded-full bg-slate-300"></span>
-                                        <span className="text-[10px] font-medium text-slate-500">{report.status}</span>
+                                        <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-500"></span>
+                                        <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">{report.status}</span>
                                     </div>
                                 </div>
                             </div>
                             <div className="text-right">
-                                <ChevronRight size={18} className="text-slate-300 group-hover:text-[#0B1F3B] transition-colors" />
+                                <ChevronRight size={18} className="text-slate-300 dark:text-slate-500 group-hover:text-[#0B1F3B] dark:group-hover:text-white transition-colors" />
                             </div>
                         </div>
                     ))
@@ -317,25 +317,25 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, onOpenAssista
 
 const StatCard = ({ label, value, trend, icon: Icon, color }: any) => {
     const colorClasses: Record<string, string> = {
-        blue: 'bg-blue-50 text-blue-600',
-        cyan: 'bg-cyan-50 text-cyan-600',
-        amber: 'bg-amber-50 text-amber-600',
-        emerald: 'bg-emerald-50 text-emerald-600'
+        blue: 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400',
+        cyan: 'bg-cyan-50 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400',
+        amber: 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400',
+        emerald: 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'
     };
 
     return (
-        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+        <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow h-full group">
             <div className="flex justify-between items-start mb-4">
-                <div className={`p-3 rounded-2xl ${colorClasses[color]}`}>
-                    <Icon size={20} />
+                <div className={`p-3 rounded-2xl ${colorClasses[color] || colorClasses['blue']} group-hover:scale-110 transition-transform`}>
+                    <Icon size={24} />
                 </div>
-                <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${trend === 'Stable' || trend === 'Improving' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
+                <span className={`text-[10px] font-bold px-2 py-1 rounded-full border ${trend === 'Stable' || trend === 'Improving' ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-800' : 'bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-800'}`}>
                     {trend}
                 </span>
             </div>
             <div>
-                <h3 className="text-2xl font-bold text-slate-900 font-display mb-1">{value}</h3>
-                <p className="text-slate-500 text-xs font-medium uppercase tracking-wider">{label}</p>
+                <h3 className="text-3xl font-bold text-slate-900 dark:text-white font-display mb-1">{value}</h3>
+                <p className="text-slate-400 dark:text-slate-500 text-xs font-bold uppercase tracking-wider">{label}</p>
             </div>
         </div>
     );
@@ -344,10 +344,10 @@ const StatCard = ({ label, value, trend, icon: Icon, color }: any) => {
 const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
         return (
-            <div className="bg-white/90 backdrop-blur-md p-4 rounded-2xl shadow-xl border border-white/20 ring-1 ring-black/5">
+            <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-md p-4 rounded-2xl shadow-xl border border-white/20 dark:border-slate-700 ring-1 ring-black/5 dark:ring-white/5">
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{label}</p>
-                <p className="text-lg font-bold text-[#0B1F3B] font-display">
-                    {payload[0].value} <span className="text-xs font-medium text-slate-500">Index</span>
+                <p className="text-lg font-bold text-[#0B1F3B] dark:text-white font-display">
+                    {payload[0].value} <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Index</span>
                 </p>
             </div>
         );

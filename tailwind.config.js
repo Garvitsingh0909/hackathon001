@@ -8,6 +8,7 @@ export default {
     "./App.tsx",
     "./index.tsx",
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       fontFamily: {
