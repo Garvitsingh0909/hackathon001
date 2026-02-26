@@ -1,9 +1,9 @@
 export const API_KEY = process.env.API_KEY || '';
 
 export const MODELS = {
-    IMAGE_ANALYSIS: 'gemini-3-pro-image-preview',
-    CHAT: 'gemini-3.1-pro-preview', 
-    SEARCH: 'gemini-3-flash-preview', 
+    IMAGE_ANALYSIS: 'gemini-2.5-flash',
+    CHAT: 'gemini-2.5-flash', 
+    SEARCH: 'gemini-2.5-flash', 
     MAPS: 'gemini-2.5-flash', 
     TTS: 'gemini-2.5-flash-preview-tts',
     FAST: 'gemini-2.5-flash-lite',
