@@ -12,6 +12,13 @@ export interface WaterQualityReport {
     status: 'Pending' | 'In Review' | 'Action Taken' | 'Resolved';
     imageUrl?: string;
     color?: string;
+    // Granular Data for Charts
+    ph?: number;
+    dissolvedOxygen?: number; // mg/L
+    chlorophyll?: number; // µg/L
+    nitrogen?: number; // mg/L
+    phosphorus?: number; // mg/L
+    historicalData?: { date: string; value: number }[];
 }
 
 export interface ChatMessage {

@@ -9,14 +9,20 @@ export const AdminMap = () => {
     const [selectedSegment, setSelectedSegment] = useState<RiverSegment | null>(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchSegments = async () => {
-            setLoading(true);
+    const fetchSegments = async () => {
+        setLoading(true);
+        try {
             const data = await api.getSegments();
             setSegments(data);
-            if (data.length > 0) setSelectedSegment(data[0]);
+            if (data.length > 0 && !selectedSegment) setSelectedSegment(data[0]);
+        } catch (e) {
+            console.error(e);
+        } finally {
             setLoading(false);
-        };
+        }
+    };
+
+    useEffect(() => {
         fetchSegments();
     }, []);
 
@@ -49,8 +55,8 @@ export const AdminMap = () => {
                         <h3 className="font-bold text-slate-900 font-display text-lg">River Segments</h3>
                         <p className="text-xs text-slate-500 font-medium">{segments.length} Active Sensors</p>
                     </div>
-                    <button onClick={() => window.location.reload()} className="p-2.5 hover:bg-slate-50 rounded-xl text-slate-500 transition-colors">
-                        <RefreshCw size={18} />
+                    <button onClick={fetchSegments} className="p-2.5 hover:bg-slate-50 rounded-xl text-slate-500 transition-colors">
+                        <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
                     </button>
                 </div>
 

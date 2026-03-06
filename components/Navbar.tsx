@@ -52,12 +52,13 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, languag
                 {navItems.map((item) => (
                     <button
                         key={item.id}
-                        onClick={() => setActiveTab(item.id)}
-                        className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors relative ${
+                        id={`nav-${item.id}`}
+                        className={`tour-${item.id} px-4 py-1.5 rounded-full text-sm font-medium transition-colors relative ${
                             activeTab === item.id 
                             ? (darkMode ? 'text-white' : 'text-slate-900')
                             : (darkMode ? 'text-slate-400 hover:text-white hover:bg-white/10' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50')
                         }`}
+                        onClick={() => setActiveTab(item.id)}
                     >
                         {activeTab === item.id && (
                             <motion.div

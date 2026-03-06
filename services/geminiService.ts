@@ -67,6 +67,9 @@ export const chatNormal = async (history: {role: string, parts: {text: string}[]
         const chat = ai.chats.create({
             model: MODELS.CHAT,
             history: history,
+            config: {
+                systemInstruction: "You are JalDrishti, a helpful water governance assistant. You help citizens with water quality, regulations, and reporting. Keep answers concise and helpful."
+            }
         });
 
         const result = await chat.sendMessage({ message });
@@ -74,6 +77,26 @@ export const chatNormal = async (history: {role: string, parts: {text: string}[]
     } catch (error) {
         console.error("Chat failed:", error);
         return "I'm having trouble connecting right now. Please try again.";
+    }
+};
+
+// 2.1 Code Fixing Assistant
+export const chatCode = async (history: {role: string, parts: {text: string}[]}[], message: string) => {
+    if (!API_KEY) throw new Error("API Key not configured");
+    try {
+        const chat = ai.chats.create({
+            model: MODELS.CHAT,
+            history: history,
+            config: {
+                systemInstruction: "You are an expert Senior Software Engineer and Code Fixing Assistant. Your goal is to analyze code provided by the user, identify errors (syntax, logic, security, performance), and provide the corrected version. \n\nRules:\n1. Always provide the fixed code in a Markdown code block.\n2. Briefly explain what was wrong and how you fixed it.\n3. If the code is incomplete, ask for clarification.\n4. Be concise and professional."
+            }
+        });
+
+        const result = await chat.sendMessage({ message });
+        return result.text;
+    } catch (error) {
+        console.error("Code Chat failed:", error);
+        return "I encountered an error while analyzing the code. Please try again.";
     }
 };
 
@@ -165,5 +188,32 @@ export const getQuickStat = async (dataContext: string) => {
         return response.text;
     } catch (error) {
         return "Status update unavailable.";
+    }
+};
+
+// 7. Audio Transcription (Real API)
+export const transcribeAudio = async (base64Audio: string, mimeType: string = 'audio/wav') => {
+    if (!API_KEY) throw new Error("API Key not configured");
+    try {
+        const response = await ai.models.generateContent({
+            model: MODELS.TRANSCRIPTION,
+            contents: {
+                parts: [
+                    {
+                        inlineData: {
+                            mimeType: mimeType,
+                            data: base64Audio
+                        }
+                    },
+                    {
+                        text: "Transcribe this audio."
+                    }
+                ]
+            }
+        });
+        return response.text;
+    } catch (error) {
+        console.error("Transcription failed:", error);
+        throw error;
     }
 };

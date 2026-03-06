@@ -24,6 +24,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, onOpenAssista
     useEffect(() => {
         const loadData = async () => {
             try {
+                // 1. Fetch critical data first
                 const [reportData, trendData] = await Promise.all([
                     api.getReports(),
                     api.getWaterTrends()
@@ -31,17 +32,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, onOpenAssista
                 
                 setReports(reportData);
                 setChartData(trendData);
-                
-                // Generate AI Summary based on real data
+                setLoading(false); // Stop loading immediately after core data
+
+                // 2. Fetch AI summary in background
                 if (reportData.length > 0) {
                     const latest = reportData[0];
                     const context = `Latest report from ${latest.locationName} shows ${latest.overallScore}/100 score. Algae: ${latest.algaeLevel}. Status: ${latest.status}.`;
-                    const summary = await getQuickStat(context);
-                    setAiSummary(summary || "Monitoring active. Systems normal.");
+                    
+                    // Non-blocking AI call
+                    getQuickStat(context).then(summary => {
+                        if (summary) setAiSummary(summary);
+                    }).catch(err => console.error("AI Summary failed", err));
                 }
             } catch (e) {
                 console.error(e);
-            } finally {
                 setLoading(false);
             }
         };

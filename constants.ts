@@ -1,12 +1,13 @@
-export const API_KEY = 'AIzaSyAGpQZq48_YEix0QBNchvQaaFCLCarptlU';
+export const API_KEY = 'AIzaSyAD7eXkpDH6Gjw3L4Yv_07mAgQn0NR7IQs';
 
 export const MODELS = {
-    IMAGE_ANALYSIS: 'gemini-2.5-flash',
-    CHAT: 'gemini-2.5-flash', 
-    SEARCH: 'gemini-2.5-flash', 
+    IMAGE_ANALYSIS: 'gemini-3.1-pro-preview',
+    CHAT: 'gemini-3.1-pro-preview', 
+    SEARCH: 'gemini-3-flash-preview', 
     MAPS: 'gemini-2.5-flash', 
     TTS: 'gemini-2.5-flash-preview-tts',
-    FAST: 'gemini-2.5-flash-lite',
+    FAST: 'gemini-3.1-flash-lite-preview',
+    TRANSCRIPTION: 'gemini-3-flash-preview',
 };
 
 export const TRANSLATIONS = {
