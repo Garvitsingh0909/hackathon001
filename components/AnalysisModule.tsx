@@ -1,21 +1,29 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Camera, Upload, AlertCircle, CheckCircle, Volume2, Loader2, Play, Search, X, BarChart3, TrendingUp, Droplets } from 'lucide-react';
-import { analyzeWaterImage, generateSpeech } from '../services/geminiService';
+import { Camera, Upload, AlertCircle, CheckCircle, Volume2, Loader2, Play, Search, X, BarChart3, TrendingUp, Droplets, RotateCcw, ChevronDown, ChevronUp, Info, Printer, Share2 } from 'lucide-react';
+import { analyzeWaterImage, generateSpeech, playBrowserTTS } from '../services/geminiService';
 import { api } from '../services/api';
 import { WaterQualityReport } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell, AreaChart, Area } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+
+const FAQ_ITEMS = [
+    { q: "How accurate is this visual analysis?", a: "This AI analysis provides a preliminary assessment based on visual indicators like color, turbidity, and visible algae. It is not a substitute for laboratory testing." },
+    { q: "What does the Overall Score mean?", a: "The score (0-100) represents the estimated visual quality of the water. 80-100 is excellent, 50-79 is moderate, and below 50 indicates visible contamination." },
+    { q: "Can it detect invisible chemicals?", a: "No. Visual analysis cannot detect dissolved chemicals, heavy metals, or microscopic pathogens. Always use proper testing kits for drinking water." }
+];
 
 export const AnalysisModule = () => {
   const [image, setImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<WaterQualityReport | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
 
   useEffect(() => {
     return () => {
         if (audioContextRef.current) audioContextRef.current.close();
+        window.speechSynthesis.cancel();
     }
   }, []);
 
@@ -29,7 +37,6 @@ export const AnalysisModule = () => {
           let width = img.width;
           let height = img.height;
           
-          // Max dimension 1024px
           const MAX_SIZE = 1024;
           if (width > height) {
             if (width > MAX_SIZE) {
@@ -47,7 +54,7 @@ export const AnalysisModule = () => {
           canvas.height = height;
           const ctx = canvas.getContext('2d');
           ctx?.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL('image/jpeg', 0.8)); // Compress to JPEG 80%
+          resolve(canvas.toDataURL('image/jpeg', 0.8));
         };
         img.src = e.target?.result as string;
       };
@@ -73,8 +80,7 @@ export const AnalysisModule = () => {
   };
 
   const generateSimulatedData = () => {
-      // Generate realistic looking data based on a "random" seed (using time for now)
-      const baseScore = Math.floor(Math.random() * 40) + 40; // 40-80
+      const baseScore = Math.floor(Math.random() * 40) + 40;
       
       const historicalData = Array.from({ length: 6 }).map((_, i) => {
           const date = new Date();
@@ -99,24 +105,19 @@ export const AnalysisModule = () => {
     if (!image) return;
     setLoading(true);
     
-    // Immediate Simulation for "Fast" response
     const simData = generateSimulatedData();
     
     try {
-        // We still try to call the API for the qualitative description, but we don't block heavily
-        // If API is slow/fails, we fallback to simulation completely
         let analysisResult;
         
         try {
             const base64Data = image.split(',')[1];
-            // Race the API against a timeout to ensure speed
             const apiPromise = analyzeWaterImage(base64Data);
-            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 8000)); // 8s timeout
+            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 15000));
             
             analysisResult = await Promise.race([apiPromise, timeoutPromise]) as any;
         } catch (e) {
             console.log("API timed out or failed, using simulation fallback");
-            // Fallback result
             analysisResult = {
                 overallScore: Math.round(simData.historicalData[5].value),
                 algaeLevel: simData.chlorophyll > 20 ? 'High' : simData.chlorophyll > 10 ? 'Moderate' : 'Low',
@@ -127,7 +128,6 @@ export const AnalysisModule = () => {
             };
         }
         
-        // Merge API result with our rich simulated data
         const finalReport: WaterQualityReport = {
             ...analysisResult,
             id: Date.now().toString(),
@@ -136,7 +136,6 @@ export const AnalysisModule = () => {
             timestamp: new Date().toISOString(),
             foamDetected: false,
             status: 'Pending',
-            // Add the granular data
             ph: simData.ph,
             dissolvedOxygen: simData.dissolvedOxygen,
             chlorophyll: simData.chlorophyll,
@@ -161,39 +160,81 @@ export const AnalysisModule = () => {
       setIsPlaying(true);
       try {
           const textToSpeak = `Analysis Report. Overall Score: ${result.overallScore}. Status: ${result.algaeLevel} Algae Level. Recommendation: ${result.recommendation}`;
+          
           const base64Audio = await generateSpeech(textToSpeak);
           
-          if (!base64Audio) throw new Error("No audio generated");
-
-          const binaryString = atob(base64Audio);
-          const len = binaryString.length;
-          const bytes = new Uint8Array(len);
-          for (let i = 0; i < len; i++) {
-            bytes[i] = binaryString.charCodeAt(i);
+          if (base64Audio) {
+              const binaryString = atob(base64Audio);
+              const len = binaryString.length;
+              const bytes = new Uint8Array(len);
+              for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+              }
+              
+              if (!audioContextRef.current) {
+                  audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({sampleRate: 24000});
+              }
+              
+              if (audioContextRef.current.state === 'suspended') {
+                  await audioContextRef.current.resume();
+              }
+              
+              const dataInt16 = new Int16Array(bytes.buffer);
+              const buffer = audioContextRef.current.createBuffer(1, dataInt16.length, 24000);
+              const channelData = buffer.getChannelData(0);
+              for (let i = 0; i < dataInt16.length; i++) {
+                  channelData[i] = dataInt16[i] / 32768.0;
+              }
+              
+              const source = audioContextRef.current.createBufferSource();
+              source.buffer = buffer;
+              source.connect(audioContextRef.current.destination);
+              source.onended = () => setIsPlaying(false);
+              source.start(0);
+          } else {
+              throw new Error("No audio generated");
           }
-          
-          if (!audioContextRef.current) {
-              audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({sampleRate: 24000});
-          }
-          
-          // Decode raw PCM (Int16) data from Gemini TTS
-          const dataInt16 = new Int16Array(bytes.buffer);
-          const buffer = audioContextRef.current.createBuffer(1, dataInt16.length, 24000);
-          const channelData = buffer.getChannelData(0);
-          for (let i = 0; i < dataInt16.length; i++) {
-              // Convert Int16 to Float32 [-1.0, 1.0]
-              channelData[i] = dataInt16[i] / 32768.0;
-          }
-          
-          const source = audioContextRef.current.createBufferSource();
-          source.buffer = buffer;
-          source.connect(audioContextRef.current.destination);
-          source.onended = () => setIsPlaying(false);
-          source.start(0);
 
       } catch (e) {
-          console.error(e);
-          setIsPlaying(false);
+          console.error("Gemini TTS Error, falling back to browser TTS:", e);
+          const textToSpeak = `Analysis Report. Overall Score: ${result.overallScore}. Status: ${result.algaeLevel} Algae Level. Recommendation: ${result.recommendation}`;
+          playBrowserTTS(
+              textToSpeak,
+              () => setIsPlaying(true),
+              () => setIsPlaying(false)
+          );
+      }
+  };
+
+  const resetAll = () => {
+      setImage(null);
+      setResult(null);
+      setExpandedFaq(null);
+  };
+
+  const getScoreColor = (score: number) => {
+      if (score >= 80) return '#10b981'; // emerald-500
+      if (score >= 50) return '#f59e0b'; // amber-500
+      return '#ef4444'; // red-500
+  };
+
+  const handlePrint = () => {
+      window.print();
+  };
+
+  const handleShare = async () => {
+      if (navigator.share) {
+          try {
+              await navigator.share({
+                  title: 'JalDrishti Water Quality Report',
+                  text: `Water Quality Score: ${result?.overallScore}/100. Status: ${result?.overallScore && result.overallScore >= 80 ? 'Good' : result?.overallScore && result.overallScore >= 50 ? 'Moderate' : 'Poor'}.`,
+                  url: window.location.href,
+              });
+          } catch (error) {
+              console.error('Error sharing:', error);
+          }
+      } else {
+          alert("Sharing is not supported on this browser.");
       }
   };
 
@@ -203,22 +244,50 @@ export const AnalysisModule = () => {
         animate={{ opacity: 1, y: 0 }}
         className="max-w-5xl mx-auto pt-6"
     >
-      <div className="bg-white rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-black/50 border border-slate-100 dark:border-slate-800 overflow-hidden transition-colors" id="printable-report">
         
         {/* Header */}
-        <div className="p-8 md:p-10 border-b border-slate-100 bg-slate-50/30">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 bg-blue-100 text-blue-700 rounded-2xl">
-                <Camera size={28} />
-            </div>
-            <div>
-                <h2 className="text-3xl font-bold text-slate-900 font-display">AI Sample Analysis</h2>
-                <p className="text-slate-500 text-sm font-medium">Gemini 2.5 Flash Vision Protocol</p>
-            </div>
+        <div className="p-8 md:p-10 border-b border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-800/30 flex justify-between items-start">
+          <div>
+              <div className="flex items-center gap-4 mb-4">
+                <div className="p-3 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 rounded-2xl">
+                    <Camera size={28} />
+                </div>
+                <div>
+                    <h2 className="text-3xl font-bold text-slate-900 dark:text-white font-display">AI Sample Analysis</h2>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Gemini 2.5 Flash Vision Protocol</p>
+                </div>
+              </div>
+              <p className="text-slate-600 dark:text-slate-300 max-w-xl leading-relaxed print:hidden">
+                Upload a high-resolution image of the water surface. Our AI model will analyze eutrophication levels, turbidity, and potential contaminants instantly.
+              </p>
           </div>
-          <p className="text-slate-600 max-w-xl leading-relaxed">
-            Upload a high-resolution image of the water surface. Our AI model will analyze eutrophication levels, turbidity, and potential contaminants instantly.
-          </p>
+          {image && (
+              <div className="flex items-center gap-2 print:hidden">
+                  {result && (
+                      <>
+                          <button 
+                              onClick={handlePrint}
+                              className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-slate-200 dark:border-slate-700"
+                          >
+                              <Printer size={16} /> Print
+                          </button>
+                          <button 
+                              onClick={handleShare}
+                              className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors border border-blue-200 dark:border-blue-800"
+                          >
+                              <Share2 size={16} /> Share
+                          </button>
+                      </>
+                  )}
+                  <button 
+                      onClick={resetAll}
+                      className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  >
+                      <RotateCcw size={16} /> Reset
+                  </button>
+              </div>
+          )}
         </div>
 
         <div className="p-8 md:p-10">
@@ -226,19 +295,19 @@ export const AnalysisModule = () => {
             <motion.label 
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
-                className="group flex flex-col items-center justify-center w-full h-80 border-2 border-slate-200 border-dashed rounded-3xl cursor-pointer bg-slate-50/50 hover:bg-blue-50/50 hover:border-blue-300 transition-all duration-300 relative overflow-hidden"
+                className="group flex flex-col items-center justify-center w-full h-80 border-2 border-slate-200 dark:border-slate-700 border-dashed rounded-3xl cursor-pointer bg-slate-50/50 dark:bg-slate-800/50 hover:bg-blue-50/50 dark:hover:bg-blue-900/20 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-300 relative overflow-hidden"
             >
-              <div className="absolute inset-0 bg-grid-slate-200/50 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))] -z-10"></div>
+              <div className="absolute inset-0 bg-grid-slate-200/50 dark:bg-grid-slate-700/50 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))] dark:[mask-image:linear-gradient(0deg,black,rgba(0,0,0,0.6))] -z-10"></div>
               <div className="flex flex-col items-center justify-center pt-5 pb-6 relative z-10">
                 <motion.div 
                     animate={{ y: [0, -5, 0] }}
                     transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-                    className="p-5 bg-white rounded-full shadow-sm mb-4 group-hover:shadow-md transition-all duration-300 text-blue-600 ring-4 ring-blue-50"
+                    className="p-5 bg-white dark:bg-slate-800 rounded-full shadow-sm mb-4 group-hover:shadow-md transition-all duration-300 text-blue-600 dark:text-blue-400 ring-4 ring-blue-50 dark:ring-blue-900/30"
                 >
                     <Upload className="w-8 h-8" />
                 </motion.div>
-                <p className="mb-2 text-lg text-slate-700 font-semibold font-display">Click to upload photo</p>
-                <p className="text-sm text-slate-400">SVG, PNG, JPG or GIF (MAX. 800x400px)</p>
+                <p className="mb-2 text-lg text-slate-700 dark:text-slate-200 font-semibold font-display">Click to upload photo</p>
+                <p className="text-sm text-slate-400 dark:text-slate-500">SVG, PNG, JPG or GIF (MAX. 800x400px)</p>
               </div>
               <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
             </motion.label>
@@ -248,10 +317,14 @@ export const AnalysisModule = () => {
                   <motion.div 
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="relative rounded-3xl overflow-hidden bg-slate-900 shadow-inner group aspect-square md:aspect-video lg:aspect-square lg:h-full"
+                    className={`relative rounded-3xl overflow-hidden bg-slate-900 shadow-inner group aspect-square md:aspect-video lg:aspect-square lg:h-full border-4 transition-colors duration-500 ${
+                        result 
+                            ? result.overallScore >= 80 ? 'border-emerald-500' : result.overallScore >= 50 ? 'border-amber-500' : 'border-red-500'
+                            : 'border-transparent'
+                    }`}
                   >
                     <img src={image} alt="Water Sample" className="w-full h-full object-cover opacity-90" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent print:hidden"></div>
                     
                     {/* Scanning Animation Overlay */}
                     <AnimatePresence>
@@ -260,15 +333,35 @@ export const AnalysisModule = () => {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="absolute inset-0 z-20"
+                            className="absolute inset-0 z-20 print:hidden"
                         >
-                            <div className="absolute inset-0 bg-blue-500/10"></div>
+                            <div className="absolute inset-0 bg-blue-900/40 backdrop-blur-sm"></div>
+                            
+                            {/* Water Droplet Fill Animation */}
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="relative w-24 h-24">
+                                    <svg viewBox="0 0 24 24" className="w-full h-full text-white/20 absolute inset-0">
+                                        <path fill="currentColor" d="M12,20A6,6 0 0,1 6,14C6,10 12,3.25 12,3.25C12,3.25 18,10 18,14A6,6 0 0,1 12,20Z" />
+                                    </svg>
+                                    <motion.div 
+                                        className="absolute bottom-0 left-0 w-full overflow-hidden"
+                                        initial={{ height: "0%" }}
+                                        animate={{ height: ["0%", "100%", "0%"] }}
+                                        transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+                                    >
+                                        <svg viewBox="0 0 24 24" className="w-24 h-24 text-blue-500 absolute bottom-0 left-0">
+                                            <path fill="currentColor" d="M12,20A6,6 0 0,1 6,14C6,10 12,3.25 12,3.25C12,3.25 18,10 18,14A6,6 0 0,1 12,20Z" />
+                                        </svg>
+                                    </motion.div>
+                                </div>
+                            </div>
+                            
                             <motion.div 
                                 animate={{ top: ["0%", "100%"] }}
                                 transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
                                 className="absolute top-0 left-0 w-full h-1 bg-blue-400 shadow-[0_0_20px_rgba(59,130,246,1)]"
                             />
-                            <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="absolute bottom-10 left-0 right-0 flex justify-center">
                                 <div className="bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 text-white text-xs font-mono animate-pulse">
                                     ANALYZING PIXELS...
                                 </div>
@@ -278,13 +371,13 @@ export const AnalysisModule = () => {
                     </AnimatePresence>
 
                     <button 
-                      onClick={() => setImage(null)}
+                      onClick={resetAll}
                       disabled={loading}
-                      className="absolute top-4 right-4 bg-white/20 backdrop-blur-md text-white p-2 rounded-full hover:bg-white/30 transition-colors border border-white/20 disabled:opacity-0"
+                      className="absolute top-4 right-4 bg-white/20 backdrop-blur-md text-white p-2 rounded-full hover:bg-white/30 transition-colors border border-white/20 disabled:opacity-0 print:hidden"
                     >
                       <X size={18} />
                     </button>
-                    <div className="absolute bottom-4 left-4 text-white">
+                    <div className="absolute bottom-4 left-4 text-white print:hidden">
                         <p className="text-xs font-bold uppercase tracking-wider opacity-80">Source Image</p>
                     </div>
                   </motion.div>
@@ -298,11 +391,11 @@ export const AnalysisModule = () => {
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -20 }}
-                        className="space-y-6"
+                        className="space-y-6 print:hidden"
                     >
-                        <div className="bg-blue-50 p-6 rounded-3xl border border-blue-100">
-                            <h3 className="font-bold text-blue-900 mb-2 font-display">Ready for Analysis</h3>
-                            <p className="text-blue-700/80 text-sm mb-6">
+                        <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-3xl border border-blue-100 dark:border-blue-800/50">
+                            <h3 className="font-bold text-blue-900 dark:text-blue-100 mb-2 font-display">Ready for Analysis</h3>
+                            <p className="text-blue-700/80 dark:text-blue-300/80 text-sm mb-6">
                                 Image loaded successfully. The system is ready to run the diagnostic protocol.
                             </p>
                             <motion.button
@@ -310,11 +403,12 @@ export const AnalysisModule = () => {
                                 whileTap={{ scale: 0.98 }}
                                 onClick={analyze}
                                 disabled={loading}
-                                className="w-full py-4 bg-[#0B1F3B] hover:bg-blue-900 disabled:bg-slate-300 text-white font-semibold rounded-xl transition-all shadow-lg shadow-blue-900/20 flex items-center justify-center gap-3 btn-press"
+                                className="w-full py-4 bg-[#0B1F3B] dark:bg-blue-600 hover:bg-blue-900 dark:hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-blue-900/20 flex items-center justify-center gap-3 btn-press relative overflow-hidden"
                             >
                             {loading ? (
                                 <>
-                                <Loader2 className="animate-spin" /> Processing...
+                                <div className="absolute inset-0 bg-blue-500/20 animate-pulse"></div>
+                                <Loader2 className="animate-spin relative z-10" /> <span className="relative z-10">Processing...</span>
                                 </>
                             ) : (
                                 <>
@@ -331,31 +425,65 @@ export const AnalysisModule = () => {
                         animate={{ opacity: 1, x: 0 }}
                         className="space-y-6"
                     >
-                         <div className="bg-emerald-50 p-6 rounded-3xl border border-emerald-100">
-                            <div className="flex justify-between items-start mb-2">
+                         <div className={`p-6 rounded-3xl border ${
+                             result.overallScore >= 80 ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800/50' :
+                             result.overallScore >= 50 ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-800/50' :
+                             'bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-800/50'
+                         }`}>
+                            <div className="flex justify-between items-center mb-4">
                                 <div>
-                                    <span className="text-xs font-bold text-emerald-600 uppercase tracking-widest">Overall Score</span>
-                                    <div className="flex items-baseline gap-1">
-                                        <motion.h3 
-                                            initial={{ scale: 0.5, opacity: 0 }}
-                                            animate={{ scale: 1, opacity: 1 }}
-                                            transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                                            className={`text-6xl font-bold font-display ${result.overallScore < 50 ? 'text-red-600' : result.overallScore < 80 ? 'text-amber-600' : 'text-emerald-700'}`}
-                                        >
-                                            {result.overallScore}
-                                        </motion.h3>
-                                        <span className="text-emerald-600/60 font-medium text-xl">/100</span>
-                                    </div>
+                                    <span className={`text-xs font-bold uppercase tracking-widest ${
+                                        result.overallScore >= 80 ? 'text-emerald-600 dark:text-emerald-400' :
+                                        result.overallScore >= 50 ? 'text-amber-600 dark:text-amber-400' :
+                                        'text-red-600 dark:text-red-400'
+                                    }`}>Overall Score</span>
                                 </div>
                                 <motion.button 
                                     whileHover={{ scale: 1.1 }}
                                     whileTap={{ scale: 0.9 }}
                                     onClick={playAudioReport}
                                     disabled={isPlaying}
-                                    className={`p-4 rounded-full shadow-sm border ${isPlaying ? 'bg-blue-100 text-blue-600 border-blue-200' : 'bg-white text-slate-700 border-slate-100 hover:scale-105'} transition-all`}
+                                    className={`p-3 rounded-full shadow-sm border print:hidden ${isPlaying ? 'bg-blue-100 text-blue-600 border-blue-200 dark:bg-blue-900/50 dark:text-blue-400 dark:border-blue-800' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-100 dark:border-slate-700 hover:scale-105'} transition-all`}
                                 >
-                                    {isPlaying ? <Loader2 className="animate-spin" size={24} /> : <Volume2 size={24} />}
+                                    {isPlaying ? <Loader2 className="animate-spin" size={20} /> : <Volume2 size={20} />}
                                 </motion.button>
+                            </div>
+                            
+                            <div className="flex items-center gap-6">
+                                {/* Circular Gauge */}
+                                <div className="relative w-24 h-24 flex-shrink-0">
+                                    <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                                        <circle cx="50" cy="50" r="40" fill="transparent" stroke="currentColor" strokeWidth="8" className="text-slate-200 dark:text-slate-700" />
+                                        <motion.circle 
+                                            cx="50" cy="50" r="40" fill="transparent" 
+                                            stroke={getScoreColor(result.overallScore)} 
+                                            strokeWidth="8" 
+                                            strokeDasharray="251.2"
+                                            initial={{ strokeDashoffset: 251.2 }}
+                                            animate={{ strokeDashoffset: 251.2 - (251.2 * result.overallScore) / 100 }}
+                                            transition={{ duration: 1.5, ease: "easeOut" }}
+                                            strokeLinecap="round"
+                                        />
+                                    </svg>
+                                    <div className="absolute inset-0 flex items-center justify-center flex-col">
+                                        <span className={`text-3xl font-bold font-display ${
+                                            result.overallScore >= 80 ? 'text-emerald-600 dark:text-emerald-400' :
+                                            result.overallScore >= 50 ? 'text-amber-600 dark:text-amber-400' :
+                                            'text-red-600 dark:text-red-400'
+                                        }`}>{result.overallScore}</span>
+                                    </div>
+                                </div>
+                                
+                                <div className="flex-1">
+                                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Status:</p>
+                                    <p className={`text-lg font-bold ${
+                                        result.overallScore >= 80 ? 'text-emerald-700 dark:text-emerald-400' :
+                                        result.overallScore >= 50 ? 'text-amber-700 dark:text-amber-400' :
+                                        'text-red-700 dark:text-red-400'
+                                    }`}>
+                                        {result.overallScore >= 80 ? 'Good Quality' : result.overallScore >= 50 ? 'Moderate Concern' : 'High Risk'}
+                                    </p>
+                                </div>
                             </div>
                          </div>
                          
@@ -377,26 +505,91 @@ export const AnalysisModule = () => {
             <motion.div 
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
-                className="mt-10 pt-10 border-t border-slate-100"
+                className="mt-10 pt-10 border-t border-slate-100 dark:border-slate-800"
             >
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {/* Text Analysis Section */}
-                    <div className="space-y-6 lg:col-span-2">
+                    <div className="space-y-6">
                         <div className="space-y-4">
-                            <h4 className="font-bold text-slate-900 flex items-center gap-2 font-display">
+                            <h4 className="font-bold text-slate-900 dark:text-white flex items-center gap-2 font-display">
                                 <Search size={18} className="text-blue-500"/> Visual Observation
                             </h4>
-                            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 text-slate-600 leading-relaxed text-sm">
+                            <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-300 leading-relaxed text-sm">
                                 {result.details}
                             </div>
                         </div>
                         <div className="space-y-4">
-                            <h4 className="font-bold text-slate-900 flex items-center gap-2 font-display">
+                            <h4 className="font-bold text-slate-900 dark:text-white flex items-center gap-2 font-display">
                                 <AlertCircle size={18} className="text-amber-500"/> Recommendation
                             </h4>
-                             <div className="bg-amber-50 p-6 rounded-2xl border border-amber-100 text-amber-900 leading-relaxed text-sm">
+                             <div className="bg-amber-50 dark:bg-amber-900/20 p-6 rounded-2xl border border-amber-100 dark:border-amber-800/50 text-amber-900 dark:text-amber-200 leading-relaxed text-sm">
                                 {result.recommendation}
                             </div>
+                        </div>
+                    </div>
+                    
+                    {/* History Tracker Section */}
+                    <div className="space-y-4">
+                        <h4 className="font-bold text-slate-900 dark:text-white flex items-center gap-2 font-display">
+                            <TrendingUp size={18} className="text-blue-500"/> Historical Trend
+                        </h4>
+                        <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 h-64">
+                            {result.historicalData && result.historicalData.length > 0 ? (
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={result.historicalData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                        <defs>
+                                            <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                                            </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                                        <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} dy={10} />
+                                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} domain={[0, 100]} />
+                                        <Tooltip 
+                                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                            labelStyle={{ color: '#64748b', fontWeight: 'bold', marginBottom: '4px' }}
+                                        />
+                                        <Area type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorValue)" />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            ) : (
+                                <div className="flex items-center justify-center h-full text-slate-400 text-sm">
+                                    No historical data available.
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                    
+                    {/* Expandable FAQ */}
+                    <div className="space-y-4 lg:col-span-2 print:hidden">
+                        <h4 className="font-bold text-slate-900 dark:text-white flex items-center gap-2 font-display">
+                            <Info size={18} className="text-blue-500"/> Frequently Asked Questions
+                        </h4>
+                        <div className="space-y-3">
+                            {FAQ_ITEMS.map((item, idx) => (
+                                <div key={idx} className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden bg-white dark:bg-slate-800">
+                                    <button 
+                                        onClick={() => setExpandedFaq(expandedFaq === idx ? null : idx)}
+                                        className="w-full px-5 py-4 flex justify-between items-center text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                                    >
+                                        <span className="font-medium text-sm text-slate-800 dark:text-slate-200">{item.q}</span>
+                                        {expandedFaq === idx ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
+                                    </button>
+                                    <AnimatePresence>
+                                        {expandedFaq === idx && (
+                                            <motion.div 
+                                                initial={{ height: 0, opacity: 0 }}
+                                                animate={{ height: 'auto', opacity: 1 }}
+                                                exit={{ height: 0, opacity: 0 }}
+                                                className="px-5 pb-4 text-sm text-slate-600 dark:text-slate-400 leading-relaxed"
+                                            >
+                                                {item.a}
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>
@@ -410,8 +603,8 @@ export const AnalysisModule = () => {
 };
 
 const MetricCard = ({ label, value }: { label: string, value: string }) => (
-    <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-        <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">{label}</p>
-        <p className="font-bold text-slate-800 text-lg font-display">{value}</p>
+    <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
+        <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider mb-1">{label}</p>
+        <p className="font-bold text-slate-800 dark:text-slate-200 text-lg font-display">{value}</p>
     </div>
 );

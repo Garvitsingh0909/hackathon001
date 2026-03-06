@@ -1,15 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Mic, X, Send, Bot, ChevronUp, Loader2, Code, Droplets, Volume2, VolumeX } from 'lucide-react';
-import { chatNormal, chatCode, generateSpeech, transcribeAudio } from '../services/geminiService';
+import { Mic, X, Send, Bot, Loader2, Volume2, VolumeX, Copy, Check, ChevronDown, ChevronUp, Droplets, AlertTriangle, Info, ShieldCheck } from 'lucide-react';
+import { chatNormal, generateSpeech, playBrowserTTS, transcribeAudio } from '../services/geminiService';
 import { ChatMessage } from '../types';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface AssistantProps {
     isOpen: boolean;
     onClose: () => void;
 }
 
+const QUICK_CARDS = [
+    { icon: <AlertTriangle size={18} className="text-amber-500" />, text: "My water smells bad", query: "My tap water has a strange smell. What could be the reason and is it safe?" },
+    { icon: <Droplets size={18} className="text-yellow-500" />, text: "Water looks discolored", query: "The water coming from my tap is yellowish/brown. What should I do?" },
+    { icon: <ShieldCheck size={18} className="text-emerald-500" />, text: "Check if water is safe", query: "How can I check if my home water is safe for drinking?" },
+    { icon: <Info size={18} className="text-blue-500" />, text: "High TDS problem", query: "My water TDS is very high. What are the health effects and how to fix it?" }
+];
+
 export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose }) => {
-    const [mode, setMode] = useState<'water' | 'code'>('water');
     const [messages, setMessages] = useState<ChatMessage[]>([
         {
             id: '1',
@@ -22,6 +29,8 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [audioEnabled, setAudioEnabled] = useState(true);
+    const [showEmojis, setShowEmojis] = useState(false);
+    const [isSent, setIsSent] = useState(false);
     
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const audioContextRef = useRef<AudioContext | null>(null);
@@ -32,37 +41,23 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose }) => {
 
     useEffect(() => {
         if (isOpen) scrollToBottom();
-    }, [messages, isOpen]);
+    }, [messages, isOpen, isLoading]);
 
     useEffect(() => {
         return () => {
             if (audioContextRef.current) {
                 audioContextRef.current.close();
             }
+            window.speechSynthesis.cancel();
         };
     }, []);
-
-    // Reset messages when switching modes
-    const toggleMode = () => {
-        const newMode = mode === 'water' ? 'code' : 'water';
-        setMode(newMode);
-        setMessages([
-            {
-                id: Date.now().toString(),
-                role: 'model',
-                text: newMode === 'water' 
-                    ? "Hello! I am JalDrishti, your water governance assistant. \n\nYou can ask me about:\n💧 Water quality alerts\n📜 Government regulations\n📸 How to analyze a sample"
-                    : "💻 **Code Fixing Assistant Active**\n\nPaste your broken code here, and I'll debug, fix, and optimize it for you.",
-                timestamp: new Date()
-            }
-        ]);
-    };
 
     const [isRecording, setIsRecording] = useState(false);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
 
     const startRecording = async () => {
+        if (navigator.vibrate) navigator.vibrate(50); // Haptic feedback
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             mediaRecorderRef.current = new MediaRecorder(stream);
@@ -104,6 +99,7 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose }) => {
     };
 
     const stopRecording = () => {
+        if (navigator.vibrate) navigator.vibrate(50);
         if (mediaRecorderRef.current && isRecording) {
             mediaRecorderRef.current.stop();
             setIsRecording(false);
@@ -119,50 +115,60 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose }) => {
     };
 
     const playResponse = async (text: string) => {
-        if (!audioEnabled || mode === 'code') return;
+        if (!audioEnabled) return;
         
         try {
             setIsSpeaking(true);
-            // Strip markdown for speech
             const cleanText = text.replace(/[*#_`]/g, '');
             const base64Audio = await generateSpeech(cleanText);
             
-            if (!base64Audio) throw new Error("No audio generated");
-
-            const binaryString = atob(base64Audio);
-            const len = binaryString.length;
-            const bytes = new Uint8Array(len);
-            for (let i = 0; i < len; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
+            if (base64Audio) {
+                const binaryString = atob(base64Audio);
+                const len = binaryString.length;
+                const bytes = new Uint8Array(len);
+                for (let i = 0; i < len; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                
+                if (!audioContextRef.current) {
+                    audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({sampleRate: 24000});
+                }
+                
+                if (audioContextRef.current.state === 'suspended') {
+                    await audioContextRef.current.resume();
+                }
+                
+                const dataInt16 = new Int16Array(bytes.buffer);
+                const buffer = audioContextRef.current.createBuffer(1, dataInt16.length, 24000);
+                const channelData = buffer.getChannelData(0);
+                for (let i = 0; i < dataInt16.length; i++) {
+                    channelData[i] = dataInt16[i] / 32768.0;
+                }
+                
+                const source = audioContextRef.current.createBufferSource();
+                source.buffer = buffer;
+                source.connect(audioContextRef.current.destination);
+                source.onended = () => setIsSpeaking(false);
+                source.start(0);
+            } else {
+                throw new Error("No audio generated");
             }
-            
-            if (!audioContextRef.current) {
-                audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({sampleRate: 24000});
-            }
-            
-            // Decode raw PCM (Int16) data from Gemini TTS
-            const dataInt16 = new Int16Array(bytes.buffer);
-            const buffer = audioContextRef.current.createBuffer(1, dataInt16.length, 24000);
-            const channelData = buffer.getChannelData(0);
-            for (let i = 0; i < dataInt16.length; i++) {
-                // Convert Int16 to Float32 [-1.0, 1.0]
-                channelData[i] = dataInt16[i] / 32768.0;
-            }
-            
-            const source = audioContextRef.current.createBufferSource();
-            source.buffer = buffer;
-            source.connect(audioContextRef.current.destination);
-            source.onended = () => setIsSpeaking(false);
-            source.start(0);
         } catch (error) {
-            console.error("TTS Error:", error);
-            setIsSpeaking(false);
+            console.error("Gemini TTS Error, falling back to browser TTS:", error);
+            playBrowserTTS(
+                text.replace(/[*#_`]/g, ''),
+                () => setIsSpeaking(true),
+                () => setIsSpeaking(false)
+            );
         }
     };
 
     const handleSend = async (overrideInput?: string) => {
         const textToSend = overrideInput || input;
         if (!textToSend.trim() || isLoading) return;
+
+        setIsSent(true);
+        setTimeout(() => setIsSent(false), 1500);
 
         const userMsg: ChatMessage = {
             id: Date.now().toString(),
@@ -176,14 +182,10 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose }) => {
         setIsLoading(true);
 
         try {
-            const apiHistory = messages.map(m => ({ role: m.role, parts: [{ text: m.text }] }));
+            // Send last 5 messages for context memory
+            const apiHistory = messages.slice(-5).map(m => ({ role: m.role, parts: [{ text: m.text }] }));
             
-            let responseText;
-            if (mode === 'code') {
-                responseText = await chatCode(apiHistory, userMsg.text);
-            } else {
-                responseText = await chatNormal(apiHistory, userMsg.text);
-            }
+            const responseText = await chatNormal(apiHistory, userMsg.text);
 
             const modelMsg: ChatMessage = {
                 id: (Date.now() + 1).toString(),
@@ -193,7 +195,6 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose }) => {
             };
             setMessages(prev => [...prev, modelMsg]);
             
-            // Play audio response
             if (responseText) {
                 playResponse(responseText);
             }
@@ -212,6 +213,13 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose }) => {
         }
     };
 
+    const addEmoji = (emoji: string) => {
+        if (input.length < 500) {
+            setInput(prev => prev + emoji);
+        }
+        setShowEmojis(false);
+    };
+
     if (!isOpen) return null;
 
     return (
@@ -226,19 +234,23 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose }) => {
                 <div className="flex justify-center pt-4 pb-2 cursor-pointer" onClick={onClose}>
                     <div className="w-16 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full"></div>
                 </div>
-                <div className="px-8 pb-6 border-b border-slate-200/50 dark:border-slate-700/50 flex justify-between items-center">
+                <div className="px-8 pb-4 border-b border-slate-200/50 dark:border-slate-700/50 flex justify-between items-center">
                     <div className="flex items-center gap-4">
-                        <div className={`p-3 rounded-2xl text-white shadow-lg transition-colors ${mode === 'code' ? 'bg-gradient-to-br from-purple-600 to-indigo-700 shadow-purple-500/30' : 'bg-gradient-to-br from-blue-600 to-blue-700 shadow-blue-500/30'}`}>
-                            {mode === 'code' ? <Code size={28} /> : <Bot size={28} />}
+                        <div className="p-3 rounded-2xl text-white shadow-lg transition-colors bg-gradient-to-br from-blue-600 to-blue-700 shadow-blue-500/30 relative">
+                            <Bot size={28} />
+                            {isSpeaking && <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                            </span>}
                         </div>
                         <div>
                             <h3 className="font-bold text-slate-900 dark:text-white text-xl font-display">
-                                {mode === 'code' ? 'Code Fixer' : 'JalDrishti Assistant'}
+                                JalDrishti Assistant
                             </h3>
                             <div className="flex items-center gap-2">
-                                <span className={`w-2 h-2 rounded-full animate-pulse ${isSpeaking ? 'bg-green-500' : (mode === 'code' ? 'bg-purple-500' : 'bg-blue-500')}`}></span>
+                                <span className={`w-2 h-2 rounded-full ${isSpeaking ? 'bg-green-500 animate-pulse' : 'bg-blue-500'}`}></span>
                                 <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                                    {isSpeaking ? 'Speaking...' : 'Gemini 2.5 Flash'}
+                                    {isSpeaking ? 'Speaking...' : 'Online'}
                                 </p>
                             </div>
                         </div>
@@ -247,17 +259,10 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose }) => {
                     <div className="flex items-center gap-2">
                         <button 
                             onClick={() => setAudioEnabled(!audioEnabled)}
-                            className={`p-2 rounded-full transition-all ${audioEnabled ? 'bg-blue-50 text-blue-600' : 'bg-slate-100 text-slate-400'}`}
+                            className={`p-2 rounded-full transition-all ${audioEnabled ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500'}`}
                             title={audioEnabled ? "Mute Voice" : "Enable Voice"}
                         >
                             {audioEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
-                        </button>
-                        <button 
-                            onClick={toggleMode}
-                            className={`p-2 rounded-full transition-all ${mode === 'code' ? 'bg-purple-100 text-purple-600 hover:bg-purple-200' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
-                            title={mode === 'code' ? "Switch to Water Assistant" : "Switch to Code Fixer"}
-                        >
-                            {mode === 'code' ? <Droplets size={20} /> : <Code size={20} />}
                         </button>
                         <button onClick={onClose} className="p-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-500 dark:text-slate-400 transition-colors">
                             <X size={24} />
@@ -265,67 +270,189 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose }) => {
                     </div>
                 </div>
 
+                {/* Quick Cards */}
+                {messages.length === 1 && (
+                    <div className="px-6 pt-4 pb-2 flex gap-2 overflow-x-auto no-scrollbar">
+                        {QUICK_CARDS.map((card, idx) => (
+                            <button 
+                                key={idx}
+                                onClick={() => handleSend(card.query)}
+                                className="flex-shrink-0 flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-2 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm"
+                            >
+                                {card.icon} {card.text}
+                            </button>
+                        ))}
+                    </div>
+                )}
+
                 {/* Messages Area */}
-                <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8 bg-slate-50/50 dark:bg-slate-950/50">
+                <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 bg-slate-50/50 dark:bg-slate-950/50">
                     {messages.map((msg) => (
-                        <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`max-w-[85%] p-5 rounded-3xl shadow-sm ${
+                        <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} message-enter`}>
+                            {msg.role === 'model' && (
+                                <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center mr-3 shrink-0 self-end mb-5">
+                                    <Bot size={16} className="text-blue-600 dark:text-blue-400" />
+                                </div>
+                            )}
+                            
+                            <div className={`max-w-[80%] relative group ${
                                 msg.role === 'user' 
-                                    ? (mode === 'code' ? 'bg-purple-600 text-white rounded-br-sm' : 'bg-[#0B1F3B] dark:bg-blue-600 text-white rounded-br-sm')
-                                    : 'bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-bl-sm'
+                                    ? 'bg-gradient-to-br from-blue-600 to-teal-500 text-white rounded-3xl rounded-br-sm shadow-md'
+                                    : 'bg-white dark:bg-slate-800 border-l-4 border-blue-500 text-slate-700 dark:text-slate-200 rounded-3xl rounded-bl-sm shadow-sm'
                             }`}>
-                                {msg.role === 'user' ? (
-                                    <p className={`text-[15px] leading-relaxed whitespace-pre-wrap ${mode === 'code' ? 'font-mono text-xs' : ''}`}>{msg.text}</p>
-                                ) : (
-                                    <TypingEffect text={msg.text} />
-                                )}
-                                <p className={`text-[10px] mt-2 font-medium ${msg.role === 'user' ? 'text-blue-300 dark:text-blue-100' : 'text-slate-400 dark:text-slate-500'}`}>
-                                    {msg.timestamp.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                                </p>
+                                <div className="p-4 md:p-5">
+                                    {msg.role === 'user' ? (
+                                        <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                                    ) : (
+                                        <ExpandableMessage text={msg.text} />
+                                    )}
+                                </div>
+                                
+                                <div className={`flex items-center gap-2 px-4 pb-2 text-[10px] font-medium ${msg.role === 'user' ? 'justify-end text-blue-100' : 'justify-start text-slate-400 dark:text-slate-500'}`}>
+                                    {msg.timestamp.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: true})}
+                                    
+                                    {msg.role === 'model' && (
+                                        <button 
+                                            onClick={() => navigator.clipboard.writeText(msg.text)}
+                                            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded"
+                                            title="Copy message"
+                                        >
+                                            <Copy size={12} />
+                                        </button>
+                                    )}
+                                </div>
                             </div>
+
+                            {msg.role === 'user' && (
+                                <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center ml-3 shrink-0 self-end mb-5 text-xs font-bold text-slate-600 dark:text-slate-300">
+                                    You
+                                </div>
+                            )}
                         </div>
                     ))}
+                    
                     {isLoading && (
-                        <div className="flex justify-start">
-                            <div className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 px-6 py-4 rounded-3xl rounded-bl-sm flex items-center gap-3 shadow-sm">
-                                <Loader2 className={`animate-spin ${mode === 'code' ? 'text-purple-600' : 'text-blue-600'} dark:text-blue-400`} size={20} />
-                                <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">Thinking...</span>
+                        <div className="flex justify-start message-enter">
+                            <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center mr-3 shrink-0 self-end mb-5">
+                                <Bot size={16} className="text-blue-600 dark:text-blue-400" />
+                            </div>
+                            <div className="bg-white dark:bg-slate-800 border-l-4 border-slate-300 dark:border-slate-600 px-6 py-5 rounded-3xl rounded-bl-sm shadow-sm flex items-center gap-2">
+                                <div className="flex gap-1">
+                                    <div className="w-2 h-2 bg-slate-400 rounded-full typing-dot"></div>
+                                    <div className="w-2 h-2 bg-slate-400 rounded-full typing-dot"></div>
+                                    <div className="w-2 h-2 bg-slate-400 rounded-full typing-dot"></div>
+                                </div>
                             </div>
                         </div>
                     )}
                     <div ref={messagesEndRef} />
                 </div>
 
-                {/* Input Area */}
-                <div className="p-6 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 pb-8 md:pb-6">
-                    <div className="relative flex items-center gap-3">
-                        <div 
-                            onClick={toggleListening}
-                            className={`p-4 rounded-2xl cursor-pointer transition-colors group ${
-                                isRecording 
-                                    ? 'bg-red-500 text-white animate-pulse' 
-                                    : (mode === 'code' ? 'bg-purple-50 text-purple-500 hover:bg-purple-100' : 'bg-red-50 text-red-500 hover:bg-red-100')
-                            }`} 
-                            title="Voice Input"
+                {/* Voice Recording Overlay */}
+                <AnimatePresence>
+                    {isRecording && (
+                        <motion.div 
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 20 }}
+                            className="absolute bottom-24 left-4 right-4 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-6 z-10"
                         >
-                            <Mic size={24} className={`transition-transform ${!isRecording && 'group-hover:scale-110'}`} />
+                            <div className="flex flex-col items-center justify-center gap-4">
+                                <div className="flex items-center gap-2 text-sm font-bold text-slate-500 dark:text-slate-400">
+                                    <span className="text-lg">🇮🇳</span> EN / HI Supported
+                                </div>
+                                <div className="flex items-end gap-1 h-12">
+                                    {[1, 2, 3, 4, 5].map((i) => (
+                                        <motion.div 
+                                            key={i}
+                                            animate={{ height: ['20%', '100%', '20%'] }}
+                                            transition={{ repeat: Infinity, duration: 0.8 + (i * 0.1), ease: "easeInOut" }}
+                                            className="w-2 bg-blue-500 rounded-full"
+                                        />
+                                    ))}
+                                </div>
+                                <p className="text-slate-600 dark:text-slate-300 font-medium">Listening...</p>
+                                <div className="text-xs text-slate-400 dark:text-slate-500 text-center">
+                                    Tips: Speak clearly • Avoid background noise • Say "T D S"
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* Input Area */}
+                <div className="p-4 md:p-6 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
+                    <div className="relative flex items-end gap-2">
+                        <div className="relative">
+                            <button 
+                                onClick={toggleListening}
+                                className={`p-4 rounded-full transition-all ${
+                                    isRecording 
+                                        ? 'bg-red-500 text-white mic-pulse' 
+                                        : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                                }`} 
+                                aria-label="Voice Input"
+                            >
+                                <Mic size={22} />
+                            </button>
                         </div>
-                        <input
-                            type="text"
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                            placeholder={isRecording ? "Listening..." : (mode === 'code' ? "Paste code to fix..." : "Ask about water quality, regulations...")}
-                            className={`flex-1 bg-slate-100 dark:bg-slate-800 border-none rounded-2xl px-6 py-4 text-slate-800 dark:text-white placeholder-slate-400 focus:ring-2 focus:bg-white dark:focus:bg-slate-800 transition-all outline-none text-lg ${mode === 'code' ? 'focus:ring-purple-500 font-mono text-sm' : 'focus:ring-blue-500'}`}
-                            autoFocus
-                        />
+                        
+                        <div className="flex-1 relative bg-slate-100 dark:bg-slate-800 rounded-3xl border border-transparent focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-100 dark:focus-within:ring-blue-900/30 transition-all">
+                            <textarea
+                                value={input}
+                                onChange={(e) => setInput(e.target.value.slice(0, 500))}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                        e.preventDefault();
+                                        handleSend();
+                                    }
+                                }}
+                                placeholder="Ask about water quality..."
+                                className="w-full bg-transparent border-none px-5 py-4 text-slate-800 dark:text-white placeholder-slate-400 focus:ring-0 resize-none max-h-32 min-h-[56px] no-scrollbar"
+                                rows={1}
+                                aria-label="Chat input"
+                            />
+                            
+                            <div className="absolute right-3 bottom-3 flex items-center gap-2">
+                                <div className="relative">
+                                    <button 
+                                        onClick={() => setShowEmojis(!showEmojis)}
+                                        className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                                        aria-label="Emojis"
+                                    >
+                                        💧
+                                    </button>
+                                    {showEmojis && (
+                                        <div className="absolute bottom-full right-0 mb-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg p-2 flex gap-1 z-20">
+                                            {['💧', '🚰', '🔬', '🧪', '⚗️', '🌊'].map(emoji => (
+                                                <button key={emoji} onClick={() => addEmoji(emoji)} className="hover:bg-slate-100 dark:hover:bg-slate-700 p-1.5 rounded text-lg">
+                                                    {emoji}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
                         <button 
                             onClick={() => handleSend()}
                             disabled={!input.trim() || isLoading}
-                            className={`p-4 text-white rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl hover:-translate-y-1 ${mode === 'code' ? 'bg-purple-600 hover:bg-purple-700 shadow-purple-900/20' : 'bg-[#0B1F3B] hover:bg-blue-900 shadow-blue-900/20'}`}
+                            className={`p-4 rounded-full transition-all shadow-md flex-shrink-0 ${
+                                isSent 
+                                    ? 'bg-green-500 text-white' 
+                                    : 'bg-gradient-to-br from-blue-600 to-blue-700 text-white hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0'
+                            }`}
+                            aria-label="Send message"
                         >
-                            <Send size={24} />
+                            {isSent ? <Check size={22} /> : <Send size={22} className="ml-1" />}
                         </button>
+                    </div>
+                    <div className="flex justify-between items-center mt-2 px-2">
+                        <span className="text-[10px] text-slate-400 font-medium">Press Enter to send</span>
+                        <span className={`text-[10px] font-medium ${input.length >= 500 ? 'text-red-500' : 'text-slate-400'}`}>
+                            {input.length}/500
+                        </span>
                     </div>
                 </div>
             </div>
@@ -333,25 +460,38 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose }) => {
     );
 };
 
-const TypingEffect = ({ text }: { text: string }) => {
+const ExpandableMessage = ({ text }: { text: string }) => {
+    const [expanded, setExpanded] = useState(false);
     const [displayedText, setDisplayedText] = useState('');
+    const isLong = text.split('\n').length > 4 || text.length > 250;
     
     useEffect(() => {
         setDisplayedText('');
         let i = 0;
-        // Much faster typing for "fast" feel
         const timer = setInterval(() => {
             if (i < text.length) {
-                // Add multiple characters at once for speed
                 setDisplayedText((prev) => prev + text.slice(i, i + 3));
                 i += 3;
             } else {
                 clearInterval(timer);
             }
         }, 5); 
-
         return () => clearInterval(timer);
     }, [text]);
 
-    return <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{displayedText}</p>;
+    const content = expanded ? displayedText : (isLong ? displayedText.slice(0, 250) + '...' : displayedText);
+
+    return (
+        <div className="flex flex-col">
+            <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{content}</p>
+            {isLong && displayedText.length === text.length && (
+                <button 
+                    onClick={() => setExpanded(!expanded)}
+                    className="mt-2 text-xs font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1 hover:underline w-fit"
+                >
+                    {expanded ? <>Show less <ChevronUp size={14}/></> : <>Show more <ChevronDown size={14}/></>}
+                </button>
+            )}
+        </div>
+    );
 };

@@ -185,3 +185,43 @@
 .text-white\/80 {
   color: rgba(255, 255, 255, 0.8);
 }
+
+/* NEW ENHANCEMENTS ANIMATIONS */
+@keyframes rippleOut {
+  0% { box-shadow: 0 0 0 0 rgba(2, 132, 199, 0.4); }
+  100% { box-shadow: 0 0 0 30px rgba(2, 132, 199, 0); }
+}
+.ripple {
+  animation: rippleOut 0.6s ease-out;
+}
+
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.message-enter {
+  animation: slideUpFade 0.3s ease-out forwards;
+}
+
+@keyframes pulseRing {
+  0% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(59, 130, 246, 0); }
+  100% { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+}
+.mic-pulse {
+  animation: pulseRing 2s infinite;
+}
+
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0) scale(1); }
+  30% { transform: translateY(-4px) scale(1.2); }
+}
+.typing-dot {
+  animation: typingBounce 1.4s infinite ease-in-out both;
+}
+.typing-dot:nth-child(1) { animation-delay: -0.32s; }
+.typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+.dark {
+  color-scheme: dark;
+}
