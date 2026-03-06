@@ -57,9 +57,18 @@ let REPORTS_DB = [
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = 5000;
 
   app.use(express.json());
+
+  // Secure endpoint to provide API key to frontend (never expose in bundle)
+  app.get('/api/config', (req, res) => {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return res.status(500).json({ error: 'GEMINI_API_KEY not configured on server' });
+    }
+    res.json({ apiKey });
+  });
 
   // API Routes
   app.get('/api/segments', (req, res) => {

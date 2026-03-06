@@ -1,16 +1,15 @@
-import { GoogleGenAI, Modality, Type, ThinkingLevel } from "@google/genai";
-import { API_KEY, MODELS } from "../constants";
+import { GoogleGenAI, Modality } from "@google/genai";
+import { getApiKey, MODELS } from "../constants";
 
-if (!API_KEY) {
-  console.error("GEMINI_API_KEY is missing.");
-}
-
-const ai = new GoogleGenAI({ apiKey: API_KEY });
+const getAI = async () => {
+  const apiKey = await getApiKey();
+  return new GoogleGenAI({ apiKey });
+};
 
 // 1. Analyze Image (Real API with Mock Fallback)
 export const analyzeWaterImage = async (base64Image: string, mimeType: string = 'image/jpeg') => {
-  if (!API_KEY) throw new Error("API Key not configured");
   try {
+    const ai = await getAI();
     const response = await ai.models.generateContent({
       model: MODELS.IMAGE_ANALYSIS,
       contents: [{
@@ -47,8 +46,7 @@ export const analyzeWaterImage = async (base64Image: string, mimeType: string = 
     return JSON.parse(jsonStr);
   } catch (error) {
     console.error("Analysis failed, using mock fallback:", error);
-    // Mock Fallback
-    const score = Math.floor(Math.random() * 40) + 40; // 40-80
+    const score = Math.floor(Math.random() * 40) + 40;
     const levels = ["Low", "Moderate", "High"];
     const level = levels[Math.floor(Math.random() * levels.length)];
     const isCloudy = Math.random() > 0.5;
@@ -67,8 +65,8 @@ export const analyzeWaterImage = async (base64Image: string, mimeType: string = 
 
 // 2. Chat (Real API with Mock Fallback)
 export const chatNormal = async (history: {role: string, parts: {text: string}[]}[], message: string) => {
-    if (!API_KEY) throw new Error("API Key not configured");
     try {
+        const ai = await getAI();
         const chat = ai.chats.create({
             model: MODELS.CHAT,
             history: history,
@@ -104,8 +102,8 @@ Recommend filters with Indian rupee prices. Mention free govt testing (CGWB, PHC
 
 // 3. Search Grounding (Real API with Mock Fallback)
 export const searchWaterNews = async (query: string) => {
-    if (!API_KEY) throw new Error("API Key not configured");
     try {
+        const ai = await getAI();
         const response = await ai.models.generateContent({
             model: MODELS.SEARCH,
             contents: `Find the latest news and updates regarding: ${query}. Summarize the key points relevant to water quality and environmental impact.`,
@@ -129,8 +127,8 @@ export const searchWaterNews = async (query: string) => {
 
 // 4. Maps Grounding (Real API with Mock Fallback)
 export const findNearbyStations = async (lat: number, lng: number) => {
-    if (!API_KEY) throw new Error("API Key not configured");
     try {
+        const ai = await getAI();
         const response = await ai.models.generateContent({
             model: MODELS.MAPS,
             contents: "Find water quality monitoring stations, river segments, or environmental offices near this location.",
@@ -166,8 +164,8 @@ export const findNearbyStations = async (lat: number, lng: number) => {
 
 // 5. Text to Speech (Real API)
 export const generateSpeech = async (text: string) => {
-    if (!API_KEY) throw new Error("API Key not configured");
     try {
+        const ai = await getAI();
         const response = await ai.models.generateContent({
             model: MODELS.TTS,
             contents: [{ parts: [{ text }] }],
@@ -191,8 +189,8 @@ export const generateSpeech = async (text: string) => {
 
 // 6. Fast Response (Real API)
 export const getQuickStat = async (dataContext: string) => {
-    if (!API_KEY) return "Status update unavailable (API Key missing).";
     try {
+        const ai = await getAI();
         const response = await ai.models.generateContent({
             model: MODELS.FAST,
             contents: `Given this data context: ${dataContext}. Provide a 1-sentence quick summary of the water health status.`,
@@ -205,8 +203,8 @@ export const getQuickStat = async (dataContext: string) => {
 
 // 7. Audio Transcription (Real API)
 export const transcribeAudio = async (base64Audio: string, mimeType: string = 'audio/wav') => {
-    if (!API_KEY) throw new Error("API Key not configured");
     try {
+        const ai = await getAI();
         const response = await ai.models.generateContent({
             model: MODELS.TRANSCRIPTION,
             contents: [{
@@ -238,7 +236,6 @@ export const playBrowserTTS = (text: string, onStart?: () => void, onEnd?: () =>
         return;
     }
 
-    // Cancel any ongoing speech
     window.speechSynthesis.cancel();
 
     const speak = () => {
@@ -247,7 +244,6 @@ export const playBrowserTTS = (text: string, onStart?: () => void, onEnd?: () =>
         utterance.rate = 1.0;
         utterance.pitch = 1.0;
 
-        // Try to select a better voice
         const voices = window.speechSynthesis.getVoices();
         const preferredVoice = voices.find(v => v.name.includes('Google US English')) || 
                                voices.find(v => v.name.includes('Samantha')) ||
@@ -255,14 +251,8 @@ export const playBrowserTTS = (text: string, onStart?: () => void, onEnd?: () =>
         
         if (preferredVoice) utterance.voice = preferredVoice;
 
-        utterance.onstart = () => {
-            if (onStart) onStart();
-        };
-
-        utterance.onend = () => {
-            if (onEnd) onEnd();
-        };
-
+        utterance.onstart = () => { if (onStart) onStart(); };
+        utterance.onend = () => { if (onEnd) onEnd(); };
         utterance.onerror = (e) => {
             console.error("TTS Error:", e);
             if (onEnd) onEnd();

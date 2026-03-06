@@ -1,4 +1,15 @@
-export const API_KEY = process.env.GEMINI_API_KEY;
+let _apiKey: string | undefined;
+
+export const getApiKey = async (): Promise<string> => {
+  if (_apiKey) return _apiKey;
+  const res = await fetch('/api/config');
+  if (!res.ok) throw new Error('Failed to fetch API config from server');
+  const data = await res.json();
+  _apiKey = data.apiKey;
+  return _apiKey as string;
+};
+
+export const API_KEY = undefined;
 
 export const MODELS = {
     IMAGE_ANALYSIS: 'gemini-3.1-flash-preview',
