@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, LayoutGrid, Activity, Map, FileText, Moon, Sun, Droplets, Clock, Lightbulb } from 'lucide-react';
+import { Bell, LayoutGrid, Activity, Map, FileText, Moon, Sun, Droplets, Clock, Lightbulb, Calculator, HelpCircle, MapPin, Share2 } from 'lucide-react';
 import { TRANSLATIONS } from '../constants';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -26,6 +26,20 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, languag
   const [currentTip, setCurrentTip] = useState(0);
   const [isRipple, setIsRipple] = useState(false);
 
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "JalDrishti AI",
+          text: "Check your water quality for free with India's smartest water assistant!",
+          url: window.location.href
+        });
+      } catch (err) {
+        console.log('Share failed:', err);
+      }
+    }
+  };
+
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
     const tipTimer = setInterval(() => {
@@ -47,6 +61,9 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, languag
       { id: 'home', label: t.home, icon: LayoutGrid },
       { id: 'analyze', label: t.analyze, icon: Activity },
       { id: 'intel', label: t.intel, icon: FileText },
+      { id: 'map', label: t.map, icon: MapPin },
+      { id: 'tools', label: t.tools, icon: Calculator },
+      { id: 'faq', label: t.faq, icon: HelpCircle },
       { id: 'admin', label: t.admin, icon: Map },
   ];
 
@@ -106,11 +123,26 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, languag
 
                 {/* Right Actions */}
                 <div className="flex items-center gap-4">
+                    {/* AI Enhanced Badge */}
+                    <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/50">
+                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                        <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">AI Enhanced</span>
+                    </div>
+
                     {/* Live Clock */}
                     <div className={`hidden lg:flex items-center gap-1.5 text-xs font-mono px-3 py-1.5 rounded-full border ${darkMode ? 'bg-slate-800 border-slate-700 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-600'}`}>
                         <Clock size={14} className="text-[#1CA7A6]" />
                         <span>{istTime} IST</span>
                     </div>
+
+                    {/* Share Button */}
+                    <button 
+                        onClick={handleShare}
+                        className={`p-2 rounded-full transition-colors ${darkMode ? 'text-slate-400 hover:text-white hover:bg-white/10' : 'text-slate-400 hover:text-slate-900 hover:bg-slate-100'}`}
+                        aria-label="Share JalDrishti AI"
+                    >
+                        <Share2 size={20} />
+                    </button>
 
                     <button 
                         onClick={toggleDarkMode}

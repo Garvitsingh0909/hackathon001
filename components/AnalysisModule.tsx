@@ -493,6 +493,26 @@ export const AnalysisModule = () => {
                             <MetricCard label="pH Level" value={result.ph?.toString() || "N/A"} />
                             <MetricCard label="Dissolved O2" value={`${result.dissolvedOxygen} mg/L`} />
                          </div>
+
+                         {/* Unsafe Result Alert */}
+                         {result.overallScore < 50 && (
+                             <motion.div 
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="mt-4 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                             >
+                                 <div className="flex items-center gap-3">
+                                     <AlertCircle className="text-red-600 dark:text-red-400 flex-shrink-0" size={24} />
+                                     <div>
+                                         <p className="text-red-800 dark:text-red-300 font-bold text-sm">Critical Water Quality Detected</p>
+                                         <p className="text-red-600 dark:text-red-400 text-xs mt-0.5">This water is unsafe for consumption without heavy filtration.</p>
+                                     </div>
+                                 </div>
+                                 <button className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl transition-colors whitespace-nowrap shadow-sm">
+                                     What to do now
+                                 </button>
+                             </motion.div>
+                         )}
                     </motion.div>
                   )}
                   </AnimatePresence>

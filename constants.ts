@@ -16,7 +16,10 @@ export const TRANSLATIONS = {
             home: 'Home',
             analyze: 'Analysis',
             intel: 'Intelligence',
-            admin: 'Admin Map'
+            admin: 'Admin Map',
+            map: 'India Map',
+            tools: 'Tools',
+            faq: 'FAQ'
         },
         hero: {
             label: 'Government AI Initiative',
@@ -45,7 +48,10 @@ export const TRANSLATIONS = {
             home: 'होम',
             analyze: 'विश्लेषण',
             intel: 'इंटेलीजेंस',
-            admin: 'प्रशासन मानचित्र'
+            admin: 'प्रशासन मानचित्र',
+            map: 'भारत का नक्शा',
+            tools: 'उपकरण',
+            faq: 'सामान्य प्रश्न'
         },
         hero: {
             label: 'सरकारी एआई पहल',

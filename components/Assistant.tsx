@@ -7,6 +7,8 @@ import { motion, AnimatePresence } from 'motion/react';
 interface AssistantProps {
     isOpen: boolean;
     onClose: () => void;
+    initialMessage?: string;
+    onNavigate?: (tab: string) => void;
 }
 
 const QUICK_CARDS = [
@@ -16,7 +18,7 @@ const QUICK_CARDS = [
     { icon: <Info size={18} className="text-blue-500" />, text: "High TDS problem", query: "My water TDS is very high. What are the health effects and how to fix it?" }
 ];
 
-export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose }) => {
+export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose, initialMessage, onNavigate }) => {
     const [messages, setMessages] = useState<ChatMessage[]>([
         {
             id: '1',
@@ -31,9 +33,21 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose }) => {
     const [audioEnabled, setAudioEnabled] = useState(true);
     const [showEmojis, setShowEmojis] = useState(false);
     const [isSent, setIsSent] = useState(false);
+    const [voiceHistory, setVoiceHistory] = useState<string[]>([]);
+    const [selectedLang, setSelectedLang] = useState('en-IN');
+    const [noiseLevel, setNoiseLevel] = useState(0);
+    const [showArsenicAlert, setShowArsenicAlert] = useState(false);
     
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const audioContextRef = useRef<AudioContext | null>(null);
+    const analyserRef = useRef<AnalyserNode | null>(null);
+    const animationFrameRef = useRef<number | null>(null);
+
+    useEffect(() => {
+        if (initialMessage && isOpen) {
+            handleSend(initialMessage);
+        }
+    }, [initialMessage, isOpen]);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -48,6 +62,9 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose }) => {
             if (audioContextRef.current) {
                 audioContextRef.current.close();
             }
+            if (animationFrameRef.current) {
+                cancelAnimationFrame(animationFrameRef.current);
+            }
             window.speechSynthesis.cancel();
         };
     }, []);
@@ -56,12 +73,29 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose }) => {
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
 
+    const updateNoiseLevel = () => {
+        if (!analyserRef.current) return;
+        const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
+        analyserRef.current.getByteFrequencyData(dataArray);
+        const average = dataArray.reduce((acc, val) => acc + val, 0) / dataArray.length;
+        setNoiseLevel(average);
+        animationFrameRef.current = requestAnimationFrame(updateNoiseLevel);
+    };
+
     const startRecording = async () => {
         if (navigator.vibrate) navigator.vibrate(50); // Haptic feedback
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             mediaRecorderRef.current = new MediaRecorder(stream);
             audioChunksRef.current = [];
+
+            // Setup audio context for noise level
+            const actx = new (window.AudioContext || (window as any).webkitAudioContext)();
+            const analyser = actx.createAnalyser();
+            const source = actx.createMediaStreamSource(stream);
+            source.connect(analyser);
+            analyserRef.current = analyser;
+            updateNoiseLevel();
 
             mediaRecorderRef.current.ondataavailable = (event) => {
                 if (event.data.size > 0) {
@@ -70,6 +104,7 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose }) => {
             };
 
             mediaRecorderRef.current.onstop = async () => {
+                if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
                 const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
                 const reader = new FileReader();
                 reader.readAsDataURL(audioBlob);
@@ -79,8 +114,28 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose }) => {
                         setIsLoading(true);
                         const transcription = await transcribeAudio(base64Audio);
                         if (transcription) {
-                            setInput(transcription);
-                            handleSend(transcription);
+                            const cleanText = transcription.trim();
+                            setVoiceHistory(prev => [cleanText, ...prev].slice(0, 5));
+                            
+                            // Voice Commands
+                            const lowerText = cleanText.toLowerCase();
+                            if (lowerText.includes("analyze my water") && onNavigate) {
+                                onNavigate('analyze');
+                                onClose();
+                                return;
+                            }
+                            if (lowerText.includes("show india map") && onNavigate) {
+                                onNavigate('map');
+                                onClose();
+                                return;
+                            }
+                            if (lowerText.includes("clear chat")) {
+                                setMessages([]);
+                                return;
+                            }
+                            
+                            setInput(cleanText);
+                            handleSend(cleanText);
                         }
                     } catch (error) {
                         console.error("Transcription error:", error);
@@ -166,6 +221,11 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose }) => {
     const handleSend = async (overrideInput?: string) => {
         const textToSend = overrideInput || input;
         if (!textToSend.trim() || isLoading) return;
+
+        const lowerText = textToSend.toLowerCase();
+        if (lowerText.includes('bihar') || lowerText.includes('west bengal') || lowerText.includes('jharkhand') || lowerText.includes('assam')) {
+            setShowArsenicAlert(true);
+        }
 
         setIsSent(true);
         setTimeout(() => setIsSent(false), 1500);
@@ -358,23 +418,46 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose }) => {
                             className="absolute bottom-24 left-4 right-4 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-6 z-10"
                         >
                             <div className="flex flex-col items-center justify-center gap-4">
-                                <div className="flex items-center gap-2 text-sm font-bold text-slate-500 dark:text-slate-400">
-                                    <span className="text-lg">🇮🇳</span> EN / HI Supported
+                                <div className="flex flex-wrap justify-center gap-2 mb-2">
+                                    {[{id: 'en-IN', label: 'English'}, {id: 'hi-IN', label: 'Hindi'}, {id: 'bn-IN', label: 'Bengali'}, {id: 'te-IN', label: 'Telugu'}, {id: 'ta-IN', label: 'Tamil'}, {id: 'mr-IN', label: 'Marathi'}].map(lang => (
+                                        <button 
+                                            key={lang.id}
+                                            onClick={() => setSelectedLang(lang.id)}
+                                            className={`px-3 py-1 text-xs font-bold rounded-full border transition-colors ${selectedLang === lang.id ? 'bg-blue-100 border-blue-500 text-blue-700 dark:bg-blue-900/50 dark:border-blue-500 dark:text-blue-300' : 'bg-slate-50 border-slate-200 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400'}`}
+                                        >
+                                            {lang.label}
+                                        </button>
+                                    ))}
                                 </div>
                                 <div className="flex items-end gap-1 h-12">
-                                    {[1, 2, 3, 4, 5].map((i) => (
-                                        <motion.div 
-                                            key={i}
-                                            animate={{ height: ['20%', '100%', '20%'] }}
-                                            transition={{ repeat: Infinity, duration: 0.8 + (i * 0.1), ease: "easeInOut" }}
-                                            className="w-2 bg-blue-500 rounded-full"
-                                        />
-                                    ))}
+                                    {[1, 2, 3, 4, 5].map((i) => {
+                                        const height = Math.max(20, Math.min(100, noiseLevel * (i * 0.5)));
+                                        return (
+                                            <motion.div 
+                                                key={i}
+                                                animate={{ height: `${height}%` }}
+                                                transition={{ type: 'tween', duration: 0.1 }}
+                                                className="w-2 bg-blue-500 rounded-full"
+                                            />
+                                        );
+                                    })}
                                 </div>
                                 <p className="text-slate-600 dark:text-slate-300 font-medium">Listening...</p>
                                 <div className="text-xs text-slate-400 dark:text-slate-500 text-center">
-                                    Tips: Speak clearly • Avoid background noise • Say "T D S"
+                                    Commands: "Analyze my water" • "Show India map" • "Clear chat"
                                 </div>
+                                {voiceHistory.length > 0 && (
+                                    <div className="mt-4 w-full">
+                                        <p className="text-xs font-bold text-slate-400 mb-2 text-center">Recent Voice Inputs</p>
+                                        <div className="flex flex-wrap gap-2 justify-center">
+                                            {voiceHistory.map((h, i) => (
+                                                <button key={i} onClick={() => { stopRecording(); handleSend(h); }} className="px-3 py-1 bg-slate-100 dark:bg-slate-700 rounded-full text-xs text-slate-600 dark:text-slate-300 truncate max-w-[150px]">
+                                                    "{h}"
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </motion.div>
                     )}
