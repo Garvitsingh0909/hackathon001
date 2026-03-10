@@ -1,6 +1,3 @@
-export const API_KEY = process.env.GEMINI_API_KEY;
-export const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-
 export const MODELS = {
     IMAGE_ANALYSIS: 'gemini-3-flash-preview',
     CHAT: 'gemini-3-flash-preview', 

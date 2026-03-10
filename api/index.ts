@@ -1,5 +1,6 @@
 import express from 'express';
 import { getPrisma } from '../server/prisma.js';
+import geminiRouter from './gemini.js';
 
 const app = express();
 app.use(express.json());
@@ -53,6 +54,9 @@ let REPORTS_DB = [
         status: 'Action Taken'
     }
 ];
+
+// Gemini AI Routes (server-side, API key never exposed to client)
+app.use(geminiRouter);
 
 // API Routes
 app.get('/api/segments', async (req, res) => {
