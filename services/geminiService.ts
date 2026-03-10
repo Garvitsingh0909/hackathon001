@@ -1,5 +1,5 @@
 import { GoogleGenAI, Modality, Type, ThinkingLevel } from "@google/genai";
-import { API_KEY, OPENROUTER_API_KEY, MODELS } from "../constants";
+import { API_KEY, MODELS } from "../constants";
 
 if (!API_KEY) {
   console.error("GEMINI_API_KEY is missing.");
@@ -75,7 +75,7 @@ Know India's regional water risks: arsenic (Bihar/Bengal), fluoride (Rajasthan/A
 Recommend filters with Indian rupee prices. Mention free govt testing (CGWB, PHC, Jal Jeevan Mission).`;
 
     // Try OpenRouter if key is available
-    if (OPENROUTER_API_KEY) {
+    if (process.env.OPENROUTER_API_KEY) {
         try {
             // Convert Gemini history format to OpenRouter format
             const openRouterMessages = [
@@ -94,7 +94,7 @@ Recommend filters with Indian rupee prices. Mention free govt testing (CGWB, PHC
             const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                 method: "POST",
                 headers: {
-                    "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+                    "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({

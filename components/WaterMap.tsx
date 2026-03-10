@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { MapPin, AlertTriangle, ShieldAlert, ShieldCheck, Info, MessageSquare } from 'lucide-react';
-import { TRANSLATIONS } from '../constants';
 
 const stateRisks: Record<string, { risk: 'critical' | 'high' | 'medium' | 'low', issues: string[], color: string }> = {
   "West Bengal":    { risk: "critical", issues: ["Arsenic", "Iron"], color: "#dc2626" },
@@ -27,8 +26,7 @@ const stateRisks: Record<string, { risk: 'critical' | 'high' | 'medium' | 'low',
   "Delhi":          { risk: "medium",   issues: ["TDS", "Heavy metals"], color: "#d97706" },
 };
 
-export const WaterMap = ({ onGetAdvice, language = 'en' }: { onGetAdvice: (state: string) => void, language?: 'en' | 'hi' }) => {
-  const t = TRANSLATIONS[language].map;
+export const WaterMap = ({ onGetAdvice }: { onGetAdvice: (state: string) => void }) => {
   const [filter, setFilter] = useState<'all' | 'critical' | 'high' | 'medium' | 'low'>('all');
 
   const filteredStates = Object.entries(stateRisks).filter(([_, data]) => {
@@ -71,19 +69,19 @@ export const WaterMap = ({ onGetAdvice, language = 'en' }: { onGetAdvice: (state
                 <MapPin size={28} />
             </div>
             <div>
-                <h2 className="text-3xl font-bold text-slate-900 dark:text-white font-display">{t.title}</h2>
-                <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{t.subtitle}</p>
+                <h2 className="text-3xl font-bold text-slate-900 dark:text-white font-display">India Water Risk Map</h2>
+                <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Regional water quality concerns and contaminants</p>
             </div>
           </div>
           
           {/* Legend & Filters */}
           <div className="mt-8 flex flex-col md:flex-row gap-4 justify-between items-center">
             <div className="flex flex-wrap items-center gap-2 bg-slate-100/50 dark:bg-slate-800/50 backdrop-blur-md p-1.5 rounded-full shadow-inner border border-slate-200/50 dark:border-slate-700/50">
-              <FilterBtn label={t.all} active={filter === 'all'} onClick={() => setFilter('all')} color="from-slate-400 to-slate-500" />
-              <FilterBtn label={t.critical} active={filter === 'critical'} onClick={() => setFilter('critical')} color="from-red-500 to-rose-600" />
-              <FilterBtn label={t.high} active={filter === 'high'} onClick={() => setFilter('high')} color="from-orange-500 to-amber-600" />
-              <FilterBtn label={t.medium} active={filter === 'medium'} onClick={() => setFilter('medium')} color="from-amber-400 to-yellow-500" />
-              <FilterBtn label={t.low} active={filter === 'low'} onClick={() => setFilter('low')} color="from-emerald-400 to-green-500" />
+              <FilterBtn label="All" active={filter === 'all'} onClick={() => setFilter('all')} color="from-slate-400 to-slate-500" />
+              <FilterBtn label="Critical" active={filter === 'critical'} onClick={() => setFilter('critical')} color="from-red-500 to-rose-600" />
+              <FilterBtn label="High" active={filter === 'high'} onClick={() => setFilter('high')} color="from-orange-500 to-amber-600" />
+              <FilterBtn label="Medium" active={filter === 'medium'} onClick={() => setFilter('medium')} color="from-amber-400 to-yellow-500" />
+              <FilterBtn label="Low" active={filter === 'low'} onClick={() => setFilter('low')} color="from-emerald-400 to-green-500" />
             </div>
           </div>
         </div>
@@ -109,7 +107,7 @@ export const WaterMap = ({ onGetAdvice, language = 'en' }: { onGetAdvice: (state
                   </div>
                   
                   <div className="mb-6">
-                    <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">{t.keyIssues}</p>
+                    <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Key Issues</p>
                     <div className="flex flex-wrap gap-2">
                       {data.issues.map(issue => (
                         <span key={issue} className="px-3 py-1 bg-white/60 dark:bg-black/30 rounded-full text-sm font-medium text-slate-700 dark:text-slate-300 border border-slate-200/50 dark:border-slate-700/50">
@@ -124,7 +122,7 @@ export const WaterMap = ({ onGetAdvice, language = 'en' }: { onGetAdvice: (state
                   onClick={() => onGetAdvice(state)}
                   className="w-full py-3 mt-auto bg-gov-card dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-slate-700 text-gov-navy dark:text-blue-400 font-bold rounded-xl transition-colors border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-2 shadow-subtle hover:shadow-subtle-hover"
                 >
-                  <MessageSquare size={18} /> {t.getAdvice}
+                  <MessageSquare size={18} /> Get Advice
                 </button>
               </motion.div>
             ))}

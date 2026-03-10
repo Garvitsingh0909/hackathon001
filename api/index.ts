@@ -1,5 +1,16 @@
-import { NextResponse } from 'next/server';
-import { getPrisma } from '../../../server/prisma';
+import express from 'express';
+import { getPrisma } from '../server/prisma.js';
+
+const app = express();
+app.use(express.json());
+
+// Mock Data
+const MOCK_SEGMENTS = [
+    { id: 'seg-1', name: 'Tamsa Headwaters (Mau)', status: 'Safe', lastUpdate: '10 mins ago', coordinates: { lat: 25.9427, lng: 83.5539 }, paramDo: 6.8, paramPh: 7.2 },
+    { id: 'seg-2', name: 'Industrial Zone A', status: 'Critical', lastUpdate: '2 mins ago', coordinates: { lat: 25.9500, lng: 83.5600 }, paramDo: 3.2, paramPh: 8.4 },
+    { id: 'seg-3', name: 'Agricultural Runoff Point', status: 'Warning', lastUpdate: '1 hour ago', coordinates: { lat: 25.9300, lng: 83.5400 }, paramDo: 5.1, paramPh: 7.8 },
+    { id: 'seg-4', name: 'City Center Ghat', status: 'Critical', lastUpdate: 'Just now', coordinates: { lat: 25.9450, lng: 83.5500 }, paramDo: 2.9, paramPh: 8.1 },
+];
 
 let REPORTS_DB = [
     {
@@ -43,24 +54,49 @@ let REPORTS_DB = [
     }
 ];
 
-export async function GET() {
+// API Routes
+app.get('/api/segments', async (req, res) => {
+    try {
+        const prisma = getPrisma();
+        const segments = await prisma.sensorData.findMany();
+        if (segments.length > 0) {
+            res.json(segments);
+            return;
+        }
+    } catch (e) {
+        // Fallback to mock data if DB not configured
+    }
+    res.json(MOCK_SEGMENTS);
+});
+
+app.get('/api/reports', async (req, res) => {
     try {
         const prisma = getPrisma();
         const reports = await prisma.waterReport.findMany({
             orderBy: { timestamp: 'desc' }
         });
         if (reports.length > 0) {
-            return NextResponse.json(reports);
+            res.json(reports);
+            return;
         }
     } catch (e) {
         // Fallback to mock data if DB not configured
     }
     const sortedReports = [...REPORTS_DB].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-    return NextResponse.json(sortedReports);
-}
+    res.json(sortedReports);
+});
 
-export async function POST(req: Request) {
-    const report = await req.json();
+app.get('/api/trends', (req, res) => {
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const data = days.map(day => ({
+        name: day,
+        value: Math.floor(Math.random() * (75 - 45 + 1) + 45)
+    }));
+    res.json(data);
+});
+
+app.post('/api/reports', async (req, res) => {
+    const report = req.body;
     try {
         const prisma = getPrisma();
         const newReport = await prisma.waterReport.create({
@@ -82,7 +118,8 @@ export async function POST(req: Request) {
                 phosphorus: report.phosphorus,
             }
         });
-        return NextResponse.json(newReport);
+        res.json(newReport);
+        return;
     } catch (e) {
         // Fallback to mock data if DB not configured
     }
@@ -95,5 +132,31 @@ export async function POST(req: Request) {
     };
     REPORTS_DB.unshift(newReport);
 
-    return NextResponse.json(newReport);
-}
+    // Update segment status logic
+    const segmentIndex = MOCK_SEGMENTS.findIndex(s => s.name === report.locationName);
+    if (segmentIndex >= 0) {
+        if (report.overallScore < 50) MOCK_SEGMENTS[segmentIndex].status = 'Critical';
+        else if (report.overallScore < 75) MOCK_SEGMENTS[segmentIndex].status = 'Warning';
+        else MOCK_SEGMENTS[segmentIndex].status = 'Safe';
+    }
+
+    res.json(newReport);
+});
+
+app.post('/api/chat', async (req, res) => {
+    const { query, response } = req.body;
+    try {
+        const prisma = getPrisma();
+        await prisma.userQuery.create({
+            data: {
+                query,
+                response
+            }
+        });
+        res.json({ success: true });
+    } catch (e) {
+        res.json({ success: false, error: 'Database not configured' });
+    }
+});
+
+export default app;

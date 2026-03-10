@@ -6,16 +6,13 @@ import { WaterQualityReport } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 
-import { TRANSLATIONS } from '../constants';
-
 const FAQ_ITEMS = [
     { q: "How accurate is this visual analysis?", a: "This AI analysis provides a preliminary assessment based on visual indicators like color, turbidity, and visible algae. It is not a substitute for laboratory testing." },
     { q: "What does the Overall Score mean?", a: "The score (0-100) represents the estimated visual quality of the water. 80-100 is excellent, 50-79 is moderate, and below 50 indicates visible contamination." },
     { q: "Can it detect invisible chemicals?", a: "No. Visual analysis cannot detect dissolved chemicals, heavy metals, or microscopic pathogens. Always use proper testing kits for drinking water." }
 ];
 
-export const AnalysisModule = ({ language = 'en' }: { language?: 'en' | 'hi' }) => {
-  const t = TRANSLATIONS[language].analysis;
+export const AnalysisModule = () => {
   const [image, setImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -262,12 +259,12 @@ export const AnalysisModule = ({ language = 'en' }: { language?: 'en' | 'hi' }) 
                     <Camera size={28} />
                 </div>
                 <div>
-                    <h2 className="text-3xl font-bold text-slate-900 dark:text-white font-display">{t.title}</h2>
-                    <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{t.subtitle}</p>
+                    <h2 className="text-3xl font-bold text-slate-900 dark:text-white font-display">AI Sample Analysis</h2>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Gemini 2.5 Flash Vision Protocol</p>
                 </div>
               </div>
               <p className="text-slate-600 dark:text-slate-300 max-w-xl leading-relaxed print:hidden">
-                {t.desc}
+                Upload a high-resolution image of the water surface. Our AI model will analyze eutrophication levels, turbidity, and potential contaminants instantly.
               </p>
           </div>
           {image && (
@@ -278,13 +275,13 @@ export const AnalysisModule = ({ language = 'en' }: { language?: 'en' | 'hi' }) 
                               onClick={handlePrint}
                               className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-slate-200 dark:border-slate-700"
                           >
-                              <Printer size={16} /> {t.print}
+                              <Printer size={16} /> Print
                           </button>
                           <button 
                               onClick={handleShare}
                               className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors border border-blue-200 dark:border-blue-800"
                           >
-                              <Share2 size={16} /> {t.share}
+                              <Share2 size={16} /> Share
                           </button>
                       </>
                   )}
@@ -292,7 +289,7 @@ export const AnalysisModule = ({ language = 'en' }: { language?: 'en' | 'hi' }) 
                       onClick={resetAll}
                       className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                   >
-                      <RotateCcw size={16} /> {t.reset}
+                      <RotateCcw size={16} /> Reset
                   </button>
               </div>
           )}
@@ -314,8 +311,8 @@ export const AnalysisModule = ({ language = 'en' }: { language?: 'en' | 'hi' }) 
                 >
                     <Upload className="w-8 h-8" />
                 </motion.div>
-                <p className="mb-2 text-lg text-slate-700 dark:text-slate-200 font-semibold font-display">{t.clickUpload}</p>
-                <p className="text-sm text-slate-400 dark:text-slate-500">{t.uploadHint}</p>
+                <p className="mb-2 text-lg text-slate-700 dark:text-slate-200 font-semibold font-display">Click to upload photo</p>
+                <p className="text-sm text-slate-400 dark:text-slate-500">SVG, PNG, JPG or GIF (MAX. 800x400px)</p>
               </div>
               <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
             </motion.label>
@@ -386,7 +383,7 @@ export const AnalysisModule = ({ language = 'en' }: { language?: 'en' | 'hi' }) 
                       <X size={18} />
                     </button>
                     <div className="absolute bottom-4 left-4 text-white print:hidden">
-                        <p className="text-xs font-bold uppercase tracking-wider opacity-80">{t.sourceImage}</p>
+                        <p className="text-xs font-bold uppercase tracking-wider opacity-80">Source Image</p>
                     </div>
                   </motion.div>
               </div>
@@ -402,9 +399,9 @@ export const AnalysisModule = ({ language = 'en' }: { language?: 'en' | 'hi' }) 
                         className="space-y-6 print:hidden"
                     >
                         <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-3xl border border-blue-100 dark:border-blue-800/50">
-                            <h3 className="font-bold text-gov-navy dark:text-blue-100 mb-2 font-display">{t.readyTitle}</h3>
+                            <h3 className="font-bold text-gov-navy dark:text-blue-100 mb-2 font-display">Ready for Analysis</h3>
                             <p className="text-slate-600 dark:text-blue-300/80 text-sm mb-6">
-                                {t.readyDesc}
+                                Image loaded successfully. The system is ready to run the diagnostic protocol.
                             </p>
                             <motion.button
                                 whileHover={{ scale: 1.02 }}
@@ -416,7 +413,7 @@ export const AnalysisModule = ({ language = 'en' }: { language?: 'en' | 'hi' }) 
                             {loading ? (
                                 <>
                                 <div className="absolute inset-0 bg-blue-500/20 animate-pulse"></div>
-                                <Loader2 className="animate-spin relative z-10" /> <span className="relative z-10">{t.processing}</span>
+                                <Loader2 className="animate-spin relative z-10" /> <span className="relative z-10">Processing...</span>
                                 </>
                             ) : success ? (
                                 <motion.div 
@@ -425,11 +422,11 @@ export const AnalysisModule = ({ language = 'en' }: { language?: 'en' | 'hi' }) 
                                     className="flex items-center gap-2"
                                 >
                                     <CheckCircle size={24} className="text-white" />
-                                    <span>{t.complete}</span>
+                                    <span>Analysis Complete</span>
                                 </motion.div>
                             ) : (
                                 <>
-                                <CheckCircle size={20} /> {t.runDiag}
+                                <CheckCircle size={20} /> Run Diagnostics
                                 </>
                             )}
                             </motion.button>
@@ -453,7 +450,7 @@ export const AnalysisModule = ({ language = 'en' }: { language?: 'en' | 'hi' }) 
                                         result.overallScore >= 80 ? 'text-emerald-600 dark:text-emerald-400' :
                                         result.overallScore >= 50 ? 'text-amber-600 dark:text-amber-400' :
                                         'text-red-600 dark:text-red-400'
-                                    }`}>{t.overallScore}</span>
+                                    }`}>Overall Score</span>
                                 </div>
                                 <motion.button 
                                     whileHover={{ scale: 1.1 }}
@@ -492,21 +489,21 @@ export const AnalysisModule = ({ language = 'en' }: { language?: 'en' | 'hi' }) 
                                 </div>
                                 
                                 <div className="flex-1">
-                                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.status}</p>
+                                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Status:</p>
                                     <p className={`text-lg font-bold ${
                                         result.overallScore >= 80 ? 'text-emerald-700 dark:text-emerald-400' :
                                         result.overallScore >= 50 ? 'text-amber-700 dark:text-amber-400' :
                                         'text-red-700 dark:text-red-400'
                                     }`}>
-                                        {result.overallScore >= 80 ? t.goodQuality : result.overallScore >= 50 ? t.moderateConcern : t.highRisk}
+                                        {result.overallScore >= 80 ? 'Good Quality' : result.overallScore >= 50 ? 'Moderate Concern' : 'High Risk'}
                                     </p>
                                 </div>
                             </div>
                          </div>
                          
                          <div className="grid grid-cols-2 gap-3">
-                            <MetricCard label={t.algaeLevel} value={result.algaeLevel} />
-                            <MetricCard label={t.turbidity} value={result.turbidity} />
+                            <MetricCard label="Algae Level" value={result.algaeLevel} />
+                            <MetricCard label="Turbidity" value={result.turbidity} />
                          </div>
 
                          {/* Unsafe Result Alert */}
@@ -519,12 +516,12 @@ export const AnalysisModule = ({ language = 'en' }: { language?: 'en' | 'hi' }) 
                                  <div className="flex items-center gap-3">
                                      <AlertCircle className="text-red-600 dark:text-red-400 flex-shrink-0" size={24} />
                                      <div>
-                                         <p className="text-red-800 dark:text-red-300 font-bold text-sm">{t.criticalAlert}</p>
-                                         <p className="text-red-600 dark:text-red-400 text-xs mt-0.5">{t.criticalDesc}</p>
+                                         <p className="text-red-800 dark:text-red-300 font-bold text-sm">Critical Water Quality Detected</p>
+                                         <p className="text-red-600 dark:text-red-400 text-xs mt-0.5">This water is unsafe for consumption without heavy filtration.</p>
                                      </div>
                                  </div>
                                  <button className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl transition-colors whitespace-nowrap shadow-sm">
-                                     {t.whatToDo}
+                                     What to do now
                                  </button>
                              </motion.div>
                          )}
@@ -547,7 +544,7 @@ export const AnalysisModule = ({ language = 'en' }: { language?: 'en' | 'hi' }) 
                     <div className="space-y-6">
                         <div className="space-y-4">
                             <h4 className="font-bold text-slate-900 dark:text-white flex items-center gap-2 font-display">
-                                <Search size={18} className="text-blue-500"/> {t.visualObs}
+                                <Search size={18} className="text-blue-500"/> Visual Observation
                             </h4>
                             <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-300 leading-relaxed text-sm">
                                 {result.details}
@@ -555,7 +552,7 @@ export const AnalysisModule = ({ language = 'en' }: { language?: 'en' | 'hi' }) 
                         </div>
                         <div className="space-y-4">
                             <h4 className="font-bold text-slate-900 dark:text-white flex items-center gap-2 font-display">
-                                <AlertCircle size={18} className="text-amber-500"/> {t.recommendation}
+                                <AlertCircle size={18} className="text-amber-500"/> Recommendation
                             </h4>
                              <div className="bg-amber-50 dark:bg-amber-900/20 p-6 rounded-2xl border border-amber-100 dark:border-amber-800/50 text-amber-900 dark:text-amber-200 leading-relaxed text-sm">
                                 {result.recommendation}
@@ -566,7 +563,7 @@ export const AnalysisModule = ({ language = 'en' }: { language?: 'en' | 'hi' }) 
                     {/* Expandable FAQ */}
                     <div className="space-y-4 print:hidden">
                         <h4 className="font-bold text-slate-900 dark:text-white flex items-center gap-2 font-display">
-                            <Info size={18} className="text-blue-500"/> {t.faqTitle}
+                            <Info size={18} className="text-blue-500"/> Frequently Asked Questions
                         </h4>
                         <div className="space-y-3">
                             {FAQ_ITEMS.map((item, idx) => (

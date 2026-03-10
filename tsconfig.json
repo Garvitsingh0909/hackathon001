@@ -17,30 +17,13 @@
     "isolatedModules": true,
     "moduleDetection": "force",
     "allowJs": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "paths": {
       "@/*": [
         "./*"
       ]
     },
-    "noEmit": true,
-    "strict": false,
-    "resolveJsonModule": true,
-    "esModuleInterop": true,
-    "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ]
-  },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+    "allowImportingTsExtensions": true,
+    "noEmit": true
+  }
 }

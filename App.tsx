@@ -80,9 +80,9 @@ export default function App() {
     switch (activeTab) {
       case 'home': 
         return <Dashboard onChangeTab={setActiveTab} onOpenAssistant={() => setIsAssistantOpen(true)} language={language} />;
-      case 'analyze': return <AnalysisModule language={language} />;
-      case 'intel': return <WaterIntel language={language} />;
-      case 'map': return <WaterMap onGetAdvice={handleAskAI} language={language} />;
+      case 'analyze': return <AnalysisModule />;
+      case 'intel': return <WaterIntel />;
+      case 'map': return <WaterMap onGetAdvice={handleAskAI} />;
       case 'tools': return <WaterTools language={language} />;
       case 'faq': return <WaterFAQ onAskAI={handleAskAI} />;
       case 'admin': return <AdminMap />;
