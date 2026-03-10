@@ -1,18 +1,19 @@
+"use client";
 import React, { useState, useEffect } from 'react';
-import { Tour } from './components/Tour';
-import { Navbar } from './components/Navbar';
-import { Dashboard } from './components/Dashboard';
-import { AnalysisModule } from './components/AnalysisModule';
-import { WaterIntel } from './components/WaterIntel';
-import { AdminMap } from './components/AdminMap';
-import { WaterMap } from './components/WaterMap';
-import { WaterTools } from './components/WaterTools';
-import { WaterFAQ } from './components/WaterFAQ';
-import { Assistant } from './components/Assistant';
-import { Footer } from './components/Footer';
-import { StarterGuide } from './components/StarterGuide';
+import { Tour } from '../components/Tour';
+import { Navbar } from '../components/Navbar';
+import { Dashboard } from '../components/Dashboard';
+import { AnalysisModule } from '../components/AnalysisModule';
+import { WaterIntel } from '../components/WaterIntel';
+import { AdminMap } from '../components/AdminMap';
+import { WaterMap } from '../components/WaterMap';
+import { WaterTools } from '../components/WaterTools';
+import { WaterFAQ } from '../components/WaterFAQ';
+import { Assistant } from '../components/Assistant';
+import { Footer } from '../components/Footer';
+import { StarterGuide } from '../components/StarterGuide';
 import { Activity, Camera, Map as MapIcon, Home, Mic, LayoutDashboard, Calculator, HelpCircle, MapPin, X, ChevronRight } from 'lucide-react';
-import { TRANSLATIONS } from './constants';
+import { TRANSLATIONS } from '../constants';
 import { AnimatePresence, motion } from 'motion/react';
 
 export default function App() {
@@ -80,9 +81,9 @@ export default function App() {
     switch (activeTab) {
       case 'home': 
         return <Dashboard onChangeTab={setActiveTab} onOpenAssistant={() => setIsAssistantOpen(true)} language={language} />;
-      case 'analyze': return <AnalysisModule language={language} />;
-      case 'intel': return <WaterIntel language={language} />;
-      case 'map': return <WaterMap onGetAdvice={handleAskAI} language={language} />;
+      case 'analyze': return <AnalysisModule />;
+      case 'intel': return <WaterIntel />;
+      case 'map': return <WaterMap onGetAdvice={handleAskAI} />;
       case 'tools': return <WaterTools language={language} />;
       case 'faq': return <WaterFAQ onAskAI={handleAskAI} />;
       case 'admin': return <AdminMap />;

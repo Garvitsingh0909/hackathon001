@@ -1,24 +1,14 @@
-let _apiKey: string | undefined;
-
-export const getApiKey = async (): Promise<string> => {
-  if (_apiKey) return _apiKey;
-  const res = await fetch('/api/config');
-  if (!res.ok) throw new Error('Failed to fetch API config from server');
-  const data = await res.json();
-  _apiKey = data.apiKey;
-  return _apiKey as string;
-};
-
-export const API_KEY = undefined;
+export const API_KEY = process.env.GEMINI_API_KEY;
+export const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 
 export const MODELS = {
-    IMAGE_ANALYSIS: 'gemini-3.1-flash-preview',
-    CHAT: 'gemini-3.1-flash-preview', 
-    SEARCH: 'gemini-3.1-flash-preview', 
+    IMAGE_ANALYSIS: 'gemini-3-flash-preview',
+    CHAT: 'gemini-3-flash-preview', 
+    SEARCH: 'gemini-3-flash-preview', 
     MAPS: 'gemini-2.5-flash', 
     TTS: 'gemini-2.5-flash-preview-tts',
-    FAST: 'gemini-3.1-flash-preview',
-    TRANSCRIPTION: 'gemini-3.1-flash-preview',
+    FAST: 'gemini-3-flash-preview',
+    TRANSCRIPTION: 'gemini-3-flash-preview',
 };
 
 export const TRANSLATIONS = {
@@ -52,6 +42,65 @@ export const TRANSLATIONS = {
             recentReports: 'Recent Citizen Reports',
             submitReport: 'Submit Report',
             uploadPhoto: 'Upload photos for AI analysis'
+        },
+        analysis: {
+            title: 'AI Sample Analysis',
+            subtitle: 'Gemini 2.5 Flash Vision Protocol',
+            desc: 'Upload a high-resolution image of the water surface. Our AI model will analyze eutrophication levels, turbidity, and potential contaminants instantly.',
+            print: 'Print',
+            share: 'Share',
+            reset: 'Reset',
+            clickUpload: 'Click to upload photo',
+            uploadHint: 'SVG, PNG, JPG or GIF (MAX. 800x400px)',
+            sourceImage: 'Source Image',
+            readyTitle: 'Ready for Analysis',
+            readyDesc: 'Image loaded successfully. The system is ready to run the diagnostic protocol.',
+            runDiag: 'Run Diagnostics',
+            processing: 'Processing...',
+            complete: 'Analysis Complete',
+            overallScore: 'Overall Score',
+            status: 'Status:',
+            goodQuality: 'Good Quality',
+            moderateConcern: 'Moderate Concern',
+            highRisk: 'High Risk',
+            algaeLevel: 'Algae Level',
+            turbidity: 'Turbidity',
+            criticalAlert: 'Critical Water Quality Detected',
+            criticalDesc: 'This water is unsafe for consumption without heavy filtration.',
+            whatToDo: 'What to do now',
+            visualObs: 'Visual Observation',
+            recommendation: 'Recommendation',
+            faqTitle: 'Frequently Asked Questions'
+        },
+        intel: {
+            latestNews: 'Latest News',
+            nearbyStations: 'Nearby Stations',
+            riskChecker: 'Risk Checker',
+            gathering: 'Gathering intelligence from Tamsa Basin...',
+            groundedSearch: 'Grounded Search',
+            realTimeUpdates: 'Real-time environmental updates for Tamsa River',
+            verifiedSources: 'Verified Sources',
+            readArticle: 'Read Article',
+            monitoringPoints: 'Monitoring Points',
+            officialStations: 'Official water quality stations and landmarks',
+            viewSource: 'View Source',
+            viewOnMaps: 'View on Maps',
+            locationRisk: 'Location Risk Checker',
+            checkHistorical: 'Check historical water quality risks for your area',
+            enterCity: 'Enter your city or pin code...',
+            check: 'Check',
+            safetyRecs: 'Safety Recommendations:'
+        },
+        map: {
+            title: 'India Water Risk Map',
+            subtitle: 'Regional water quality concerns and contaminants',
+            all: 'All',
+            critical: 'Critical',
+            high: 'High',
+            medium: 'Medium',
+            low: 'Low',
+            keyIssues: 'Key Issues',
+            getAdvice: 'Get Advice'
         }
     },
     hi: {
@@ -84,6 +133,65 @@ export const TRANSLATIONS = {
             recentReports: 'हालिया नागरिक रिपोर्ट',
             submitReport: 'रिपोर्ट भेजें',
             uploadPhoto: 'एआई विश्लेषण के लिए फोटो अपलोड करें'
+        },
+        analysis: {
+            title: 'एआई नमूना विश्लेषण',
+            subtitle: 'जेमिनी 2.5 फ्लैश विजन प्रोटोकॉल',
+            desc: 'पानी की सतह की एक उच्च-रिज़ॉल्यूशन छवि अपलोड करें। हमारा एआई मॉडल यूट्रोफिकेशन स्तर, मैलापन और संभावित दूषित पदार्थों का तुरंत विश्लेषण करेगा।',
+            print: 'प्रिंट करें',
+            share: 'शेयर करें',
+            reset: 'रीसेट करें',
+            clickUpload: 'फोटो अपलोड करने के लिए क्लिक करें',
+            uploadHint: 'SVG, PNG, JPG या GIF (अधिकतम 800x400px)',
+            sourceImage: 'स्रोत छवि',
+            readyTitle: 'विश्लेषण के लिए तैयार',
+            readyDesc: 'छवि सफलतापूर्वक लोड हो गई। सिस्टम डायग्नोस्टिक प्रोटोकॉल चलाने के लिए तैयार है।',
+            runDiag: 'डायग्नोस्टिक्स चलाएं',
+            processing: 'प्रोसेसिंग...',
+            complete: 'विश्लेषण पूर्ण',
+            overallScore: 'कुल स्कोर',
+            status: 'स्थिति:',
+            goodQuality: 'अच्छी गुणवत्ता',
+            moderateConcern: 'मध्यम चिंता',
+            highRisk: 'उच्च जोखिम',
+            algaeLevel: 'शैवाल स्तर',
+            turbidity: 'मैलापन',
+            criticalAlert: 'गंभीर जल गुणवत्ता का पता चला',
+            criticalDesc: 'यह पानी भारी निस्पंदन के बिना उपभोग के लिए असुरक्षित है।',
+            whatToDo: 'अब क्या करें',
+            visualObs: 'दृश्य अवलोकन',
+            recommendation: 'सिफारिश',
+            faqTitle: 'सामान्य प्रश्न'
+        },
+        intel: {
+            latestNews: 'ताज़ा खबर',
+            nearbyStations: 'आसपास के स्टेशन',
+            riskChecker: 'जोखिम चेकर',
+            gathering: 'तमसा बेसिन से जानकारी एकत्र की जा रही है...',
+            groundedSearch: 'ग्राउंडेड सर्च',
+            realTimeUpdates: 'तमसा नदी के लिए वास्तविक समय के पर्यावरण अपडेट',
+            verifiedSources: 'सत्यापित स्रोत',
+            readArticle: 'लेख पढ़ें',
+            monitoringPoints: 'निगरानी बिंदु',
+            officialStations: 'आधिकारिक जल गुणवत्ता स्टेशन और स्थल',
+            viewSource: 'स्रोत देखें',
+            viewOnMaps: 'मानचित्र पर देखें',
+            locationRisk: 'स्थान जोखिम चेकर',
+            checkHistorical: 'अपने क्षेत्र के लिए ऐतिहासिक जल गुणवत्ता जोखिमों की जांच करें',
+            enterCity: 'अपना शहर या पिन कोड दर्ज करें...',
+            check: 'जांचें',
+            safetyRecs: 'सुरक्षा सिफारिशें:'
+        },
+        map: {
+            title: 'भारत जल जोखिम मानचित्र',
+            subtitle: 'क्षेत्रीय जल गुणवत्ता संबंधी चिंताएं और दूषित पदार्थ',
+            all: 'सभी',
+            critical: 'गंभीर',
+            high: 'उच्च',
+            medium: 'मध्यम',
+            low: 'निम्न',
+            keyIssues: 'प्रमुख मुद्दे',
+            getAdvice: 'सलाह लें'
         }
     }
 };

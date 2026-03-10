@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Map, Search, Newspaper, MapPin, ExternalLink, Loader2, AlertTriangle, ShieldAlert, ShieldCheck } from 'lucide-react';
 import { searchWaterNews, findNearbyStations } from '../services/geminiService';
 import { motion, AnimatePresence } from 'motion/react';
+import { TRANSLATIONS } from '../constants';
 
-export const WaterIntel = () => {
+export const WaterIntel = ({ language = 'en' }: { language?: 'en' | 'hi' }) => {
+    const t = TRANSLATIONS[language].intel;
     const [activeSection, setActiveSection] = useState<'news' | 'stations' | 'risk'>('news');
     const [news, setNews] = useState<{text: string, sources: any[]} | null>(null);
     const [stations, setStations] = useState<{text: string, chunks: any[]} | null>(null);
@@ -21,7 +23,7 @@ export const WaterIntel = () => {
     const fetchNews = async () => {
         setLoading(true);
         try {
-            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 30000));
+            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 60000));
             const apiPromise = searchWaterNews("Tamsa River pollution and water quality Uttar Pradesh");
             
             const result = await Promise.race([apiPromise, timeoutPromise]) as any;
@@ -44,7 +46,7 @@ export const WaterIntel = () => {
     const fetchStations = async () => {
         setLoading(true);
         try {
-            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 30000));
+            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 60000));
             const apiPromise = findNearbyStations(MOCK_LAT, MOCK_LNG);
             
             const result = await Promise.race([apiPromise, timeoutPromise]) as any;
@@ -122,42 +124,63 @@ export const WaterIntel = () => {
             animate={{ opacity: 1 }}
             className="max-w-5xl mx-auto space-y-8 pt-6"
         >
-            <div className="flex flex-wrap items-center justify-center gap-2 md:gap-4 bg-white dark:bg-slate-900 p-1.5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 w-fit mx-auto mb-8 transition-colors">
+            <div className="flex flex-wrap items-center justify-center gap-2 md:gap-4 bg-slate-100/50 dark:bg-slate-800/50 backdrop-blur-md p-2 rounded-full shadow-inner border border-slate-200/50 dark:border-slate-700/50 w-fit mx-auto mb-8 transition-colors">
                 <button
                     onClick={() => setActiveSection('news')}
-                    className={`px-4 md:px-6 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${activeSection === 'news' ? 'bg-[#0B1F3B] dark:bg-blue-600 text-white shadow-lg' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200'}`}
+                    className={`relative px-6 py-3 rounded-full text-sm font-bold tracking-wide transition-all duration-300 flex items-center gap-2 ${activeSection === 'news' ? 'text-white shadow-lg' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50'}`}
                 >
-                    <span className="flex items-center gap-2"><Newspaper size={18} /> <span className="hidden sm:inline">Latest News</span></span>
+                    {activeSection === 'news' && (
+                        <motion.div
+                            layoutId="intel-tab-active"
+                            className="absolute inset-0 rounded-full -z-10 bg-gradient-to-r from-blue-600 to-gov-teal shadow-[0_0_15px_rgba(34,184,166,0.4)]"
+                            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                        />
+                    )}
+                    <Newspaper size={18} className={activeSection === 'news' ? 'animate-pulse' : ''} /> <span className="hidden sm:inline font-display">{t.latestNews}</span>
                 </button>
                 <button
                     onClick={() => setActiveSection('stations')}
-                    className={`px-4 md:px-6 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${activeSection === 'stations' ? 'bg-[#0B1F3B] dark:bg-blue-600 text-white shadow-lg' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200'}`}
+                    className={`relative px-6 py-3 rounded-full text-sm font-bold tracking-wide transition-all duration-300 flex items-center gap-2 ${activeSection === 'stations' ? 'text-white shadow-lg' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50'}`}
                 >
-                    <span className="flex items-center gap-2"><MapPin size={18} /> <span className="hidden sm:inline">Nearby Stations</span></span>
+                    {activeSection === 'stations' && (
+                        <motion.div
+                            layoutId="intel-tab-active"
+                            className="absolute inset-0 rounded-full -z-10 bg-gradient-to-r from-emerald-500 to-teal-500 shadow-[0_0_15px_rgba(16,185,129,0.4)]"
+                            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                        />
+                    )}
+                    <MapPin size={18} className={activeSection === 'stations' ? 'animate-bounce' : ''} /> <span className="hidden sm:inline font-display">{t.nearbyStations}</span>
                 </button>
                 <button
                     onClick={() => setActiveSection('risk')}
-                    className={`px-4 md:px-6 py-3 rounded-xl text-sm font-bold transition-all duration-300 ${activeSection === 'risk' ? 'bg-[#0B1F3B] dark:bg-blue-600 text-white shadow-lg' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-200'}`}
+                    className={`relative px-6 py-3 rounded-full text-sm font-bold tracking-wide transition-all duration-300 flex items-center gap-2 ${activeSection === 'risk' ? 'text-white shadow-lg' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50'}`}
                 >
-                    <span className="flex items-center gap-2"><AlertTriangle size={18} /> <span className="hidden sm:inline">Risk Checker</span></span>
+                    {activeSection === 'risk' && (
+                        <motion.div
+                            layoutId="intel-tab-active"
+                            className="absolute inset-0 rounded-full -z-10 bg-gradient-to-r from-amber-500 to-orange-500 shadow-[0_0_15px_rgba(245,158,11,0.4)]"
+                            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                        />
+                    )}
+                    <AlertTriangle size={18} className={activeSection === 'risk' ? 'animate-pulse' : ''} /> <span className="hidden sm:inline font-display">{t.riskChecker}</span>
                 </button>
             </div>
 
             {loading && activeSection !== 'risk' ? (
-                <div className="flex flex-col items-center justify-center py-32 text-slate-400 dark:text-slate-500 bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm transition-colors">
-                    <Loader2 className="animate-spin mb-4 text-[#1CA7A6]" size={48} />
-                    <p className="font-medium animate-pulse">Gathering intelligence from Tamsa Basin...</p>
+                <div className="flex flex-col items-center justify-center py-32 text-slate-400 dark:text-slate-500 bg-gov-card dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-subtle transition-colors">
+                    <Loader2 className="animate-spin mb-4 text-gov-teal" size={48} />
+                    <p className="font-medium animate-pulse">{t.gathering}</p>
                 </div>
             ) : (
-                <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 md:p-12 shadow-sm border border-slate-100 dark:border-slate-800 min-h-[500px] transition-colors">
+                <div className="bg-gov-card dark:bg-slate-900 rounded-[2.5rem] p-8 md:p-12 shadow-subtle border border-slate-200 dark:border-slate-800 min-h-[500px] transition-colors">
                     {activeSection === 'news' && news && (
                         <motion.div variants={container} initial="hidden" animate="show">
                             <motion.div variants={item} className="mb-8 border-b border-slate-100 dark:border-slate-800 pb-6">
                                 <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-3 font-display">
                                     <div className="p-2 bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded-xl"><Search size={24} /></div>
-                                    Grounded Search
+                                    {t.groundedSearch}
                                 </h2>
-                                <p className="text-slate-500 dark:text-slate-400 ml-14">Real-time environmental updates for Tamsa River</p>
+                                <p className="text-slate-500 dark:text-slate-400 ml-14">{t.realTimeUpdates}</p>
                             </motion.div>
                             
                             <motion.div variants={item} className="prose prose-lg prose-slate dark:prose-invert max-w-none text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -167,7 +190,7 @@ export const WaterIntel = () => {
                             {news.sources.length > 0 && (
                                 <motion.div variants={item} className="mt-12 pt-8 border-t border-slate-100 dark:border-slate-800">
                                     <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-6 flex items-center gap-2">
-                                        <div className="w-4 h-[1px] bg-slate-300 dark:bg-slate-600"></div> Verified Sources
+                                        <div className="w-4 h-[1px] bg-slate-300 dark:bg-slate-600"></div> {t.verifiedSources}
                                     </h4>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         {news.sources.map((source, idx) => (
@@ -179,7 +202,7 @@ export const WaterIntel = () => {
                                                     href={source.web.uri} 
                                                     target="_blank" 
                                                     rel="noreferrer" 
-                                                    className="flex flex-col justify-between p-5 rounded-2xl border border-slate-100 dark:border-slate-700 hover:border-blue-200 dark:hover:border-blue-500 bg-white dark:bg-slate-800 hover:shadow-lg dark:hover:shadow-black/50 transition-all duration-300 group h-full"
+                                                    className="flex flex-col justify-between p-5 rounded-2xl border border-slate-200 dark:border-slate-700 hover:border-blue-200 dark:hover:border-blue-500 bg-gov-card dark:bg-slate-800 hover:shadow-subtle-hover dark:hover:shadow-black/50 transition-all duration-300 group h-full"
                                                 >
                                                     <div>
                                                         <div className="flex items-start justify-between mb-3">
@@ -192,7 +215,7 @@ export const WaterIntel = () => {
                                                         <p className="text-xs text-slate-400 dark:text-slate-500 font-mono truncate">{new URL(source.web.uri).hostname}</p>
                                                     </div>
                                                     <div className="mt-4 pt-4 border-t border-slate-50 dark:border-slate-700 flex items-center text-sm font-bold text-blue-600 dark:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
-                                                        Read Article <ArrowRight size={16} className="ml-2" />
+                                                        {t.readArticle} <ArrowRight size={16} className="ml-2" />
                                                     </div>
                                                 </motion.a>
                                             ) : null
@@ -208,9 +231,9 @@ export const WaterIntel = () => {
                             <motion.div variants={item} className="mb-8 border-b border-slate-100 dark:border-slate-800 pb-6">
                                 <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-3 font-display">
                                     <div className="p-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-xl"><Map className="text-emerald-500 dark:text-emerald-400" size={24} /></div>
-                                    Monitoring Points
+                                    {t.monitoringPoints}
                                 </h2>
-                                <p className="text-slate-500 dark:text-slate-400 ml-14">Official water quality stations and landmarks</p>
+                                <p className="text-slate-500 dark:text-slate-400 ml-14">{t.officialStations}</p>
                             </motion.div>
 
                             <motion.p variants={item} className="text-slate-600 dark:text-slate-300 mb-10 whitespace-pre-line text-lg leading-relaxed">{stations.text}</motion.p>
@@ -219,10 +242,10 @@ export const WaterIntel = () => {
                                 {stations.chunks?.map((chunk, idx) => {
                                     if (chunk.web?.uri && chunk.web?.title) {
                                        return (
-                                        <motion.div variants={item} key={idx} className="border border-slate-200 dark:border-slate-700 rounded-2xl p-5 hover:shadow-lg dark:hover:shadow-black/50 hover:-translate-y-1 transition-all bg-white dark:bg-slate-800 group">
+                                        <motion.div variants={item} key={idx} className="border border-slate-200 dark:border-slate-700 rounded-2xl p-5 hover:shadow-subtle-hover dark:hover:shadow-black/50 hover:-translate-y-1 transition-all bg-gov-card dark:bg-slate-800 group">
                                             <h4 className="font-bold text-slate-800 dark:text-slate-200 text-lg mb-2 group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">{chunk.web.title}</h4>
                                             <a href={chunk.web.uri} target="_blank" rel="noreferrer" className="text-blue-600 dark:text-blue-400 text-sm font-bold flex items-center gap-2 mt-4 bg-blue-50 dark:bg-blue-900/30 w-fit px-3 py-1.5 rounded-lg group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50 transition-colors">
-                                                View Source <ArrowRight size={14} />
+                                                {t.viewSource} <ArrowRight size={14} />
                                             </a>
                                         </motion.div>
                                        )
@@ -236,8 +259,8 @@ export const WaterIntel = () => {
                                                     <MapPin size={18} />
                                                  </div>
                                              </div>
-                                             <a href={chunk.maps.uri} target="_blank" rel="noreferrer" className="text-blue-600 dark:text-blue-400 text-sm font-bold flex items-center gap-2 mt-4 bg-white dark:bg-slate-800 w-fit px-3 py-1.5 rounded-lg shadow-sm group-hover:shadow transition-all">
-                                                 View on Maps <ArrowRight size={14} />
+                                             <a href={chunk.maps.uri} target="_blank" rel="noreferrer" className="text-blue-600 dark:text-blue-400 text-sm font-bold flex items-center gap-2 mt-4 bg-gov-card dark:bg-slate-800 w-fit px-3 py-1.5 rounded-lg shadow-subtle group-hover:shadow-subtle-hover transition-all">
+                                                 {t.viewOnMaps} <ArrowRight size={14} />
                                              </a>
                                          </motion.div>
                                         )
@@ -253,16 +276,16 @@ export const WaterIntel = () => {
                             <motion.div variants={item} className="mb-8 border-b border-slate-100 dark:border-slate-800 pb-6">
                                 <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-3 font-display">
                                     <div className="p-2 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-xl"><AlertTriangle size={24} /></div>
-                                    Location Risk Checker
+                                    {t.locationRisk}
                                 </h2>
-                                <p className="text-slate-500 dark:text-slate-400 ml-14">Check historical water quality risks for your area</p>
+                                <p className="text-slate-500 dark:text-slate-400 ml-14">{t.checkHistorical}</p>
                             </motion.div>
 
                             <motion.div variants={item} className="max-w-2xl mx-auto">
                                 <div className="flex gap-2 mb-8">
                                     <input 
                                         type="text" 
-                                        placeholder="Enter your city or pin code..." 
+                                        placeholder={t.enterCity} 
                                         value={locationInput}
                                         onChange={(e) => setLocationInput(e.target.value)}
                                         onKeyDown={(e) => e.key === 'Enter' && handleCheckRisk()}
@@ -274,7 +297,7 @@ export const WaterIntel = () => {
                                         className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white font-bold rounded-xl transition-colors flex items-center gap-2"
                                     >
                                         {isCheckingRisk ? <Loader2 className="animate-spin" size={20} /> : <Search size={20} />}
-                                        <span className="hidden sm:inline">Check</span>
+                                        <span className="hidden sm:inline">{t.check}</span>
                                     </button>
                                 </div>
 
@@ -309,7 +332,7 @@ export const WaterIntel = () => {
                                             </div>
                                             
                                             <div className="mt-6 pt-6 border-t border-slate-200/50 dark:border-slate-700/50">
-                                                <h4 className="font-bold text-slate-800 dark:text-slate-200 mb-3">Safety Recommendations:</h4>
+                                                <h4 className="font-bold text-slate-800 dark:text-slate-200 mb-3">{t.safetyRecs}</h4>
                                                 <ul className="space-y-2">
                                                     {riskResult.tips.map((tip, idx) => (
                                                         <li key={idx} className="flex items-center gap-2 text-slate-600 dark:text-slate-400">

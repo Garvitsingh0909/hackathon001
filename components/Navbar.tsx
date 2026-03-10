@@ -71,7 +71,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, languag
 
   return (
     <div className="fixed top-0 left-0 right-0 z-50">
-        <nav className={`backdrop-blur-md border-b transition-colors duration-300 ${darkMode ? 'bg-slate-900/90 border-slate-800' : 'bg-white/90 border-slate-100'}`}>
+        <nav className={`backdrop-blur-xl border-b transition-colors duration-300 ${darkMode ? 'bg-gov-navy/80 border-white/10' : 'bg-gov-card/80 border-slate-200'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
                 {/* Brand */}
@@ -87,93 +87,98 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, languag
                                 e.currentTarget.nextElementSibling?.classList.remove('hidden');
                             }} 
                         />
-                        <div className="hidden bg-[#0B1F3B] p-1.5 rounded-lg absolute inset-0 flex items-center justify-center">
+                        <div className="hidden bg-gov-navy p-1.5 rounded-lg absolute inset-0 flex items-center justify-center">
                             <Droplets className="text-white h-6 w-6" strokeWidth={2.5} />
                         </div>
                     </div>
-                    <span className={`text-lg font-bold font-display tracking-tight z-10 ${darkMode ? 'text-white' : 'text-slate-900'}`}>
-                        JalDrishti<span className="text-[#1CA7A6]">.AI</span>
+                    <span className={`text-lg font-bold font-display tracking-tight z-10 ${darkMode ? 'text-white' : 'text-gov-navy'}`}>
+                        JalDrishti<span className="text-gov-teal">.AI</span>
                     </span>
                 </div>
 
-                {/* Desktop Navigation - Minimal Pill */}
-                <div className="hidden md:flex items-center space-x-1">
+                {/* Desktop Navigation - Hackathon Level */}
+                <div className="hidden md:flex items-center p-1.5 bg-slate-100/50 dark:bg-slate-800/50 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 rounded-full shadow-inner">
                     {navItems.map((item) => (
                         <button
                             key={item.id}
                             id={`nav-${item.id}`}
-                            className={`tour-${item.id} px-4 py-1.5 rounded-full text-sm font-medium transition-colors relative ${
+                            className={`tour-${item.id} relative px-5 py-2 rounded-full text-sm font-bold tracking-wide transition-all duration-300 flex items-center gap-2 ${
                                 activeTab === item.id 
-                                ? (darkMode ? 'text-white' : 'text-slate-900')
-                                : (darkMode ? 'text-slate-400 hover:text-white hover:bg-white/10' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50')
+                                ? 'text-white shadow-lg'
+                                : (darkMode ? 'text-slate-400 hover:text-white hover:bg-white/5' : 'text-slate-500 hover:text-gov-navy hover:bg-slate-200/50')
                             }`}
                             onClick={() => setActiveTab(item.id)}
                         >
                             {activeTab === item.id && (
                                 <motion.div
-                                    layoutId="navbar-pill"
-                                    className={`absolute inset-0 rounded-full -z-10 ${darkMode ? 'bg-white/10' : 'bg-slate-100'}`}
-                                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                    layoutId="navbar-pill-active"
+                                    className="absolute inset-0 rounded-full -z-10 bg-gradient-to-r from-blue-600 to-gov-teal shadow-[0_0_15px_rgba(34,184,166,0.4)]"
+                                    transition={{ type: "spring", stiffness: 300, damping: 25 }}
                                 />
                             )}
-                            {item.label}
+                            <item.icon size={16} className={activeTab === item.id ? 'animate-pulse' : ''} />
+                            <span className="font-display">{item.label}</span>
                         </button>
                     ))}
                 </div>
 
-                {/* Right Actions */}
-                <div className="flex items-center gap-4">
+                    {/* Right Actions */}
+                <div className="flex items-center gap-2 sm:gap-4">
                     {/* AI Enhanced Badge */}
-                    <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/50">
+                    <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/50">
                         <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
                         <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">AI Enhanced</span>
                     </div>
 
                     {/* Live Clock */}
-                    <div className={`hidden lg:flex items-center gap-1.5 text-xs font-mono px-3 py-1.5 rounded-full border ${darkMode ? 'bg-slate-800 border-slate-700 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-600'}`}>
-                        <Clock size={14} className="text-[#1CA7A6]" />
+                    <div className={`hidden xl:flex items-center gap-1.5 text-xs font-mono px-3 py-1.5 rounded-full border ${darkMode ? 'bg-white/5 border-white/10 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-600'}`}>
+                        <Clock size={14} className="text-gov-teal" />
                         <span>{istTime} IST</span>
                     </div>
 
                     {/* Share Button */}
                     <button 
                         onClick={handleShare}
-                        className={`p-2 rounded-full transition-colors ${darkMode ? 'text-slate-400 hover:text-white hover:bg-white/10' : 'text-slate-400 hover:text-slate-900 hover:bg-slate-100'}`}
+                        className={`hidden sm:flex w-10 h-10 items-center justify-center rounded-full transition-all hover:scale-105 ${darkMode ? 'bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white border border-white/10' : 'bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200'}`}
                         aria-label="Share JalDrishti AI"
                     >
-                        <Share2 size={20} />
+                        <Share2 size={18} />
                     </button>
 
+                    {/* Dark Mode Toggle */}
                     <button 
                         onClick={toggleDarkMode}
-                        className={`p-2 rounded-full transition-colors ${darkMode ? 'text-slate-400 hover:text-white hover:bg-white/10' : 'text-slate-400 hover:text-slate-900 hover:bg-slate-100'}`}
+                        className={`w-10 h-10 flex items-center justify-center rounded-full transition-all hover:scale-105 ${darkMode ? 'bg-white/5 text-amber-400 hover:bg-white/10 border border-white/10' : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200'}`}
                         aria-label="Toggle Dark Mode"
                     >
-                        {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+                        {darkMode ? <Sun size={18} /> : <Moon size={18} />}
                     </button>
 
-                    <div className={`flex items-center gap-1 text-xs font-medium rounded-full p-1 border ${darkMode ? 'bg-slate-800 border-slate-700 text-slate-400' : 'bg-slate-50 border-slate-100 text-slate-500'}`}>
+                    {/* Language Toggle */}
+                    <div className={`flex items-center p-1 rounded-full border transition-colors ${darkMode ? 'bg-white/5 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
                         <button 
                             onClick={() => setLanguage('en')}
-                            className={`px-3 py-1 rounded-full transition-all ${language === 'en' ? (darkMode ? 'bg-slate-700 text-white shadow-sm' : 'bg-white text-slate-900 shadow-sm') : 'hover:opacity-80'}`}
+                            className={`px-2.5 py-1.5 rounded-full text-xs font-bold transition-all ${language === 'en' ? 'bg-gov-teal text-white shadow-md' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
                         >
                             EN
                         </button>
                         <button 
                             onClick={() => setLanguage('hi')}
-                            className={`px-3 py-1 rounded-full transition-all ${language === 'hi' ? (darkMode ? 'bg-slate-700 text-white shadow-sm' : 'bg-white text-slate-900 shadow-sm') : 'hover:opacity-80'}`}
+                            className={`px-2.5 py-1.5 rounded-full text-xs font-bold transition-all ${language === 'hi' ? 'bg-gov-teal text-white shadow-md' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
                         >
                             HI
                         </button>
                     </div>
                     
-                    <button className={`transition-colors relative ${darkMode ? 'text-slate-400 hover:text-white' : 'text-slate-400 hover:text-slate-900'}`}>
-                        <Bell size={20} />
-                        <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
-                    </button>
-                    
-                    <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold border ${darkMode ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-slate-200 text-slate-600 border-slate-300'}`}>
-                        JD
+                    {/* Profile/Notifications */}
+                    <div className="hidden sm:flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-700">
+                        <button className={`relative w-10 h-10 flex items-center justify-center rounded-full transition-all hover:scale-105 ${darkMode ? 'bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white border border-white/10' : 'bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200'}`}>
+                            <Bell size={18} />
+                            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
+                        </button>
+                        <div className={`h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold border shadow-sm ${darkMode ? 'bg-gradient-to-br from-blue-600 to-gov-teal text-white border-white/10' : 'bg-gradient-to-br from-blue-500 to-gov-teal text-white border-transparent'}`}>
+                            JD
+                        </div>
                     </div>
                 </div>
             </div>

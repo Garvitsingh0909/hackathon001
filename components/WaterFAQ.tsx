@@ -57,16 +57,16 @@ export const WaterFAQ = ({ onAskAI }: { onAskAI: (question: string) => void }) =
         animate={{ opacity: 1, y: 0 }}
         className="max-w-5xl mx-auto pt-6"
     >
-      <div className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-black/50 border border-slate-100 dark:border-slate-800 overflow-hidden transition-colors">
+      <div className="bg-gov-card dark:bg-slate-900 rounded-[2rem] shadow-subtle dark:shadow-black/50 border border-slate-200 dark:border-slate-800 overflow-hidden transition-colors">
         
         {/* Header */}
-        <div className="p-8 md:p-10 border-b border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-800/30">
+        <div className="p-8 md:p-10 border-b border-slate-200 dark:border-slate-800 bg-gov-bg dark:bg-slate-800/30">
           <div className="flex items-center gap-4 mb-6">
             <div className="p-3 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 rounded-2xl">
                 <HelpCircle size={28} />
             </div>
             <div>
-                <h2 className="text-3xl font-bold text-slate-900 dark:text-white font-display">Water Safety FAQs</h2>
+                <h2 className="text-3xl font-bold text-gov-navy dark:text-white font-display">Water Safety FAQs</h2>
                 <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Common questions about water quality in India</p>
             </div>
           </div>
@@ -80,7 +80,7 @@ export const WaterFAQ = ({ onAskAI }: { onAskAI: (question: string) => void }) =
               placeholder="Search FAQs..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-sm"
+              className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-gov-card dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-subtle"
             />
           </div>
         </div>
@@ -93,7 +93,7 @@ export const WaterFAQ = ({ onAskAI }: { onAskAI: (question: string) => void }) =
               </div>
             ) : (
               filteredFaqs.map((faq, idx) => (
-                <div key={idx} className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden bg-white dark:bg-slate-800 hover:shadow-md transition-shadow">
+                <div key={idx} className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden bg-gov-card dark:bg-slate-800 hover:shadow-subtle-hover transition-shadow">
                   <button 
                     onClick={() => setExpanded(expanded === idx ? null : idx)}
                     className="w-full px-6 py-5 flex justify-between items-center text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"

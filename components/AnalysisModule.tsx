@@ -6,15 +6,19 @@ import { WaterQualityReport } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 
+import { TRANSLATIONS } from '../constants';
+
 const FAQ_ITEMS = [
     { q: "How accurate is this visual analysis?", a: "This AI analysis provides a preliminary assessment based on visual indicators like color, turbidity, and visible algae. It is not a substitute for laboratory testing." },
     { q: "What does the Overall Score mean?", a: "The score (0-100) represents the estimated visual quality of the water. 80-100 is excellent, 50-79 is moderate, and below 50 indicates visible contamination." },
     { q: "Can it detect invisible chemicals?", a: "No. Visual analysis cannot detect dissolved chemicals, heavy metals, or microscopic pathogens. Always use proper testing kits for drinking water." }
 ];
 
-export const AnalysisModule = () => {
+export const AnalysisModule = ({ language = 'en' }: { language?: 'en' | 'hi' }) => {
+  const t = TRANSLATIONS[language].analysis;
   const [image, setImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
   const [result, setResult] = useState<WaterQualityReport | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
@@ -144,7 +148,11 @@ export const AnalysisModule = () => {
             historicalData: simData.historicalData
         };
 
-        setResult(finalReport);
+        setSuccess(true);
+        setTimeout(() => {
+            setResult(finalReport);
+            setSuccess(false);
+        }, 1000);
     } catch (error: any) {
         console.error("Analysis error", error);
         alert(`Failed to analyze image. Error: ${error.message || 'Unknown error'}`);
@@ -244,22 +252,22 @@ export const AnalysisModule = () => {
         animate={{ opacity: 1, y: 0 }}
         className="max-w-5xl mx-auto pt-6"
     >
-      <div className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-xl shadow-slate-200/50 dark:shadow-black/50 border border-slate-100 dark:border-slate-800 overflow-hidden transition-colors" id="printable-report">
+      <div className="bg-gov-card dark:bg-slate-900 rounded-[2rem] shadow-subtle dark:shadow-black/50 border border-slate-200 dark:border-slate-800 overflow-hidden transition-colors" id="printable-report">
         
         {/* Header */}
-        <div className="p-8 md:p-10 border-b border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-800/30 flex justify-between items-start">
+        <div className="p-8 md:p-10 border-b border-slate-200 dark:border-slate-800 bg-gov-bg dark:bg-slate-800/30 flex justify-between items-start">
           <div>
               <div className="flex items-center gap-4 mb-4">
                 <div className="p-3 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 rounded-2xl">
                     <Camera size={28} />
                 </div>
                 <div>
-                    <h2 className="text-3xl font-bold text-slate-900 dark:text-white font-display">AI Sample Analysis</h2>
-                    <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Gemini 2.5 Flash Vision Protocol</p>
+                    <h2 className="text-3xl font-bold text-slate-900 dark:text-white font-display">{t.title}</h2>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{t.subtitle}</p>
                 </div>
               </div>
               <p className="text-slate-600 dark:text-slate-300 max-w-xl leading-relaxed print:hidden">
-                Upload a high-resolution image of the water surface. Our AI model will analyze eutrophication levels, turbidity, and potential contaminants instantly.
+                {t.desc}
               </p>
           </div>
           {image && (
@@ -270,13 +278,13 @@ export const AnalysisModule = () => {
                               onClick={handlePrint}
                               className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-slate-200 dark:border-slate-700"
                           >
-                              <Printer size={16} /> Print
+                              <Printer size={16} /> {t.print}
                           </button>
                           <button 
                               onClick={handleShare}
                               className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors border border-blue-200 dark:border-blue-800"
                           >
-                              <Share2 size={16} /> Share
+                              <Share2 size={16} /> {t.share}
                           </button>
                       </>
                   )}
@@ -284,7 +292,7 @@ export const AnalysisModule = () => {
                       onClick={resetAll}
                       className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                   >
-                      <RotateCcw size={16} /> Reset
+                      <RotateCcw size={16} /> {t.reset}
                   </button>
               </div>
           )}
@@ -295,19 +303,19 @@ export const AnalysisModule = () => {
             <motion.label 
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
-                className="group flex flex-col items-center justify-center w-full h-80 border-2 border-slate-200 dark:border-slate-700 border-dashed rounded-3xl cursor-pointer bg-slate-50/50 dark:bg-slate-800/50 hover:bg-blue-50/50 dark:hover:bg-blue-900/20 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-300 relative overflow-hidden"
+                className="group flex flex-col items-center justify-center w-full h-80 border-2 border-slate-200 dark:border-slate-700 border-dashed rounded-3xl cursor-pointer bg-gov-bg dark:bg-slate-800/50 hover:bg-gov-teal/5 dark:hover:bg-gov-teal/20 hover:border-gov-teal dark:hover:border-gov-teal transition-all duration-300 relative overflow-hidden"
             >
               <div className="absolute inset-0 bg-grid-slate-200/50 dark:bg-grid-slate-700/50 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))] dark:[mask-image:linear-gradient(0deg,black,rgba(0,0,0,0.6))] -z-10"></div>
               <div className="flex flex-col items-center justify-center pt-5 pb-6 relative z-10">
                 <motion.div 
                     animate={{ y: [0, -5, 0] }}
                     transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-                    className="p-5 bg-white dark:bg-slate-800 rounded-full shadow-sm mb-4 group-hover:shadow-md transition-all duration-300 text-blue-600 dark:text-blue-400 ring-4 ring-blue-50 dark:ring-blue-900/30"
+                    className="p-5 bg-gov-card dark:bg-slate-800 rounded-full shadow-subtle mb-4 group-hover:shadow-subtle-hover transition-all duration-300 text-gov-teal dark:text-gov-teal ring-4 ring-gov-teal/10 dark:ring-gov-teal/30"
                 >
                     <Upload className="w-8 h-8" />
                 </motion.div>
-                <p className="mb-2 text-lg text-slate-700 dark:text-slate-200 font-semibold font-display">Click to upload photo</p>
-                <p className="text-sm text-slate-400 dark:text-slate-500">SVG, PNG, JPG or GIF (MAX. 800x400px)</p>
+                <p className="mb-2 text-lg text-slate-700 dark:text-slate-200 font-semibold font-display">{t.clickUpload}</p>
+                <p className="text-sm text-slate-400 dark:text-slate-500">{t.uploadHint}</p>
               </div>
               <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
             </motion.label>
@@ -349,7 +357,7 @@ export const AnalysisModule = () => {
                                         animate={{ height: ["0%", "100%", "0%"] }}
                                         transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
                                     >
-                                        <svg viewBox="0 0 24 24" className="w-24 h-24 text-blue-500 absolute bottom-0 left-0">
+                                        <svg viewBox="0 0 24 24" className="w-24 h-24 text-gov-teal absolute bottom-0 left-0">
                                             <path fill="currentColor" d="M12,20A6,6 0 0,1 6,14C6,10 12,3.25 12,3.25C12,3.25 18,10 18,14A6,6 0 0,1 12,20Z" />
                                         </svg>
                                     </motion.div>
@@ -359,7 +367,7 @@ export const AnalysisModule = () => {
                             <motion.div 
                                 animate={{ top: ["0%", "100%"] }}
                                 transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                                className="absolute top-0 left-0 w-full h-1 bg-blue-400 shadow-[0_0_20px_rgba(59,130,246,1)]"
+                                className="absolute top-0 left-0 w-full h-1 bg-gov-teal shadow-[0_0_20px_rgba(34,184,166,1)]"
                             />
                             <div className="absolute bottom-10 left-0 right-0 flex justify-center">
                                 <div className="bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 text-white text-xs font-mono animate-pulse">
@@ -378,7 +386,7 @@ export const AnalysisModule = () => {
                       <X size={18} />
                     </button>
                     <div className="absolute bottom-4 left-4 text-white print:hidden">
-                        <p className="text-xs font-bold uppercase tracking-wider opacity-80">Source Image</p>
+                        <p className="text-xs font-bold uppercase tracking-wider opacity-80">{t.sourceImage}</p>
                     </div>
                   </motion.div>
               </div>
@@ -394,25 +402,34 @@ export const AnalysisModule = () => {
                         className="space-y-6 print:hidden"
                     >
                         <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-3xl border border-blue-100 dark:border-blue-800/50">
-                            <h3 className="font-bold text-blue-900 dark:text-blue-100 mb-2 font-display">Ready for Analysis</h3>
-                            <p className="text-blue-700/80 dark:text-blue-300/80 text-sm mb-6">
-                                Image loaded successfully. The system is ready to run the diagnostic protocol.
+                            <h3 className="font-bold text-gov-navy dark:text-blue-100 mb-2 font-display">{t.readyTitle}</h3>
+                            <p className="text-slate-600 dark:text-blue-300/80 text-sm mb-6">
+                                {t.readyDesc}
                             </p>
                             <motion.button
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                                 onClick={analyze}
-                                disabled={loading}
-                                className="w-full py-4 bg-[#0B1F3B] dark:bg-blue-600 hover:bg-blue-900 dark:hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-blue-900/20 flex items-center justify-center gap-3 btn-press relative overflow-hidden"
+                                disabled={loading || success}
+                                className={`w-full py-4 ${success ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-gov-navy dark:bg-blue-600 hover:bg-slate-800 dark:hover:bg-blue-700'} disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white font-semibold rounded-xl transition-all shadow-subtle-hover flex items-center justify-center gap-3 btn-press relative overflow-hidden`}
                             >
                             {loading ? (
                                 <>
                                 <div className="absolute inset-0 bg-blue-500/20 animate-pulse"></div>
-                                <Loader2 className="animate-spin relative z-10" /> <span className="relative z-10">Processing...</span>
+                                <Loader2 className="animate-spin relative z-10" /> <span className="relative z-10">{t.processing}</span>
                                 </>
+                            ) : success ? (
+                                <motion.div 
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    className="flex items-center gap-2"
+                                >
+                                    <CheckCircle size={24} className="text-white" />
+                                    <span>{t.complete}</span>
+                                </motion.div>
                             ) : (
                                 <>
-                                <CheckCircle size={20} /> Run Diagnostics
+                                <CheckCircle size={20} /> {t.runDiag}
                                 </>
                             )}
                             </motion.button>
@@ -436,14 +453,14 @@ export const AnalysisModule = () => {
                                         result.overallScore >= 80 ? 'text-emerald-600 dark:text-emerald-400' :
                                         result.overallScore >= 50 ? 'text-amber-600 dark:text-amber-400' :
                                         'text-red-600 dark:text-red-400'
-                                    }`}>Overall Score</span>
+                                    }`}>{t.overallScore}</span>
                                 </div>
                                 <motion.button 
                                     whileHover={{ scale: 1.1 }}
                                     whileTap={{ scale: 0.9 }}
                                     onClick={playAudioReport}
                                     disabled={isPlaying}
-                                    className={`p-3 rounded-full shadow-sm border print:hidden ${isPlaying ? 'bg-blue-100 text-blue-600 border-blue-200 dark:bg-blue-900/50 dark:text-blue-400 dark:border-blue-800' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-100 dark:border-slate-700 hover:scale-105'} transition-all`}
+                                    className={`p-3 rounded-full shadow-subtle border print:hidden ${isPlaying ? 'bg-gov-teal/10 text-gov-teal border-gov-teal/20 dark:bg-gov-teal/20 dark:text-gov-teal dark:border-gov-teal/30' : 'bg-gov-card dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:scale-105'} transition-all`}
                                 >
                                     {isPlaying ? <Loader2 className="animate-spin" size={20} /> : <Volume2 size={20} />}
                                 </motion.button>
@@ -475,23 +492,21 @@ export const AnalysisModule = () => {
                                 </div>
                                 
                                 <div className="flex-1">
-                                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Status:</p>
+                                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.status}</p>
                                     <p className={`text-lg font-bold ${
                                         result.overallScore >= 80 ? 'text-emerald-700 dark:text-emerald-400' :
                                         result.overallScore >= 50 ? 'text-amber-700 dark:text-amber-400' :
                                         'text-red-700 dark:text-red-400'
                                     }`}>
-                                        {result.overallScore >= 80 ? 'Good Quality' : result.overallScore >= 50 ? 'Moderate Concern' : 'High Risk'}
+                                        {result.overallScore >= 80 ? t.goodQuality : result.overallScore >= 50 ? t.moderateConcern : t.highRisk}
                                     </p>
                                 </div>
                             </div>
                          </div>
                          
                          <div className="grid grid-cols-2 gap-3">
-                            <MetricCard label="Algae Level" value={result.algaeLevel} />
-                            <MetricCard label="Turbidity" value={result.turbidity} />
-                            <MetricCard label="pH Level" value={result.ph?.toString() || "N/A"} />
-                            <MetricCard label="Dissolved O2" value={`${result.dissolvedOxygen} mg/L`} />
+                            <MetricCard label={t.algaeLevel} value={result.algaeLevel} />
+                            <MetricCard label={t.turbidity} value={result.turbidity} />
                          </div>
 
                          {/* Unsafe Result Alert */}
@@ -504,12 +519,12 @@ export const AnalysisModule = () => {
                                  <div className="flex items-center gap-3">
                                      <AlertCircle className="text-red-600 dark:text-red-400 flex-shrink-0" size={24} />
                                      <div>
-                                         <p className="text-red-800 dark:text-red-300 font-bold text-sm">Critical Water Quality Detected</p>
-                                         <p className="text-red-600 dark:text-red-400 text-xs mt-0.5">This water is unsafe for consumption without heavy filtration.</p>
+                                         <p className="text-red-800 dark:text-red-300 font-bold text-sm">{t.criticalAlert}</p>
+                                         <p className="text-red-600 dark:text-red-400 text-xs mt-0.5">{t.criticalDesc}</p>
                                      </div>
                                  </div>
                                  <button className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl transition-colors whitespace-nowrap shadow-sm">
-                                     What to do now
+                                     {t.whatToDo}
                                  </button>
                              </motion.div>
                          )}
@@ -527,12 +542,12 @@ export const AnalysisModule = () => {
                 animate={{ opacity: 1, height: 'auto' }}
                 className="mt-10 pt-10 border-t border-slate-100 dark:border-slate-800"
             >
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 gap-8">
                     {/* Text Analysis Section */}
                     <div className="space-y-6">
                         <div className="space-y-4">
                             <h4 className="font-bold text-slate-900 dark:text-white flex items-center gap-2 font-display">
-                                <Search size={18} className="text-blue-500"/> Visual Observation
+                                <Search size={18} className="text-blue-500"/> {t.visualObs}
                             </h4>
                             <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 text-slate-600 dark:text-slate-300 leading-relaxed text-sm">
                                 {result.details}
@@ -540,7 +555,7 @@ export const AnalysisModule = () => {
                         </div>
                         <div className="space-y-4">
                             <h4 className="font-bold text-slate-900 dark:text-white flex items-center gap-2 font-display">
-                                <AlertCircle size={18} className="text-amber-500"/> Recommendation
+                                <AlertCircle size={18} className="text-amber-500"/> {t.recommendation}
                             </h4>
                              <div className="bg-amber-50 dark:bg-amber-900/20 p-6 rounded-2xl border border-amber-100 dark:border-amber-800/50 text-amber-900 dark:text-amber-200 leading-relaxed text-sm">
                                 {result.recommendation}
@@ -548,43 +563,10 @@ export const AnalysisModule = () => {
                         </div>
                     </div>
                     
-                    {/* History Tracker Section */}
-                    <div className="space-y-4">
-                        <h4 className="font-bold text-slate-900 dark:text-white flex items-center gap-2 font-display">
-                            <TrendingUp size={18} className="text-blue-500"/> Historical Trend
-                        </h4>
-                        <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 h-64">
-                            {result.historicalData && result.historicalData.length > 0 ? (
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart data={result.historicalData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                                        <defs>
-                                            <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                                            </linearGradient>
-                                        </defs>
-                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                                        <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} dy={10} />
-                                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} domain={[0, 100]} />
-                                        <Tooltip 
-                                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                            labelStyle={{ color: '#64748b', fontWeight: 'bold', marginBottom: '4px' }}
-                                        />
-                                        <Area type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorValue)" />
-                                    </AreaChart>
-                                </ResponsiveContainer>
-                            ) : (
-                                <div className="flex items-center justify-center h-full text-slate-400 text-sm">
-                                    No historical data available.
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                    
                     {/* Expandable FAQ */}
-                    <div className="space-y-4 lg:col-span-2 print:hidden">
+                    <div className="space-y-4 print:hidden">
                         <h4 className="font-bold text-slate-900 dark:text-white flex items-center gap-2 font-display">
-                            <Info size={18} className="text-blue-500"/> Frequently Asked Questions
+                            <Info size={18} className="text-blue-500"/> {t.faqTitle}
                         </h4>
                         <div className="space-y-3">
                             {FAQ_ITEMS.map((item, idx) => (
@@ -623,8 +605,8 @@ export const AnalysisModule = () => {
 };
 
 const MetricCard = ({ label, value }: { label: string, value: string }) => (
-    <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
+    <div className="bg-gov-card dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-subtle">
         <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider mb-1">{label}</p>
-        <p className="font-bold text-slate-800 dark:text-slate-200 text-lg font-display">{value}</p>
+        <p className="font-bold text-gov-navy dark:text-slate-200 text-lg font-display">{value}</p>
     </div>
 );

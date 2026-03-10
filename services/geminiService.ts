@@ -1,15 +1,16 @@
-import { GoogleGenAI, Modality } from "@google/genai";
-import { getApiKey, MODELS } from "../constants";
+import { GoogleGenAI, Modality, Type, ThinkingLevel } from "@google/genai";
+import { API_KEY, OPENROUTER_API_KEY, MODELS } from "../constants";
 
-const getAI = async () => {
-  const apiKey = await getApiKey();
-  return new GoogleGenAI({ apiKey });
-};
+if (!API_KEY) {
+  console.error("GEMINI_API_KEY is missing.");
+}
+
+const ai = new GoogleGenAI({ apiKey: API_KEY });
 
 // 1. Analyze Image (Real API with Mock Fallback)
 export const analyzeWaterImage = async (base64Image: string, mimeType: string = 'image/jpeg') => {
+  if (!API_KEY) throw new Error("API Key not configured");
   try {
-    const ai = await getAI();
     const response = await ai.models.generateContent({
       model: MODELS.IMAGE_ANALYSIS,
       contents: [{
@@ -46,7 +47,8 @@ export const analyzeWaterImage = async (base64Image: string, mimeType: string = 
     return JSON.parse(jsonStr);
   } catch (error) {
     console.error("Analysis failed, using mock fallback:", error);
-    const score = Math.floor(Math.random() * 40) + 40;
+    // Mock Fallback
+    const score = Math.floor(Math.random() * 40) + 40; // 40-80
     const levels = ["Low", "Moderate", "High"];
     const level = levels[Math.floor(Math.random() * levels.length)];
     const isCloudy = Math.random() > 0.5;
@@ -65,18 +67,62 @@ export const analyzeWaterImage = async (base64Image: string, mimeType: string = 
 
 // 2. Chat (Real API with Mock Fallback)
 export const chatNormal = async (history: {role: string, parts: {text: string}[]}[], message: string) => {
-    try {
-        const ai = await getAI();
-        const chat = ai.chats.create({
-            model: MODELS.CHAT,
-            history: history,
-            config: {
-                systemInstruction: `You are JalDrishti AI — India's smartest water quality assistant.
+    const systemInstruction = `You are JalDrishti AI — India's smartest water quality assistant.
 Respond in the same language as the user (Hindi, English, or Hinglish).
 Use BIS IS:10500 standards. Always classify water as ✅ Safe / ⚠️ Moderate / ❌ Unsafe.
 Be concise (under 200 words). End with one bold follow-up question.
 Know India's regional water risks: arsenic (Bihar/Bengal), fluoride (Rajasthan/AP), iron (Eastern India).
-Recommend filters with Indian rupee prices. Mention free govt testing (CGWB, PHC, Jal Jeevan Mission).`
+Recommend filters with Indian rupee prices. Mention free govt testing (CGWB, PHC, Jal Jeevan Mission).`;
+
+    // Try OpenRouter if key is available
+    if (OPENROUTER_API_KEY) {
+        try {
+            // Convert Gemini history format to OpenRouter format
+            const openRouterMessages = [
+                { role: "system", content: systemInstruction }
+            ];
+            
+            history.forEach(msg => {
+                openRouterMessages.push({
+                    role: msg.role === 'model' ? 'assistant' : 'user',
+                    content: msg.parts[0].text
+                });
+            });
+            
+            openRouterMessages.push({ role: "user", content: message });
+
+            const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    model: "google/gemini-2.5-flash", // Defaulting to a fast model on OpenRouter
+                    messages: openRouterMessages
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                return data.choices[0].message.content;
+            } else {
+                console.error("OpenRouter API error:", await response.text());
+                // Fall through to Gemini
+            }
+        } catch (error) {
+            console.error("OpenRouter fetch failed:", error);
+            // Fall through to Gemini
+        }
+    }
+
+    if (!API_KEY) throw new Error("API Key not configured");
+    try {
+        const chat = ai.chats.create({
+            model: MODELS.CHAT,
+            history: history,
+            config: {
+                systemInstruction: systemInstruction
             }
         });
 
@@ -102,8 +148,8 @@ Recommend filters with Indian rupee prices. Mention free govt testing (CGWB, PHC
 
 // 3. Search Grounding (Real API with Mock Fallback)
 export const searchWaterNews = async (query: string) => {
+    if (!API_KEY) throw new Error("API Key not configured");
     try {
-        const ai = await getAI();
         const response = await ai.models.generateContent({
             model: MODELS.SEARCH,
             contents: `Find the latest news and updates regarding: ${query}. Summarize the key points relevant to water quality and environmental impact.`,
@@ -127,8 +173,8 @@ export const searchWaterNews = async (query: string) => {
 
 // 4. Maps Grounding (Real API with Mock Fallback)
 export const findNearbyStations = async (lat: number, lng: number) => {
+    if (!API_KEY) throw new Error("API Key not configured");
     try {
-        const ai = await getAI();
         const response = await ai.models.generateContent({
             model: MODELS.MAPS,
             contents: "Find water quality monitoring stations, river segments, or environmental offices near this location.",
@@ -164,8 +210,8 @@ export const findNearbyStations = async (lat: number, lng: number) => {
 
 // 5. Text to Speech (Real API)
 export const generateSpeech = async (text: string) => {
+    if (!API_KEY) throw new Error("API Key not configured");
     try {
-        const ai = await getAI();
         const response = await ai.models.generateContent({
             model: MODELS.TTS,
             contents: [{ parts: [{ text }] }],
@@ -189,8 +235,8 @@ export const generateSpeech = async (text: string) => {
 
 // 6. Fast Response (Real API)
 export const getQuickStat = async (dataContext: string) => {
+    if (!API_KEY) return "Status update unavailable (API Key missing).";
     try {
-        const ai = await getAI();
         const response = await ai.models.generateContent({
             model: MODELS.FAST,
             contents: `Given this data context: ${dataContext}. Provide a 1-sentence quick summary of the water health status.`,
@@ -203,8 +249,8 @@ export const getQuickStat = async (dataContext: string) => {
 
 // 7. Audio Transcription (Real API)
 export const transcribeAudio = async (base64Audio: string, mimeType: string = 'audio/wav') => {
+    if (!API_KEY) throw new Error("API Key not configured");
     try {
-        const ai = await getAI();
         const response = await ai.models.generateContent({
             model: MODELS.TRANSCRIPTION,
             contents: [{
@@ -229,30 +275,39 @@ export const transcribeAudio = async (base64Audio: string, mimeType: string = 'a
 };
 
 // Browser Native TTS (Offline Fallback)
-export const playBrowserTTS = (text: string, onStart?: () => void, onEnd?: () => void) => {
+export const playBrowserTTS = (text: string, onStart?: () => void, onEnd?: () => void, lang: string = 'en-US') => {
     if (!('speechSynthesis' in window)) {
         console.error("Browser does not support TTS");
         if (onEnd) onEnd();
         return;
     }
 
+    // Cancel any ongoing speech
     window.speechSynthesis.cancel();
 
     const speak = () => {
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'en-US';
+        utterance.lang = lang;
         utterance.rate = 1.0;
         utterance.pitch = 1.0;
 
+        // Try to select a better voice
         const voices = window.speechSynthesis.getVoices();
-        const preferredVoice = voices.find(v => v.name.includes('Google US English')) || 
+        const preferredVoice = voices.find(v => v.lang === lang) || 
+                               voices.find(v => v.name.includes('Google US English')) || 
                                voices.find(v => v.name.includes('Samantha')) ||
                                voices.find(v => v.lang === 'en-US');
         
         if (preferredVoice) utterance.voice = preferredVoice;
 
-        utterance.onstart = () => { if (onStart) onStart(); };
-        utterance.onend = () => { if (onEnd) onEnd(); };
+        utterance.onstart = () => {
+            if (onStart) onStart();
+        };
+
+        utterance.onend = () => {
+            if (onEnd) onEnd();
+        };
+
         utterance.onerror = (e) => {
             console.error("TTS Error:", e);
             if (onEnd) onEnd();

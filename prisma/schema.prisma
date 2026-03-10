@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model WaterReport {
+  id              String   @id @default(uuid())
+  locationName    String
+  lat             Float
+  lng             Float
+  algaeLevel      String
+  foamDetected    Boolean
+  turbidity       String
+  overallScore    Int
+  recommendation  String
+  details         String
+  status          String
+  ph              Float?
+  dissolvedOxygen Float?
+  chlorophyll     Float?
+  nitrogen        Float?
+  phosphorus      Float?
+  timestamp       DateTime @default(now())
+}
+
+model SensorData {
+  id          String   @id @default(uuid())
+  segmentId   String
+  name        String
+  status      String
+  lat         Float
+  lng         Float
+  paramDo     Float
+  paramPh     Float
+  lastUpdate  DateTime @default(now())
+}
+
+model UserQuery {
+  id        String   @id @default(uuid())
+  query     String
+  response  String
+  timestamp DateTime @default(now())
+}

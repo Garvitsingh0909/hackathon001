@@ -288,15 +288,15 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose, initialMe
             <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm pointer-events-auto transition-opacity" onClick={onClose}></div>
 
             {/* Bottom Sheet */}
-            <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl w-full max-w-2xl mx-auto rounded-t-[2.5rem] shadow-2xl pointer-events-auto transform transition-transform duration-300 animate-slide-up flex flex-col h-[85vh] md:h-[700px] border-t border-white/20 dark:border-slate-700">
+            <div className="bg-gov-card dark:bg-slate-900/95 backdrop-blur-xl w-full max-w-2xl mx-auto rounded-t-[20px] shadow-2xl pointer-events-auto transform transition-transform duration-300 animate-slide-up flex flex-col h-[85vh] md:h-[700px] border-t border-white/20 dark:border-slate-700">
                 
                 {/* Handle / Header */}
                 <div className="flex justify-center pt-4 pb-2 cursor-pointer" onClick={onClose}>
-                    <div className="w-16 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full"></div>
+                    <div className="w-10 h-1 bg-slate-300 dark:bg-slate-600 rounded-full"></div>
                 </div>
                 <div className="px-8 pb-4 border-b border-slate-200/50 dark:border-slate-700/50 flex justify-between items-center">
                     <div className="flex items-center gap-4">
-                        <div className="p-3 rounded-2xl text-white shadow-lg transition-colors bg-gradient-to-br from-blue-600 to-blue-700 shadow-blue-500/30 relative">
+                        <div className="p-3 rounded-2xl text-white shadow-subtle transition-colors bg-gov-navy relative">
                             <Bot size={28} />
                             {isSpeaking && <span className="absolute -top-1 -right-1 flex h-3 w-3">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
@@ -304,7 +304,7 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose, initialMe
                             </span>}
                         </div>
                         <div>
-                            <h3 className="font-bold text-slate-900 dark:text-white text-xl font-display">
+                            <h3 className="font-bold text-gov-navy dark:text-white text-xl font-display">
                                 JalDrishti Assistant
                             </h3>
                             <div className="flex items-center gap-2">
@@ -337,7 +337,7 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose, initialMe
                             <button 
                                 key={idx}
                                 onClick={() => handleSend(card.query)}
-                                className="flex-shrink-0 flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-2 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm"
+                                className="flex-shrink-0 flex items-center gap-2 bg-gov-card dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-2 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-subtle"
                             >
                                 {card.icon} {card.text}
                             </button>
@@ -346,19 +346,19 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose, initialMe
                 )}
 
                 {/* Messages Area */}
-                <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 bg-slate-50/50 dark:bg-slate-950/50">
+                <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 bg-gov-bg dark:bg-slate-950/50">
                     {messages.map((msg) => (
                         <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} message-enter`}>
                             {msg.role === 'model' && (
-                                <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center mr-3 shrink-0 self-end mb-5">
-                                    <Bot size={16} className="text-blue-600 dark:text-blue-400" />
+                                <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/50 flex items-center justify-center mr-3 shrink-0 self-end mb-5">
+                                    <Bot size={16} className="text-gov-teal dark:text-blue-400" />
                                 </div>
                             )}
                             
                             <div className={`max-w-[80%] relative group ${
                                 msg.role === 'user' 
-                                    ? 'bg-gradient-to-br from-blue-600 to-teal-500 text-white rounded-3xl rounded-br-sm shadow-md'
-                                    : 'bg-white dark:bg-slate-800 border-l-4 border-blue-500 text-slate-700 dark:text-slate-200 rounded-3xl rounded-bl-sm shadow-sm'
+                                    ? 'bg-gov-navy text-white rounded-3xl rounded-br-sm shadow-subtle'
+                                    : 'bg-gov-light-surface dark:bg-slate-800 border-l-4 border-gov-teal text-slate-700 dark:text-slate-200 rounded-3xl rounded-bl-sm shadow-subtle'
                             }`}>
                                 <div className="p-4 md:p-5">
                                     {msg.role === 'user' ? (
@@ -381,6 +381,12 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose, initialMe
                                         </button>
                                     )}
                                 </div>
+                                {msg.role === 'model' && (
+                                    <div className="px-4 pb-3 flex items-center gap-1.5">
+                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Powered by</span>
+                                        <span className="text-[10px] font-bold text-[#4285F4]">Google Gemini</span>
+                                    </div>
+                                )}
                             </div>
 
                             {msg.role === 'user' && (
@@ -391,12 +397,26 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose, initialMe
                         </div>
                     ))}
                     
+                    {showArsenicAlert && (
+                        <motion.div 
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-2xl p-4 flex gap-3 shadow-sm"
+                        >
+                            <AlertTriangle className="text-red-500 flex-shrink-0" size={20} />
+                            <div>
+                                <p className="text-sm font-bold text-red-800 dark:text-red-300">Arsenic Zone Detected</p>
+                                <p className="text-xs text-red-600 dark:text-red-400 mt-1">This region has high groundwater arsenic levels. Do not drink borewell water without RO filtration.</p>
+                            </div>
+                        </motion.div>
+                    )}
+
                     {isLoading && (
                         <div className="flex justify-start message-enter">
-                            <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center mr-3 shrink-0 self-end mb-5">
-                                <Bot size={16} className="text-blue-600 dark:text-blue-400" />
+                            <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/50 flex items-center justify-center mr-3 shrink-0 self-end mb-5">
+                                <Bot size={16} className="text-gov-teal dark:text-blue-400" />
                             </div>
-                            <div className="bg-white dark:bg-slate-800 border-l-4 border-slate-300 dark:border-slate-600 px-6 py-5 rounded-3xl rounded-bl-sm shadow-sm flex items-center gap-2">
+                            <div className="bg-gov-light-surface dark:bg-slate-800 border-l-4 border-amber-500 px-6 py-5 rounded-3xl rounded-bl-sm shadow-subtle flex items-center gap-2 animate-shimmer">
                                 <div className="flex gap-1">
                                     <div className="w-2 h-2 bg-slate-400 rounded-full typing-dot"></div>
                                     <div className="w-2 h-2 bg-slate-400 rounded-full typing-dot"></div>
@@ -464,7 +484,7 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose, initialMe
                 </AnimatePresence>
 
                 {/* Input Area */}
-                <div className="p-4 md:p-6 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
+                <div className="p-4 md:p-6 bg-gov-card dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
                     <div className="relative flex items-end gap-2">
                         <div className="relative">
                             <button 
@@ -521,10 +541,10 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose, initialMe
                         <button 
                             onClick={() => handleSend()}
                             disabled={!input.trim() || isLoading}
-                            className={`p-4 rounded-full transition-all shadow-md flex-shrink-0 ${
+                            className={`p-4 rounded-full transition-all shadow-subtle flex-shrink-0 ${
                                 isSent 
                                     ? 'bg-green-500 text-white' 
-                                    : 'bg-gradient-to-br from-blue-600 to-blue-700 text-white hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0'
+                                    : 'bg-gov-navy text-white hover:shadow-subtle-hover hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0'
                             }`}
                             aria-label="Send message"
                         >

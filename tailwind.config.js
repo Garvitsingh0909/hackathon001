@@ -12,14 +12,21 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-        display: ['Outfit', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+        display: ['"Sora"', 'sans-serif'],
       },
       colors: {
-        'gov-navy': '#0B1F3B',
-        'gov-teal': '#1CA7A6',
-        'gov-blue-light': '#eff6ff',
+        'gov-navy': '#0A3D6B',
+        'gov-teal': '#00BCD4',
+        'gov-bg': '#F7F9FB',
+        'gov-card': '#FFFFFF',
+        'gov-light-surface': '#E8F4FD',
+        'gov-dark-navy': '#050E1A',
       },
+      boxShadow: {
+        'subtle': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+        'subtle-hover': '0 10px 30px -4px rgba(0, 0, 0, 0.08)',
+      }
     },
   },
   plugins: [],
