@@ -5,6 +5,7 @@ import { api } from '../services/api';
 import { getQuickStat } from '../services/geminiService';
 import { WaterQualityReport } from '../types';
 import { TRANSLATIONS } from '../constants';
+import { MOCK_REPORTS, MOCK_STATS } from '../lib/mockReports';
 import { motion } from 'motion/react';
 
 interface DashboardProps {
@@ -278,41 +279,95 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, onOpenAssista
                 </div>
           </motion.div>
 
-          {/* Recent Activity - Spans 2 cols */}
+          {/* Mock Data Disclaimer */}
+          <motion.div variants={item} className="md:col-span-2 lg:col-span-2">
+            <div style={{
+              background: "rgba(245,158,11,0.08)",
+              border: "1px solid rgba(245,158,11,0.25)",
+              borderRadius: 12,
+              padding: "12px 16px",
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              fontSize: 13,
+              color: "rgba(255,255,255,0.6)",
+            }}>
+              <span style={{ fontSize: 16 }}>⚠️</span>
+              <span>
+                <strong style={{ color: "rgba(245,158,11,0.9)" }}>Demo Mode:</strong>
+                {" "}All citizen reports, sensor readings, and water quality data shown here are mock data for demonstration purposes only. Real data will appear after pilot launch.
+              </span>
+            </div>
+          </motion.div>
+
+          {/* Mock Citizen Reports - Spans 2 cols */}
           <motion.div variants={item} className="md:col-span-2 lg:col-span-2 bg-gov-light-surface dark:bg-gov-dark-navy/80 dark:backdrop-blur-xl rounded-3xl p-6 shadow-subtle border border-blue-100 dark:border-white/10 flex flex-col">
               <div className="flex justify-between items-center mb-6">
-                  <h3 className="font-bold text-slate-800 dark:text-white font-display">{t.dashboard.recentReports}</h3>
-                  <button className="text-xs font-bold text-gov-teal hover:text-teal-700 dark:hover:text-teal-400 uppercase tracking-wider transition-colors flex items-center gap-1">View All <ArrowRight size={14}/></button>
+                  <div>
+                    <h3 className="font-bold text-slate-800 dark:text-white font-display">Community Reports</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{MOCK_STATS.totalReports} reports · {MOCK_STATS.criticalActive} critical</p>
+                  </div>
               </div>
               
               <div className="space-y-3 flex-1">
-                {loading ? (
-                    [1,2,3].map(i => <div key={i} className="h-16 bg-blue-50 dark:bg-slate-700/50 rounded-2xl animate-pulse"></div>)
-                ) : (
-                    reports.slice(0, 3).map((report) => (
-                        <div key={report.id} className="group flex items-center justify-between p-4 bg-white/50 dark:bg-slate-800/50 hover:bg-white dark:hover:bg-slate-700 border border-transparent hover:border-blue-200 dark:hover:border-slate-600 rounded-2xl transition-all duration-300 hover:shadow-md cursor-pointer">
-                            <div className="flex items-center gap-4">
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shadow-sm ${report.overallScore < 50 ? 'bg-red-500 shadow-red-500/30' : report.overallScore < 75 ? 'bg-amber-500 shadow-amber-500/30' : 'bg-emerald-500 shadow-emerald-500/30'}`}>
-                                    {report.overallScore}
-                                </div>
-                                <div>
-                                    <h4 className="font-bold text-slate-900 dark:text-white text-sm">{report.locationName}</h4>
-                                    <div className="flex items-center gap-2 mt-0.5">
-                                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                                            <Clock size={10} />
-                                            {new Date(report.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                                        </span>
-                                        <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-500"></span>
-                                        <span className={`text-[10px] font-bold ${report.status === 'Resolved' ? 'text-emerald-500' : report.status === 'Pending' ? 'text-red-500' : 'text-amber-500'}`}>{report.status}</span>
-                                    </div>
-                                </div>
+                {MOCK_REPORTS.slice(0, 3).map((report) => (
+                    <div key={report.id} className="group relative flex items-start justify-between p-4 bg-white/50 dark:bg-slate-800/50 hover:bg-white dark:hover:bg-slate-700 border border-transparent hover:border-blue-200 dark:hover:border-slate-600 rounded-2xl transition-all duration-300 hover:shadow-md cursor-pointer">
+                        <div className="absolute top-3 right-3">
+                          <span style={{
+                            fontSize: 9, padding: "2px 7px",
+                            background: "rgba(245,158,11,0.12)",
+                            border: "1px solid rgba(245,158,11,0.3)",
+                            color: "#F59E0B", borderRadius: 999,
+                            fontWeight: 600, letterSpacing: "0.05em",
+                          }}>MOCK</span>
+                        </div>
+                        <div className="flex items-start gap-3 flex-1">
+                            <div style={{ 
+                              width: 40, 
+                              height: 40, 
+                              borderRadius: '50%', 
+                              background: report.avatarColor,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: 'white',
+                              fontSize: 12,
+                              fontWeight: 600
+                            }}>
+                              {report.avatar}
                             </div>
-                            <div className="text-right">
-                                <ChevronRight size={18} className="text-slate-300 dark:text-slate-500 group-hover:text-gov-navy dark:group-hover:text-white transition-colors group-hover:translate-x-1" />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h4 className="font-bold text-slate-900 dark:text-white text-sm">{report.reportedBy}</h4>
+                                <span style={{
+                                  fontSize: 10, padding: "3px 8px",
+                                  background: report.status === 'Resolved' ? 'rgba(16,185,129,0.12)' : 
+                                             report.status === 'In Review' ? 'rgba(245,158,11,0.12)' :
+                                             report.status === 'Escalated' ? 'rgba(239,68,68,0.12)' : 'rgba(59,130,246,0.12)',
+                                  border: report.status === 'Resolved' ? '1px solid rgba(16,185,129,0.3)' :
+                                        report.status === 'In Review' ? '1px solid rgba(245,158,11,0.3)' :
+                                        report.status === 'Escalated' ? '1px solid rgba(239,68,68,0.3)' : '1px solid rgba(59,130,246,0.3)',
+                                  color: report.status === 'Resolved' ? '#10B981' :
+                                       report.status === 'In Review' ? '#F59E0B' :
+                                       report.status === 'Escalated' ? '#EF4444' : '#3B82F6',
+                                  borderRadius: 4,
+                                  fontWeight: 600
+                                }}>{report.status}</span>
+                              </div>
+                              <p className="text-slate-600 dark:text-slate-300 text-sm truncate">{report.issue}</p>
+                              <div className="flex items-center gap-3 mt-2 text-[11px] text-slate-500 dark:text-slate-400">
+                                <span>📍 {report.location}</span>
+                                <span>•</span>
+                                <span>{report.timeAgo}</span>
+                              </div>
                             </div>
                         </div>
-                    ))
-                )}
+                        <div className="flex items-center gap-2 ml-2 text-right">
+                          <span style={{ fontSize: 11, fontWeight: 600, color: '#64748B' }}>▲ {report.upvotes}</span>
+                          <ChevronRight size={16} className="text-slate-300 dark:text-slate-500" />
+                        </div>
+                    </div>
+                ))}
               </div>
           </motion.div>
 

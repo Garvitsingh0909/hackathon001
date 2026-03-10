@@ -37,6 +37,9 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose, initialMe
     const [selectedLang, setSelectedLang] = useState('en-IN');
     const [noiseLevel, setNoiseLevel] = useState(0);
     const [showArsenicAlert, setShowArsenicAlert] = useState(false);
+    const [voiceState, setVoiceState] = useState<'idle' | 'listening' | 'thinking' | 'speaking' | 'error'>('idle');
+    const [liveTranscript, setLiveTranscript] = useState('');
+    const recognitionRef = useRef<any>(null);
     
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const audioContextRef = useRef<AudioContext | null>(null);
@@ -82,14 +85,83 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose, initialMe
         animationFrameRef.current = requestAnimationFrame(updateNoiseLevel);
     };
 
+    const initSpeechRecognition = () => {
+        if (typeof window === 'undefined') return;
+        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        if (!SpeechRecognition) return null;
+        
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        recognition.lang = selectedLang === 'hi-IN' ? 'hi-IN' : 'en-IN';
+
+        recognition.onstart = () => setVoiceState('listening');
+        recognition.onend = () => setVoiceState('idle');
+        recognition.onerror = (e: any) => {
+            if (e.error === 'not-allowed') console.error('Microphone access denied');
+            if (e.error === 'no-speech') console.error('No speech detected');
+            setVoiceState('idle');
+        };
+        recognition.onresult = (e: any) => {
+            const transcript = Array.from(e.results)
+                .map((r: any) => r[0].transcript)
+                .join('');
+            setLiveTranscript(transcript);
+            if (e.results[0].isFinal) {
+                setInput(transcript);
+                handleSend(transcript);
+                setVoiceState('thinking');
+            }
+        };
+        return recognition;
+    };
+
+    const startVoiceInput = () => {
+        if (typeof window === 'undefined') return;
+        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            console.error('Voice not supported in this browser');
+            return;
+        }
+        if (!recognitionRef.current) {
+            recognitionRef.current = initSpeechRecognition();
+        }
+        if (recognitionRef.current) {
+            recognitionRef.current.lang = selectedLang === 'hi-IN' ? 'hi-IN' : 'en-IN';
+            recognitionRef.current.start();
+        }
+    };
+
+    const stopVoiceInput = () => {
+        if (recognitionRef.current) {
+            recognitionRef.current.stop();
+        }
+        setVoiceState('idle');
+    };
+
+    const speak = (text: string) => {
+        if (typeof window === 'undefined') return;
+        if (!('speechSynthesis' in window)) {
+            console.error('Browser does not support TTS');
+            return;
+        }
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = selectedLang === 'hi-IN' ? 'hi-IN' : 'en-IN';
+        utterance.rate = 0.9;
+        utterance.pitch = 1;
+        window.speechSynthesis.cancel();
+        setVoiceState('speaking');
+        utterance.onend = () => setVoiceState('idle');
+        window.speechSynthesis.speak(utterance);
+    };
+
     const startRecording = async () => {
-        if (navigator.vibrate) navigator.vibrate(50); // Haptic feedback
+        if (navigator.vibrate) navigator.vibrate(50);
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             mediaRecorderRef.current = new MediaRecorder(stream);
             audioChunksRef.current = [];
 
-            // Setup audio context for noise level
             const actx = new (window.AudioContext || (window as any).webkitAudioContext)();
             const analyser = actx.createAnalyser();
             const source = actx.createMediaStreamSource(stream);
@@ -116,24 +188,6 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose, initialMe
                         if (transcription) {
                             const cleanText = transcription.trim();
                             setVoiceHistory(prev => [cleanText, ...prev].slice(0, 5));
-                            
-                            // Voice Commands
-                            const lowerText = cleanText.toLowerCase();
-                            if (lowerText.includes("analyze my water") && onNavigate) {
-                                onNavigate('analyze');
-                                onClose();
-                                return;
-                            }
-                            if (lowerText.includes("show india map") && onNavigate) {
-                                onNavigate('map');
-                                onClose();
-                                return;
-                            }
-                            if (lowerText.includes("clear chat")) {
-                                setMessages([]);
-                                return;
-                            }
-                            
                             setInput(cleanText);
                             handleSend(cleanText);
                         }
@@ -488,7 +542,7 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose, initialMe
                     <div className="relative flex items-end gap-2">
                         <div className="relative">
                             <button 
-                                onClick={toggleListening}
+                                onClick={voiceState === 'idle' || voiceState === 'error' ? startVoiceInput : stopVoiceInput}
                                 className={`p-4 rounded-full transition-all ${
                                     isRecording 
                                         ? 'bg-red-500 text-white mic-pulse' 
