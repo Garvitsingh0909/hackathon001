@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Map, Search, Newspaper, MapPin, ExternalLink, Loader2, AlertTriangle, ShieldAlert, ShieldCheck } from 'lucide-react';
-import { searchWaterNews, findNearbyStations } from '../services/geminiService';
-import { motion, AnimatePresence } from 'motion/react';
+import { Map, Search, Newspaper, MapPin, ExternalLink, Loader2, AlertTriangle, ShieldAlert, ShieldCheck, Volume2 } from 'lucide-react';
+import { searchWaterNews, findNearbyStations, playBrowserTTS } from '../lib/claude';
+import { motion, AnimatePresence } from 'framer-motion';
+import { DisclaimerBanner } from './ui/DisclaimerBanner';
 
 export const WaterIntel = () => {
     const [activeSection, setActiveSection] = useState<'news' | 'stations' | 'risk'>('news');
     const [news, setNews] = useState<{text: string, sources: any[]} | null>(null);
     const [stations, setStations] = useState<{text: string, chunks: any[]} | null>(null);
     const [loading, setLoading] = useState(false);
+    const [isSpeaking, setIsSpeaking] = useState(false);
     
     // Risk Checker State
     const [locationInput, setLocationInput] = useState('');
@@ -72,6 +74,27 @@ export const WaterIntel = () => {
         if (activeSection === 'stations' && !stations) fetchStations();
     }, [activeSection]);
 
+    const handleSpeak = (text: string) => {
+        if (isSpeaking) {
+            window.speechSynthesis.cancel();
+            setIsSpeaking(false);
+            return;
+        }
+        
+        setIsSpeaking(true);
+        playBrowserTTS(
+            text,
+            () => setIsSpeaking(true),
+            () => setIsSpeaking(false)
+        );
+    };
+
+    useEffect(() => {
+        return () => {
+            window.speechSynthesis.cancel();
+        };
+    }, []);
+
     const handleCheckRisk = () => {
         if (!locationInput.trim()) return;
         setIsCheckingRisk(true);
@@ -122,6 +145,7 @@ export const WaterIntel = () => {
             animate={{ opacity: 1 }}
             className="max-w-5xl mx-auto space-y-8 pt-6"
         >
+            <DisclaimerBanner />
             <div className="flex flex-wrap items-center justify-center gap-2 md:gap-4 bg-slate-100/50 dark:bg-slate-800/50 backdrop-blur-md p-2 rounded-full shadow-inner border border-slate-200/50 dark:border-slate-700/50 w-fit mx-auto mb-8 transition-colors">
                 <button
                     onClick={() => setActiveSection('news')}
@@ -173,12 +197,20 @@ export const WaterIntel = () => {
                 <div className="bg-gov-card dark:bg-slate-900 rounded-[2.5rem] p-8 md:p-12 shadow-subtle border border-slate-200 dark:border-slate-800 min-h-[500px] transition-colors">
                     {activeSection === 'news' && news && (
                         <motion.div variants={container} initial="hidden" animate="show">
-                            <motion.div variants={item} className="mb-8 border-b border-slate-100 dark:border-slate-800 pb-6">
-                                <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-3 font-display">
-                                    <div className="p-2 bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded-xl"><Search size={24} /></div>
-                                    Grounded Search
-                                </h2>
-                                <p className="text-slate-500 dark:text-slate-400 ml-14">Real-time environmental updates for Tamsa River</p>
+                            <motion.div variants={item} className="mb-8 border-b border-slate-100 dark:border-slate-800 pb-6 flex justify-between items-end">
+                                <div>
+                                    <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-3 font-display">
+                                        <div className="p-2 bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded-xl"><Search size={24} /></div>
+                                        Grounded Search
+                                    </h2>
+                                    <p className="text-slate-500 dark:text-slate-400 ml-14">Real-time environmental updates for Tamsa River</p>
+                                </div>
+                                <button 
+                                    onClick={() => handleSpeak(news.text)}
+                                    className={`p-3 rounded-full border transition-all ${isSpeaking ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50'}`}
+                                >
+                                    {isSpeaking ? <Loader2 className="animate-spin" size={20} /> : <Volume2 size={20} />}
+                                </button>
                             </motion.div>
                             
                             <motion.div variants={item} className="prose prose-lg prose-slate dark:prose-invert max-w-none text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -226,12 +258,20 @@ export const WaterIntel = () => {
 
                     {activeSection === 'stations' && stations && (
                          <motion.div variants={container} initial="hidden" animate="show">
-                            <motion.div variants={item} className="mb-8 border-b border-slate-100 dark:border-slate-800 pb-6">
-                                <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-3 font-display">
-                                    <div className="p-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-xl"><Map className="text-emerald-500 dark:text-emerald-400" size={24} /></div>
-                                    Monitoring Points
-                                </h2>
-                                <p className="text-slate-500 dark:text-slate-400 ml-14">Official water quality stations and landmarks</p>
+                            <motion.div variants={item} className="mb-8 border-b border-slate-100 dark:border-slate-800 pb-6 flex justify-between items-end">
+                                <div>
+                                    <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-3 font-display">
+                                        <div className="p-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-xl"><Map className="text-emerald-500 dark:text-emerald-400" size={24} /></div>
+                                        Monitoring Points
+                                    </h2>
+                                    <p className="text-slate-500 dark:text-slate-400 ml-14">Official water quality stations and landmarks</p>
+                                </div>
+                                <button 
+                                    onClick={() => handleSpeak(stations.text)}
+                                    className={`p-3 rounded-full border transition-all ${isSpeaking ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50'}`}
+                                >
+                                    {isSpeaking ? <Loader2 className="animate-spin" size={20} /> : <Volume2 size={20} />}
+                                </button>
                             </motion.div>
 
                             <motion.p variants={item} className="text-slate-600 dark:text-slate-300 mb-10 whitespace-pre-line text-lg leading-relaxed">{stations.text}</motion.p>

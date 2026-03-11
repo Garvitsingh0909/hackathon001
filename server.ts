@@ -1,36 +1,26 @@
-import express from 'express';
-import { createServer as createViteServer } from 'vite';
-import { fileURLToPath } from 'url';
-import path from 'path';
-import apiRoutes from './api/index.js';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+import express from "express";
+import { createServer as createViteServer } from "vite";
+import apiRouter from "./api/index.js";
 
 async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  app.use(express.json());
+  // API routes FIRST
+  app.use(apiRouter);
 
-  // Use API Routes
-  app.use(apiRoutes);
-
-  // Vite Middleware
-  if (process.env.NODE_ENV !== 'production') {
+  // Vite middleware for development
+  if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },
-      appType: 'spa',
+      appType: "spa",
     });
     app.use(vite.middlewares);
   } else {
-    // Serve static files in production
-    app.use(express.static(path.join(__dirname, 'dist')));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-    });
+    app.use(express.static('dist'));
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
+  app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
 }

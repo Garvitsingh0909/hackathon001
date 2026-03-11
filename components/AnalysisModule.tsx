@@ -1,10 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Camera, Upload, AlertCircle, CheckCircle, Volume2, Loader2, Play, Search, X, BarChart3, TrendingUp, Droplets, RotateCcw, ChevronDown, ChevronUp, Info, Printer, Share2 } from 'lucide-react';
-import { analyzeWaterImage, generateSpeech, playBrowserTTS } from '../services/geminiService';
+import { analyzeWaterImage, playBrowserTTS } from '../lib/claude';
 import { api } from '../services/api';
 import { WaterQualityReport } from '../types';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { DisclaimerBanner } from './ui/DisclaimerBanner';
+import { useAuth } from '../src/AuthContext';
+import { db } from '../src/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 const FAQ_ITEMS = [
     { q: "How accurate is this visual analysis?", a: "This AI analysis provides a preliminary assessment based on visual indicators like color, turbidity, and visible algae. It is not a substitute for laboratory testing." },
@@ -13,12 +17,14 @@ const FAQ_ITEMS = [
 ];
 
 export const AnalysisModule = () => {
+  const { user } = useAuth();
   const [image, setImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [result, setResult] = useState<WaterQualityReport | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const audioContextRef = useRef<AudioContext | null>(null);
 
   useEffect(() => {
@@ -146,6 +152,26 @@ export const AnalysisModule = () => {
         };
 
         setSuccess(true);
+        
+        // Save to Firestore if user is logged in
+        if (user) {
+            setSaveStatus('saving');
+            try {
+                await addDoc(collection(db, 'reports'), {
+                    ...finalReport,
+                    userId: user.uid,
+                    userEmail: user.email,
+                    userName: user.displayName,
+                    createdAt: serverTimestamp(),
+                    imageUrl: image // In a real app, we'd upload to Storage first
+                });
+                setSaveStatus('saved');
+            } catch (error) {
+                console.error("Error saving report:", error);
+                setSaveStatus('error');
+            }
+        }
+
         setTimeout(() => {
             setResult(finalReport);
             setSuccess(false);
@@ -165,49 +191,14 @@ export const AnalysisModule = () => {
       setIsPlaying(true);
       try {
           const textToSpeak = `Analysis Report. Overall Score: ${result.overallScore}. Status: ${result.algaeLevel} Algae Level. Recommendation: ${result.recommendation}`;
-          
-          const base64Audio = await generateSpeech(textToSpeak);
-          
-          if (base64Audio) {
-              const binaryString = atob(base64Audio);
-              const len = binaryString.length;
-              const bytes = new Uint8Array(len);
-              for (let i = 0; i < len; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
-              }
-              
-              if (!audioContextRef.current) {
-                  audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({sampleRate: 24000});
-              }
-              
-              if (audioContextRef.current.state === 'suspended') {
-                  await audioContextRef.current.resume();
-              }
-              
-              const dataInt16 = new Int16Array(bytes.buffer);
-              const buffer = audioContextRef.current.createBuffer(1, dataInt16.length, 24000);
-              const channelData = buffer.getChannelData(0);
-              for (let i = 0; i < dataInt16.length; i++) {
-                  channelData[i] = dataInt16[i] / 32768.0;
-              }
-              
-              const source = audioContextRef.current.createBufferSource();
-              source.buffer = buffer;
-              source.connect(audioContextRef.current.destination);
-              source.onended = () => setIsPlaying(false);
-              source.start(0);
-          } else {
-              throw new Error("No audio generated");
-          }
-
-      } catch (e) {
-          console.error("Gemini TTS Error, falling back to browser TTS:", e);
-          const textToSpeak = `Analysis Report. Overall Score: ${result.overallScore}. Status: ${result.algaeLevel} Algae Level. Recommendation: ${result.recommendation}`;
           playBrowserTTS(
               textToSpeak,
               () => setIsPlaying(true),
               () => setIsPlaying(false)
           );
+      } catch (e) {
+          console.error("TTS Error:", e);
+          setIsPlaying(false);
       }
   };
 
@@ -249,6 +240,7 @@ export const AnalysisModule = () => {
         animate={{ opacity: 1, y: 0 }}
         className="max-w-5xl mx-auto pt-6"
     >
+      <DisclaimerBanner />
       <div className="bg-gov-card dark:bg-slate-900 rounded-[2rem] shadow-subtle dark:shadow-black/50 border border-slate-200 dark:border-slate-800 overflow-hidden transition-colors" id="printable-report">
         
         {/* Header */}
@@ -451,6 +443,11 @@ export const AnalysisModule = () => {
                                         result.overallScore >= 50 ? 'text-amber-600 dark:text-amber-400' :
                                         'text-red-600 dark:text-red-400'
                                     }`}>Overall Score</span>
+                                    {saveStatus === 'saved' && (
+                                        <span className="ml-3 text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                                            SAVED TO CLOUD
+                                        </span>
+                                    )}
                                 </div>
                                 <motion.button 
                                     whileHover={{ scale: 1.1 }}

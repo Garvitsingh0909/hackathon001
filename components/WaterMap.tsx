@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
-import { motion } from 'motion/react';
-import { MapPin, AlertTriangle, ShieldAlert, ShieldCheck, Info, MessageSquare } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { MapPin, AlertTriangle, ShieldAlert, ShieldCheck, Info, MessageSquare, Volume2, Loader2, Search, X } from 'lucide-react';
+import { TRANSLATIONS } from '../constants';
+import { DisclaimerBanner } from './ui/DisclaimerBanner';
+import { playBrowserTTS, searchWaterNews } from '../lib/claude';
 
 const stateRisks: Record<string, { risk: 'critical' | 'high' | 'medium' | 'low', issues: string[], color: string }> = {
   "West Bengal":    { risk: "critical", issues: ["Arsenic", "Iron"], color: "#dc2626" },
@@ -26,8 +29,50 @@ const stateRisks: Record<string, { risk: 'critical' | 'high' | 'medium' | 'low',
   "Delhi":          { risk: "medium",   issues: ["TDS", "Heavy metals"], color: "#d97706" },
 };
 
-export const WaterMap = ({ onGetAdvice }: { onGetAdvice: (state: string) => void }) => {
+export const WaterMap = ({ language = 'en' }: { language?: 'en' | 'hi' }) => {
+  const t = TRANSLATIONS[language].map;
   const [filter, setFilter] = useState<'all' | 'critical' | 'high' | 'medium' | 'low'>('all');
+  const [isSpeaking, setIsSpeaking] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResult, setSearchResult] = useState<string | null>(null);
+
+  const handleStateSearch = async () => {
+    if (!searchQuery.trim()) return;
+    setIsSearching(true);
+    setSearchResult(null);
+    try {
+      const result = await searchWaterNews(`Current water quality and contamination issues in ${searchQuery} India 2024 2025`);
+      setSearchResult(result.text);
+    } catch (error) {
+      console.error("Search failed:", error);
+      setSearchResult("Unable to fetch real-time data for this region. Please try again later.");
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleSpeak = (state: string, data: any) => {
+    if (isSpeaking === state) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(null);
+      return;
+    }
+
+    const text = `${state} has a ${data.risk} water risk level. Key issues include ${data.issues.join(', ')}.`;
+    setIsSpeaking(state);
+    playBrowserTTS(
+      text,
+      () => setIsSpeaking(state),
+      () => setIsSpeaking(null)
+    );
+  };
+
+  useEffect(() => {
+    return () => {
+      window.speechSynthesis.cancel();
+    };
+  }, []);
 
   const filteredStates = Object.entries(stateRisks).filter(([_, data]) => {
     if (filter === 'all') return true;
@@ -60,6 +105,7 @@ export const WaterMap = ({ onGetAdvice }: { onGetAdvice: (state: string) => void
         animate={{ opacity: 1, y: 0 }}
         className="max-w-5xl mx-auto pt-6"
     >
+      <DisclaimerBanner />
       <div className="bg-gov-card dark:bg-slate-900 rounded-[2rem] shadow-subtle dark:shadow-black/50 border border-slate-200 dark:border-slate-800 overflow-hidden transition-colors">
         
         {/* Header */}
@@ -69,22 +115,79 @@ export const WaterMap = ({ onGetAdvice }: { onGetAdvice: (state: string) => void
                 <MapPin size={28} />
             </div>
             <div>
-                <h2 className="text-3xl font-bold text-slate-900 dark:text-white font-display">India Water Risk Map</h2>
-                <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Regional water quality concerns and contaminants</p>
+                <h2 className="text-3xl font-bold text-slate-900 dark:text-white font-display">{t.title}</h2>
+                <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{t.subtitle}</p>
             </div>
           </div>
           
           {/* Legend & Filters */}
           <div className="mt-8 flex flex-col md:flex-row gap-4 justify-between items-center">
             <div className="flex flex-wrap items-center gap-2 bg-slate-100/50 dark:bg-slate-800/50 backdrop-blur-md p-1.5 rounded-full shadow-inner border border-slate-200/50 dark:border-slate-700/50">
-              <FilterBtn label="All" active={filter === 'all'} onClick={() => setFilter('all')} color="from-slate-400 to-slate-500" />
-              <FilterBtn label="Critical" active={filter === 'critical'} onClick={() => setFilter('critical')} color="from-red-500 to-rose-600" />
-              <FilterBtn label="High" active={filter === 'high'} onClick={() => setFilter('high')} color="from-orange-500 to-amber-600" />
-              <FilterBtn label="Medium" active={filter === 'medium'} onClick={() => setFilter('medium')} color="from-amber-400 to-yellow-500" />
-              <FilterBtn label="Low" active={filter === 'low'} onClick={() => setFilter('low')} color="from-emerald-400 to-green-500" />
+              <FilterBtn label={t.all} active={filter === 'all'} onClick={() => setFilter('all')} color="from-slate-400 to-slate-500" />
+              <FilterBtn label={t.critical} active={filter === 'critical'} onClick={() => setFilter('critical')} color="from-red-500 to-rose-600" />
+              <FilterBtn label={t.high} active={filter === 'high'} onClick={() => setFilter('high')} color="from-orange-500 to-amber-600" />
+              <FilterBtn label={t.medium} active={filter === 'medium'} onClick={() => setFilter('medium')} color="from-amber-400 to-yellow-500" />
+              <FilterBtn label={t.low} active={filter === 'low'} onClick={() => setFilter('low')} color="from-emerald-400 to-green-500" />
+            </div>
+            
+            <div className="flex gap-2 w-full md:w-auto">
+              <div className="relative flex-1 md:w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                <input 
+                  type="text" 
+                  placeholder="Search state/region..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleStateSearch()}
+                  className="w-full pl-9 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                />
+              </div>
+              <button 
+                onClick={handleStateSearch}
+                disabled={isSearching || !searchQuery.trim()}
+                className="px-4 py-2 bg-gov-navy dark:bg-blue-600 text-white text-sm font-bold rounded-full hover:scale-105 transition-all disabled:bg-slate-300"
+              >
+                {isSearching ? <Loader2 className="animate-spin" size={16} /> : 'Search'}
+              </button>
             </div>
           </div>
         </div>
+
+        {/* Search Result Overlay */}
+        <AnimatePresence>
+          {searchResult && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="px-8 md:px-10 pb-8"
+            >
+              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-3xl p-6 border border-blue-100 dark:border-blue-800/50 relative">
+                <button 
+                  onClick={() => setSearchResult(null)}
+                  className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+                >
+                  <X size={20} />
+                </button>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-blue-100 dark:bg-blue-800 rounded-xl text-blue-600 dark:text-blue-400">
+                    <Search size={20} />
+                  </div>
+                  <h3 className="font-bold text-lg">Real-time Intelligence: {searchQuery}</h3>
+                  <button 
+                    onClick={() => handleSpeak(searchQuery, { risk: 'search', issues: [searchResult] })}
+                    className={`p-2 rounded-full transition-all ${isSpeaking === searchQuery ? 'bg-blue-600 text-white' : 'text-blue-600 hover:bg-blue-100'}`}
+                  >
+                    {isSpeaking === searchQuery ? <Loader2 className="animate-spin" size={16} /> : <Volume2 size={16} />}
+                  </button>
+                </div>
+                <div className="prose prose-sm dark:prose-invert max-w-none text-slate-600 dark:text-slate-300">
+                  {searchResult}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* State Cards List */}
         <div className="p-8 md:p-10">
@@ -101,13 +204,21 @@ export const WaterMap = ({ onGetAdvice }: { onGetAdvice: (state: string) => void
                 <div>
                   <div className="flex justify-between items-start mb-4">
                     <h3 className="text-xl font-bold text-slate-900 dark:text-white font-display">{state}</h3>
-                    <div className="p-2 bg-white/50 dark:bg-black/20 rounded-lg backdrop-blur-sm">
-                      {getRiskIcon(data.risk)}
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => handleSpeak(state, data)}
+                        className={`p-2 rounded-lg backdrop-blur-sm border transition-all ${isSpeaking === state ? 'bg-blue-600 text-white border-blue-600' : 'bg-white/50 dark:bg-black/20 text-slate-600 dark:text-slate-300 border-transparent hover:bg-white/80'}`}
+                      >
+                        {isSpeaking === state ? <Loader2 className="animate-spin" size={16} /> : <Volume2 size={16} />}
+                      </button>
+                      <div className="p-2 bg-white/50 dark:bg-black/20 rounded-lg backdrop-blur-sm">
+                        {getRiskIcon(data.risk)}
+                      </div>
                     </div>
                   </div>
                   
                   <div className="mb-6">
-                    <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Key Issues</p>
+                    <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">{t.keyIssues}</p>
                     <div className="flex flex-wrap gap-2">
                       {data.issues.map(issue => (
                         <span key={issue} className="px-3 py-1 bg-white/60 dark:bg-black/30 rounded-full text-sm font-medium text-slate-700 dark:text-slate-300 border border-slate-200/50 dark:border-slate-700/50">
@@ -117,13 +228,6 @@ export const WaterMap = ({ onGetAdvice }: { onGetAdvice: (state: string) => void
                     </div>
                   </div>
                 </div>
-                
-                <button 
-                  onClick={() => onGetAdvice(state)}
-                  className="w-full py-3 mt-auto bg-gov-card dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-slate-700 text-gov-navy dark:text-blue-400 font-bold rounded-xl transition-colors border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-2 shadow-subtle hover:shadow-subtle-hover"
-                >
-                  <MessageSquare size={18} /> Get Advice
-                </button>
               </motion.div>
             ))}
           </div>

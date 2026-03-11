@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Volume2, X, Play, Square, Loader2 } from 'lucide-react';
-import { generateSpeech, playBrowserTTS } from '../services/geminiService';
+import { playBrowserTTS } from '../lib/claude';
 
 interface StarterGuideProps {
     isOpen: boolean;
@@ -56,55 +56,16 @@ export const StarterGuide: React.FC<StarterGuideProps> = ({ isOpen, onClose, lan
         setIsLoading(true);
         try {
             const textToSpeak = GUIDE_TEXT[language];
-            
-            // Try Gemini TTS first
-            const base64Audio = await generateSpeech(textToSpeak);
-            
-            if (base64Audio) {
-                const binaryString = atob(base64Audio);
-                const len = binaryString.length;
-                const bytes = new Uint8Array(len);
-                for (let i = 0; i < len; i++) {
-                    bytes[i] = binaryString.charCodeAt(i);
-                }
-                
-                if (!audioContextRef.current) {
-                    audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({sampleRate: 24000});
-                }
-                
-                if (audioContextRef.current.state === 'suspended') {
-                    await audioContextRef.current.resume();
-                }
-                
-                const dataInt16 = new Int16Array(bytes.buffer);
-                const buffer = audioContextRef.current.createBuffer(1, dataInt16.length, 24000);
-                const channelData = buffer.getChannelData(0);
-                for (let i = 0; i < dataInt16.length; i++) {
-                    channelData[i] = dataInt16[i] / 32768.0;
-                }
-                
-                const source = audioContextRef.current.createBufferSource();
-                source.buffer = buffer;
-                source.connect(audioContextRef.current.destination);
-                source.onended = () => setIsPlaying(false);
-                sourceRef.current = source;
-                
-                setIsLoading(false);
-                setIsPlaying(true);
-                source.start(0);
-            } else {
-                throw new Error("No audio generated");
-            }
-
-        } catch (e) {
-            console.error("Gemini TTS Error, falling back to browser TTS:", e);
-            const textToSpeak = GUIDE_TEXT[language];
             playBrowserTTS(
                 textToSpeak,
                 () => { setIsLoading(false); setIsPlaying(true); },
                 () => setIsPlaying(false),
                 language === 'hi' ? 'hi-IN' : 'en-IN'
             );
+        } catch (e) {
+            console.error("TTS Error:", e);
+            setIsLoading(false);
+            setIsPlaying(false);
         }
     };
 

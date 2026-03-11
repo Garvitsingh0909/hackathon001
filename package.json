@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.78.0",
     "@google/genai": "^1.42.0",
     "@prisma/client": "^6.19.2",
     "@radix-ui/react-slot": "^1.2.4",
@@ -17,9 +18,9 @@
     "clsx": "^2.1.1",
     "driver.js": "^1.4.0",
     "express": "^5.2.1",
+    "firebase": "^12.10.0",
     "framer-motion": "^12.34.3",
     "lucide-react": "^0.574.0",
-    "motion": "^12.34.3",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "recharts": "^3.7.0",

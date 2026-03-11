@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { HelpCircle, Search, ChevronDown, ChevronUp, MessageSquare } from 'lucide-react';
 
 const faqs = [
@@ -45,7 +45,7 @@ const faqs = [
   }
 ];
 
-export const WaterFAQ = ({ onAskAI }: { onAskAI: (question: string) => void }) => {
+export const WaterFAQ = () => {
   const [search, setSearch] = useState('');
   const [expanded, setExpanded] = useState<number | null>(null);
 
@@ -110,12 +110,6 @@ export const WaterFAQ = ({ onAskAI }: { onAskAI: (question: string) => void }) =
                         className="px-6 pb-5 text-slate-600 dark:text-slate-400 leading-relaxed border-t border-slate-100 dark:border-slate-700 pt-4"
                       >
                         <p className="mb-4">{faq.a}</p>
-                        <button 
-                          onClick={() => onAskAI(faq.q)}
-                          className="flex items-center gap-2 text-sm font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors bg-blue-50 dark:bg-blue-900/30 px-4 py-2 rounded-lg"
-                        >
-                          <MessageSquare size={16} /> Ask AI about this
-                        </button>
                       </motion.div>
                     )}
                   </AnimatePresence>

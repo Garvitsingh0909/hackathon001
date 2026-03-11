@@ -1,15 +1,5 @@
-export const API_KEY = process.env.GEMINI_API_KEY;
+export const API_KEY = process.env.ANTHROPIC_API_KEY;
 export const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-
-export const MODELS = {
-    IMAGE_ANALYSIS: 'gemini-3-flash-preview',
-    CHAT: 'gemini-3-flash-preview', 
-    SEARCH: 'gemini-3-flash-preview', 
-    MAPS: 'gemini-2.5-flash', 
-    TTS: 'gemini-2.5-flash-preview-tts',
-    FAST: 'gemini-3-flash-preview',
-    TRANSCRIPTION: 'gemini-3-flash-preview',
-};
 
 export const TRANSLATIONS = {
     en: {
@@ -42,6 +32,17 @@ export const TRANSLATIONS = {
             recentReports: 'Recent Citizen Reports',
             submitReport: 'Submit Report',
             uploadPhoto: 'Upload photos for AI analysis'
+        },
+        map: {
+            title: 'Water Quality Map',
+            subtitle: 'Regional water risks and issues',
+            all: 'All',
+            critical: 'Critical',
+            high: 'High',
+            medium: 'Medium',
+            low: 'Low',
+            keyIssues: 'Key Issues',
+            getAdvice: 'Get Advice'
         }
     },
     hi: {
@@ -74,6 +75,17 @@ export const TRANSLATIONS = {
             recentReports: 'हालिया नागरिक रिपोर्ट',
             submitReport: 'रिपोर्ट भेजें',
             uploadPhoto: 'एआई विश्लेषण के लिए फोटो अपलोड करें'
+        },
+        map: {
+            title: 'जल गुणवत्ता मानचित्र',
+            subtitle: 'क्षेत्रीय जल जोखिम और मुद्दे',
+            all: 'सभी',
+            critical: 'गंभीर',
+            high: 'उच्च',
+            medium: 'मध्यम',
+            low: 'कम',
+            keyIssues: 'मुख्य मुद्दे',
+            getAdvice: 'सलाह लें'
         }
     }
 };

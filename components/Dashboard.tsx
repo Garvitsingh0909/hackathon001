@@ -2,18 +2,19 @@ import React, { useEffect, useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Activity, Wind, Droplet, ArrowRight, Camera, AlertCircle, CheckCircle2, Clock, Mic, ChevronRight, Volume2 } from 'lucide-react';
 import { api } from '../services/api';
-import { getQuickStat } from '../services/geminiService';
+import { getQuickStat } from '../lib/claude';
 import { WaterQualityReport } from '../types';
 import { TRANSLATIONS } from '../constants';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
+import { DisclaimerBanner } from './ui/DisclaimerBanner';
+import { MockPill } from './ui/MockPill';
 
 interface DashboardProps {
     onChangeTab: (tab: string) => void;
-    onOpenAssistant: () => void;
     language: 'en' | 'hi';
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, onOpenAssistant, language }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, language }) => {
     const [reports, setReports] = useState<WaterQualityReport[]>([]);
     const [chartData, setChartData] = useState<{name: string, value: number}[]>([]);
     const [aiSummary, setAiSummary] = useState("Initializing regional data streams...");
@@ -80,6 +81,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, onOpenAssista
         animate="show"
         className="space-y-8 pt-6"
     >
+      <DisclaimerBanner />
       
       {/* 1. HERO SECTION (Modern & Clean) */}
       <motion.div variants={item} className="relative overflow-hidden rounded-3xl bg-gov-navy dark:bg-gov-dark-navy text-white p-8 md:p-12 shadow-subtle-hover water-ripple-bg">
@@ -104,13 +106,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, onOpenAssista
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                    <button 
-                        onClick={onOpenAssistant}
-                        className="h-12 px-6 bg-white text-gov-navy rounded-xl font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all flex items-center justify-center gap-2 group"
-                    >
-                        <Mic size={18} className="group-hover:text-gov-teal transition-colors" />
-                        {t.hero.btnPrimary}
-                    </button>
                     <button 
                         onClick={() => onChangeTab('admin')}
                         className="h-12 px-6 bg-transparent border border-white/20 text-white rounded-xl font-medium hover:bg-white/10 transition-all flex items-center justify-center gap-2"
@@ -296,7 +291,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, onOpenAssista
                                     {report.overallScore}
                                 </div>
                                 <div>
-                                    <h4 className="font-bold text-slate-900 dark:text-white text-sm">{report.locationName}</h4>
+                                    <h4 className="font-bold text-slate-900 dark:text-white text-sm">{report.locationName} <MockPill /></h4>
                                     <div className="flex items-center gap-2 mt-0.5">
                                         <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1">
                                             <Clock size={10} />

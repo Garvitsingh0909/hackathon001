@@ -1,8 +1,11 @@
 import express from 'express';
 import { getPrisma } from '../server/prisma.js';
+import chatRouter from './chat/route.js';
 
 const app = express();
 app.use(express.json());
+
+app.use('/api/chat', chatRouter);
 
 // Mock Data
 const MOCK_SEGMENTS = [
@@ -143,20 +146,6 @@ app.post('/api/reports', async (req, res) => {
     res.json(newReport);
 });
 
-app.post('/api/chat', async (req, res) => {
-    const { query, response } = req.body;
-    try {
-        const prisma = getPrisma();
-        await prisma.userQuery.create({
-            data: {
-                query,
-                response
-            }
-        });
-        res.json({ success: true });
-    } catch (e) {
-        res.json({ success: false, error: 'Database not configured' });
-    }
-});
+
 
 export default app;

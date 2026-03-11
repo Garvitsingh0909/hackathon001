@@ -44,8 +44,16 @@ export const Footer = () => {
                         <p className="text-xs text-slate-500 mt-1">Sankalp Innovation Challenge 2026</p>
                     </div>
                 </div>
-                <div className="border-t border-white/10 pt-6 mt-4">
-                    <p className="text-xs text-slate-500 text-center">&copy; 2026 JalDrishti AI. All rights reserved.</p>
+                <div className="border-t border-white/10 pt-6 mt-4 px-4">
+                    <div className="max-w-3xl mx-auto text-center space-y-4">
+                        <p className="text-[10px] text-gov-teal uppercase tracking-[0.2em] font-bold">
+                            Disclaimer: Demo Mode & Mock Data
+                        </p>
+                        <p className="text-[10px] text-slate-500 leading-relaxed">
+                            JalDrishti AI is currently in prototype phase. Some data points shown in the dashboard and maps may be simulated for demonstration purposes. AI-based visual analysis should be verified with laboratory testing for critical safety decisions.
+                        </p>
+                        <p className="text-xs text-slate-500 pb-4">&copy; 2026 JalDrishti AI. All rights reserved.</p>
+                    </div>
                 </div>
             </footer>
         </div>

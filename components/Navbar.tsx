@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, LayoutGrid, Activity, Map, FileText, Moon, Sun, Droplets, Clock, Lightbulb, Calculator, HelpCircle, MapPin, Share2 } from 'lucide-react';
+import { Bell, LayoutGrid, Activity, Map, FileText, Moon, Sun, Droplets, Clock, Lightbulb, Calculator, HelpCircle, MapPin, Share2, Mic } from 'lucide-react';
 import { TRANSLATIONS } from '../constants';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface NavbarProps {
     activeTab: string;
@@ -10,6 +10,9 @@ interface NavbarProps {
     setLanguage: (lang: 'en' | 'hi') => void;
     darkMode: boolean;
     toggleDarkMode: () => void;
+    user?: any;
+    onLogin?: () => void;
+    onLogout?: () => void;
 }
 
 const TIPS = [
@@ -20,11 +23,12 @@ const TIPS = [
     "Harvest rainwater to recharge groundwater levels 🌧️"
 ];
 
-export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, language, setLanguage, darkMode, toggleDarkMode }) => {
+export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, language, setLanguage, darkMode, toggleDarkMode, user, onLogin, onLogout }) => {
   const t = TRANSLATIONS[language].nav;
   const [time, setTime] = useState(new Date());
   const [currentTip, setCurrentTip] = useState(0);
   const [isRipple, setIsRipple] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const handleShare = async () => {
     if (navigator.share) {
@@ -145,6 +149,15 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, languag
                         <Share2 size={18} />
                     </button>
 
+                    {/* Assistant Trigger */}
+                    <button 
+                        onClick={() => document.dispatchEvent(new CustomEvent('open-assistant'))}
+                        className={`w-10 h-10 flex items-center justify-center rounded-full transition-all hover:scale-105 ${darkMode ? 'bg-blue-900/30 text-blue-400 hover:bg-blue-900/50 border border-blue-500/30' : 'bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200'}`}
+                        aria-label="Open Assistant"
+                    >
+                        <Mic size={18} />
+                    </button>
+
                     {/* Dark Mode Toggle */}
                     <button 
                         onClick={toggleDarkMode}
@@ -172,13 +185,55 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, languag
                     
                     {/* Profile/Notifications */}
                     <div className="hidden sm:flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-700">
+                        {user ? (
+                            <div className="relative">
+                                <button 
+                                    onClick={() => setShowProfileMenu(!showProfileMenu)}
+                                    className="h-10 w-10 rounded-full overflow-hidden border-2 border-gov-teal shadow-sm hover:scale-105 transition-transform"
+                                >
+                                    {user.photoURL ? (
+                                        <img src={user.photoURL} alt={user.displayName} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="w-full h-full bg-gov-teal text-white flex items-center justify-center font-bold">
+                                            {user.displayName?.charAt(0) || 'U'}
+                                        </div>
+                                    )}
+                                </button>
+                                
+                                <AnimatePresence>
+                                    {showProfileMenu && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                            className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-2 z-50"
+                                        >
+                                            <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 mb-2">
+                                                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Signed in as</p>
+                                                <p className="text-sm font-bold truncate">{user.displayName}</p>
+                                            </div>
+                                            <button 
+                                                onClick={() => { onLogout?.(); setShowProfileMenu(false); }}
+                                                className="w-full text-left px-4 py-2 text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors"
+                                            >
+                                                Sign Out
+                                            </button>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        ) : (
+                            <button 
+                                onClick={onLogin}
+                                className="px-4 py-2 bg-gov-navy dark:bg-blue-600 text-white text-sm font-bold rounded-full hover:scale-105 transition-all shadow-md shadow-blue-500/20"
+                            >
+                                Sign In
+                            </button>
+                        )}
                         <button className={`relative w-10 h-10 flex items-center justify-center rounded-full transition-all hover:scale-105 ${darkMode ? 'bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white border border-white/10' : 'bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200'}`}>
                             <Bell size={18} />
                             <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
                         </button>
-                        <div className={`h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold border shadow-sm ${darkMode ? 'bg-gradient-to-br from-blue-600 to-gov-teal text-white border-white/10' : 'bg-gradient-to-br from-blue-500 to-gov-teal text-white border-transparent'}`}>
-                            JD
-                        </div>
                     </div>
                 </div>
             </div>

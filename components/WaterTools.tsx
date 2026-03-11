@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Calculator, Droplet, Activity, IndianRupee, ArrowRight, CheckCircle, AlertTriangle } from 'lucide-react';
+import { DisclaimerBanner } from './ui/DisclaimerBanner';
 
 export const WaterTools = ({ language }: { language: 'en' | 'hi' }) => {
   return (
@@ -9,6 +10,7 @@ export const WaterTools = ({ language }: { language: 'en' | 'hi' }) => {
         animate={{ opacity: 1, y: 0 }}
         className="max-w-5xl mx-auto pt-6 space-y-8"
     >
+      <DisclaimerBanner />
       <div className="bg-gov-card dark:bg-slate-900 rounded-[2rem] shadow-subtle dark:shadow-black/50 border border-slate-200 dark:border-slate-800 overflow-hidden transition-colors">
         
         {/* Header */}

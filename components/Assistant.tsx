@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Mic, X, Send, Bot, Loader2, Volume2, VolumeX, Copy, Check, ChevronDown, ChevronUp, Droplets, AlertTriangle, Info, ShieldCheck } from 'lucide-react';
-import { chatNormal, generateSpeech, playBrowserTTS, transcribeAudio } from '../services/geminiService';
+import { chatWithClaude, playGeminiTTS } from '../lib/claude';
+import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 import { ChatMessage } from '../types';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface AssistantProps {
     isOpen: boolean;
@@ -39,186 +40,22 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose, initialMe
     const [showArsenicAlert, setShowArsenicAlert] = useState(false);
     
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    const audioContextRef = useRef<AudioContext | null>(null);
     const analyserRef = useRef<AnalyserNode | null>(null);
     const animationFrameRef = useRef<number | null>(null);
 
-    useEffect(() => {
-        if (initialMessage && isOpen) {
-            handleSend(initialMessage);
-        }
-    }, [initialMessage, isOpen]);
-
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    };
-
-    useEffect(() => {
-        if (isOpen) scrollToBottom();
-    }, [messages, isOpen, isLoading]);
-
-    useEffect(() => {
-        return () => {
-            if (audioContextRef.current) {
-                audioContextRef.current.close();
-            }
-            if (animationFrameRef.current) {
-                cancelAnimationFrame(animationFrameRef.current);
-            }
-            window.speechSynthesis.cancel();
-        };
-    }, []);
-
-    const [isRecording, setIsRecording] = useState(false);
-    const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-    const audioChunksRef = useRef<Blob[]>([]);
-
-    const updateNoiseLevel = () => {
-        if (!analyserRef.current) return;
-        const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
-        analyserRef.current.getByteFrequencyData(dataArray);
-        const average = dataArray.reduce((acc, val) => acc + val, 0) / dataArray.length;
-        setNoiseLevel(average);
-        animationFrameRef.current = requestAnimationFrame(updateNoiseLevel);
-    };
-
-    const startRecording = async () => {
-        if (navigator.vibrate) navigator.vibrate(50); // Haptic feedback
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorderRef.current = new MediaRecorder(stream);
-            audioChunksRef.current = [];
-
-            // Setup audio context for noise level
-            const actx = new (window.AudioContext || (window as any).webkitAudioContext)();
-            const analyser = actx.createAnalyser();
-            const source = actx.createMediaStreamSource(stream);
-            source.connect(analyser);
-            analyserRef.current = analyser;
-            updateNoiseLevel();
-
-            mediaRecorderRef.current.ondataavailable = (event) => {
-                if (event.data.size > 0) {
-                    audioChunksRef.current.push(event.data);
-                }
-            };
-
-            mediaRecorderRef.current.onstop = async () => {
-                if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
-                const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
-                const reader = new FileReader();
-                reader.readAsDataURL(audioBlob);
-                reader.onloadend = async () => {
-                    const base64Audio = (reader.result as string).split(',')[1];
-                    try {
-                        setIsLoading(true);
-                        const transcription = await transcribeAudio(base64Audio);
-                        if (transcription) {
-                            const cleanText = transcription.trim();
-                            setVoiceHistory(prev => [cleanText, ...prev].slice(0, 5));
-                            
-                            // Voice Commands
-                            const lowerText = cleanText.toLowerCase();
-                            if (lowerText.includes("analyze my water") && onNavigate) {
-                                onNavigate('analyze');
-                                onClose();
-                                return;
-                            }
-                            if (lowerText.includes("show india map") && onNavigate) {
-                                onNavigate('map');
-                                onClose();
-                                return;
-                            }
-                            if (lowerText.includes("clear chat")) {
-                                setMessages([]);
-                                return;
-                            }
-                            
-                            setInput(cleanText);
-                            handleSend(cleanText);
-                        }
-                    } catch (error) {
-                        console.error("Transcription error:", error);
-                    } finally {
-                        setIsLoading(false);
-                    }
-                };
-                stream.getTracks().forEach(track => track.stop());
-            };
-
-            mediaRecorderRef.current.start();
-            setIsRecording(true);
-        } catch (error) {
-            console.error("Error accessing microphone:", error);
-        }
-    };
-
-    const stopRecording = () => {
-        if (navigator.vibrate) navigator.vibrate(50);
-        if (mediaRecorderRef.current && isRecording) {
-            mediaRecorderRef.current.stop();
-            setIsRecording(false);
-        }
-    };
-
-    const toggleListening = () => {
-        if (isRecording) {
-            stopRecording();
-        } else {
-            startRecording();
-        }
-    };
-
-    const playResponse = async (text: string) => {
+    const playResponse = useCallback(async (text: string) => {
         if (!audioEnabled) return;
         
-        try {
-            setIsSpeaking(true);
-            const cleanText = text.replace(/[*#_`]/g, '');
-            const base64Audio = await generateSpeech(cleanText);
-            
-            if (base64Audio) {
-                const binaryString = atob(base64Audio);
-                const len = binaryString.length;
-                const bytes = new Uint8Array(len);
-                for (let i = 0; i < len; i++) {
-                    bytes[i] = binaryString.charCodeAt(i);
-                }
-                
-                if (!audioContextRef.current) {
-                    audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({sampleRate: 24000});
-                }
-                
-                if (audioContextRef.current.state === 'suspended') {
-                    await audioContextRef.current.resume();
-                }
-                
-                const dataInt16 = new Int16Array(bytes.buffer);
-                const buffer = audioContextRef.current.createBuffer(1, dataInt16.length, 24000);
-                const channelData = buffer.getChannelData(0);
-                for (let i = 0; i < dataInt16.length; i++) {
-                    channelData[i] = dataInt16[i] / 32768.0;
-                }
-                
-                const source = audioContextRef.current.createBufferSource();
-                source.buffer = buffer;
-                source.connect(audioContextRef.current.destination);
-                source.onended = () => setIsSpeaking(false);
-                source.start(0);
-            } else {
-                throw new Error("No audio generated");
-            }
-        } catch (error) {
-            console.error("Gemini TTS Error, falling back to browser TTS:", error);
-            playBrowserTTS(
-                text.replace(/[*#_`]/g, ''),
-                () => setIsSpeaking(true),
-                () => setIsSpeaking(false)
-            );
-        }
-    };
+        setIsSpeaking(true);
+        playGeminiTTS(
+            text.replace(/[*#_`]/g, ''),
+            () => setIsSpeaking(true),
+            () => setIsSpeaking(false),
+            selectedLang
+        );
+    }, [audioEnabled, selectedLang]);
 
-    const handleSend = async (overrideInput?: string) => {
+    const handleSend = useCallback(async (overrideInput?: string) => {
         const textToSend = overrideInput || input;
         if (!textToSend.trim() || isLoading) return;
 
@@ -242,10 +79,25 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose, initialMe
         setIsLoading(true);
 
         try {
-            // Send last 5 messages for context memory
-            const apiHistory = messages.slice(-5).map(m => ({ role: m.role, parts: [{ text: m.text }] }));
+            let apiHistory = messages.map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.text }));
+            apiHistory.push({ role: 'user', content: userMsg.text });
             
-            const responseText = await chatNormal(apiHistory, userMsg.text);
+            // Anthropic requires alternating roles starting with user
+            const compactedHistory: {role: string, content: string}[] = [];
+            for (const msg of apiHistory) {
+                if (compactedHistory.length === 0) {
+                    if (msg.role === 'user') compactedHistory.push(msg);
+                } else {
+                    const lastMsg = compactedHistory[compactedHistory.length - 1];
+                    if (lastMsg.role === msg.role) {
+                        lastMsg.content += '\n\n' + msg.content;
+                    } else {
+                        compactedHistory.push(msg);
+                    }
+                }
+            }
+            
+            const responseText = await chatWithClaude(compactedHistory, selectedLang.startsWith('hi') ? 'hi' : 'en', () => {});
 
             const modelMsg: ChatMessage = {
                 id: (Date.now() + 1).toString(),
@@ -270,6 +122,75 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose, initialMe
             setMessages(prev => [...prev, errorMsg]);
         } finally {
             setIsLoading(false);
+        }
+    }, [input, isLoading, messages, selectedLang, playResponse]);
+
+    const handleFinalResult = useCallback((text: string) => {
+        const cleanText = text.trim();
+        if (cleanText) {
+            setVoiceHistory(prev => [cleanText, ...prev].slice(0, 5));
+            
+            const lowerText = cleanText.toLowerCase();
+            if (lowerText.includes("analyze my water") && onNavigate) {
+                onNavigate('analyze');
+                onClose();
+                return;
+            }
+            if (lowerText.includes("show india map") && onNavigate) {
+                onNavigate('map');
+                onClose();
+                return;
+            }
+            if (lowerText.includes("clear chat")) {
+                setMessages([]);
+                return;
+            }
+            
+            setInput(cleanText);
+            handleSend(cleanText);
+        }
+    }, [onNavigate, onClose, handleSend]);
+
+    const handleToast = useCallback((msg: string) => {
+        console.log(msg);
+    }, []);
+
+    const { voiceState, liveTranscript, startListening, stopListening } = useSpeechRecognition(
+        selectedLang.startsWith('hi') ? 'hi' : 'en',
+        handleFinalResult,
+        handleToast
+    );
+
+    const isRecording = voiceState === 'listening';
+
+    useEffect(() => {
+        if (initialMessage && isOpen) {
+            handleSend(initialMessage);
+        }
+    }, [initialMessage, isOpen]);
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
+    useEffect(() => {
+        if (isOpen) scrollToBottom();
+    }, [messages, isOpen, isLoading]);
+
+    useEffect(() => {
+        return () => {
+            if (animationFrameRef.current) {
+                cancelAnimationFrame(animationFrameRef.current);
+            }
+            window.speechSynthesis.cancel();
+        };
+    }, []);
+
+    const toggleListening = () => {
+        if (isRecording) {
+            stopListening();
+        } else {
+            startListening();
         }
     };
 
@@ -384,7 +305,7 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose, initialMe
                                 {msg.role === 'model' && (
                                     <div className="px-4 pb-3 flex items-center gap-1.5">
                                         <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Powered by</span>
-                                        <span className="text-[10px] font-bold text-[#4285F4]">Google Gemini</span>
+                                        <span className="text-[10px] font-bold text-[#D97757]">Anthropic Claude</span>
                                     </div>
                                 )}
                             </div>
@@ -451,18 +372,19 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose, initialMe
                                 </div>
                                 <div className="flex items-end gap-1 h-12">
                                     {[1, 2, 3, 4, 5].map((i) => {
-                                        const height = Math.max(20, Math.min(100, noiseLevel * (i * 0.5)));
+                                        const height = Math.max(20, Math.min(100, Math.random() * 100));
                                         return (
                                             <motion.div 
                                                 key={i}
                                                 animate={{ height: `${height}%` }}
-                                                transition={{ type: 'tween', duration: 0.1 }}
+                                                transition={{ type: 'tween', duration: 0.2, repeat: Infinity, repeatType: 'reverse' }}
                                                 className="w-2 bg-blue-500 rounded-full"
                                             />
                                         );
                                     })}
                                 </div>
                                 <p className="text-slate-600 dark:text-slate-300 font-medium">Listening...</p>
+                                <p className="text-sm text-blue-500 font-medium h-6">{liveTranscript}</p>
                                 <div className="text-xs text-slate-400 dark:text-slate-500 text-center">
                                     Commands: "Analyze my water" • "Show India map" • "Clear chat"
                                 </div>
@@ -471,7 +393,7 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose, initialMe
                                         <p className="text-xs font-bold text-slate-400 mb-2 text-center">Recent Voice Inputs</p>
                                         <div className="flex flex-wrap gap-2 justify-center">
                                             {voiceHistory.map((h, i) => (
-                                                <button key={i} onClick={() => { stopRecording(); handleSend(h); }} className="px-3 py-1 bg-slate-100 dark:bg-slate-700 rounded-full text-xs text-slate-600 dark:text-slate-300 truncate max-w-[150px]">
+                                                <button key={i} onClick={() => { stopListening(); handleSend(h); }} className="px-3 py-1 bg-slate-100 dark:bg-slate-700 rounded-full text-xs text-slate-600 dark:text-slate-300 truncate max-w-[150px]">
                                                     "{h}"
                                                 </button>
                                             ))}

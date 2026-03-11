@@ -4,28 +4,31 @@ import { Navbar } from './components/Navbar';
 import { Dashboard } from './components/Dashboard';
 import { AnalysisModule } from './components/AnalysisModule';
 import { WaterIntel } from './components/WaterIntel';
+import { AdminDashboard } from './components/AdminDashboard';
 import { AdminMap } from './components/AdminMap';
+import { Assistant } from './components/Assistant';
 import { WaterMap } from './components/WaterMap';
 import { WaterTools } from './components/WaterTools';
 import { WaterFAQ } from './components/WaterFAQ';
-import { Assistant } from './components/Assistant';
 import { Footer } from './components/Footer';
 import { StarterGuide } from './components/StarterGuide';
 import { Activity, Camera, Map as MapIcon, Home, Mic, LayoutDashboard, Calculator, HelpCircle, MapPin, X, ChevronRight } from 'lucide-react';
 import { TRANSLATIONS } from './constants';
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, motion } from 'framer-motion';
 
-export default function App() {
+import { AuthProvider, useAuth } from './src/AuthContext';
+
+function AppContent() {
+  const { user, login, logout, isAdmin } = useAuth();
   const [activeTab, setActiveTab] = useState('home');
-  const [isAssistantOpen, setIsAssistantOpen] = useState(false);
   const [language, setLanguage] = useState<'en' | 'hi'>('en');
   const [darkMode, setDarkMode] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState(1);
   const [userState, setUserState] = useState('');
   const [userSource, setUserSource] = useState('');
-  const [assistantInitialMsg, setAssistantInitialMsg] = useState('');
   const [isStarterGuideOpen, setIsStarterGuideOpen] = useState(false);
+  const [isAssistantOpen, setIsAssistantOpen] = useState(false);
 
   useEffect(() => {
     const hasSeenOnboarding = localStorage.getItem('jaldrishti_onboarding');
@@ -34,16 +37,20 @@ export default function App() {
     }
     
     const handleOpenGuide = () => setIsStarterGuideOpen(true);
+    const handleOpenAssistant = () => setIsAssistantOpen(true);
     document.addEventListener('open-starter-guide', handleOpenGuide);
-    return () => document.removeEventListener('open-starter-guide', handleOpenGuide);
+    document.addEventListener('open-assistant', handleOpenAssistant);
+    return () => {
+      document.removeEventListener('open-starter-guide', handleOpenGuide);
+      document.removeEventListener('open-assistant', handleOpenAssistant);
+    };
   }, []);
 
   const handleFinishOnboarding = () => {
     localStorage.setItem('jaldrishti_onboarding', 'true');
     setShowOnboarding(false);
     if (userState && userSource) {
-      setAssistantInitialMsg(`I am in ${userState} using ${userSource} water. What are the top risks I should know about?`);
-      setIsAssistantOpen(true);
+      // Setup complete
     }
   };
 
@@ -56,11 +63,6 @@ export default function App() {
   }, [darkMode]);
 
   const t = TRANSLATIONS[language].nav;
-
-  const handleAskAI = (question: string) => {
-    setAssistantInitialMsg(question);
-    setIsAssistantOpen(true);
-  };
 
   const getSeasonalAlert = () => {
     const month = new Date().getMonth(); // 0-11
@@ -79,15 +81,21 @@ export default function App() {
   const renderContent = () => {
     switch (activeTab) {
       case 'home': 
-        return <Dashboard onChangeTab={setActiveTab} onOpenAssistant={() => setIsAssistantOpen(true)} language={language} />;
+        return <Dashboard onChangeTab={setActiveTab} language={language} />;
       case 'analyze': return <AnalysisModule />;
       case 'intel': return <WaterIntel />;
-      case 'map': return <WaterMap onGetAdvice={handleAskAI} />;
+      case 'map': return <WaterMap language={language} />;
       case 'tools': return <WaterTools language={language} />;
-      case 'faq': return <WaterFAQ onAskAI={handleAskAI} />;
-      case 'admin': return <AdminMap />;
+      case 'faq': return <WaterFAQ />;
+      case 'admin': 
+        return isAdmin ? (
+          <div className="space-y-8">
+            <AdminDashboard />
+            <AdminMap />
+          </div>
+        ) : <Dashboard onChangeTab={setActiveTab} language={language} />;
       default: 
-        return <Dashboard onChangeTab={setActiveTab} onOpenAssistant={() => setIsAssistantOpen(true)} language={language} />;
+        return <Dashboard onChangeTab={setActiveTab} language={language} />;
     }
   };
 
@@ -100,6 +108,9 @@ export default function App() {
         setLanguage={setLanguage}
         darkMode={darkMode}
         toggleDarkMode={() => setDarkMode(!darkMode)}
+        user={user}
+        onLogin={login}
+        onLogout={logout}
       />
       <Tour />
       
@@ -130,30 +141,15 @@ export default function App() {
         </AnimatePresence>
       </main>
 
-      {/* Floating Assistant Button */}
-      <motion.button 
-        whileHover={{ scale: 1.05, y: -2 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => setIsAssistantOpen(true)}
-        className={`fixed bottom-[28px] md:bottom-10 right-1/2 translate-x-1/2 md:translate-x-0 md:right-10 w-[72px] h-[72px] rounded-full shadow-subtle-hover flex flex-col items-center justify-center z-[60] btn-press group border-2 transition-colors duration-300 ${
-          isAssistantOpen ? 'bg-gov-teal border-gov-teal shadow-[0_0_20px_rgba(0,188,212,0.5)]' : 'bg-gov-navy border-gov-navy'
-        }`}
-        aria-label="Open Voice Assistant"
-      >
-        {isAssistantOpen && (
-          <div className="absolute inset-0 rounded-full border-2 border-gov-teal/50 scale-110 opacity-0 animate-pulse-ring"></div>
-        )}
-        <Mic size={32} className="text-white transition-colors" />
-        {!isAssistantOpen && (
-          <span className="absolute -bottom-6 text-[10px] font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap opacity-100 transition-opacity duration-300">Tap to speak</span>
-        )}
-      </motion.button>
-
-      {/* Voice Assistant Modal */}
-      <Assistant isOpen={isAssistantOpen} onClose={() => setIsAssistantOpen(false)} initialMessage={assistantInitialMsg} onNavigate={setActiveTab} />
-
       {/* Starter Guide Modal */}
       <StarterGuide isOpen={isStarterGuideOpen} onClose={() => setIsStarterGuideOpen(false)} language={language} />
+
+      {/* Assistant Component */}
+      <Assistant 
+        isOpen={isAssistantOpen} 
+        onClose={() => setIsAssistantOpen(false)} 
+        onNavigate={(tab) => setActiveTab(tab)}
+      />
 
       {/* Onboarding Overlay */}
       <AnimatePresence>
@@ -250,13 +246,31 @@ export default function App() {
       <div className={`fixed bottom-0 left-0 right-0 h-[72px] md:hidden z-50 px-6 flex justify-between items-center backdrop-blur-xl border-t shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transition-colors duration-300 ${darkMode ? 'bg-gov-dark-navy/90 border-white/10' : 'bg-white/90 border-slate-200/50'}`}>
         <NavBtn id="mobile-nav-home" icon={Home} label={t.home} active={activeTab === 'home'} onClick={() => setActiveTab('home')} darkMode={darkMode} />
         <NavBtn id="mobile-nav-analyze" icon={Camera} label={t.analyze} active={activeTab === 'analyze'} onClick={() => setActiveTab('analyze')} darkMode={darkMode} />
-        <div className="w-16"></div> {/* Spacer for mic button */}
+        
+        {/* Floating Assistant Trigger */}
+        <div className="absolute left-1/2 -translate-x-1/2 -top-6">
+          <button 
+            onClick={() => setIsAssistantOpen(true)}
+            className="w-14 h-14 bg-gov-navy dark:bg-blue-600 text-white rounded-full shadow-lg shadow-blue-500/40 flex items-center justify-center border-4 border-white dark:border-slate-900 transition-transform hover:scale-110 active:scale-95"
+          >
+            <Mic size={24} />
+          </button>
+        </div>
+
         <NavBtn id="mobile-nav-admin" icon={LayoutDashboard} label={t.admin} active={activeTab === 'admin'} onClick={() => setActiveTab('admin')} darkMode={darkMode} />
         <NavBtn id="mobile-nav-intel" icon={MapIcon} label={t.intel} active={activeTab === 'intel'} onClick={() => setActiveTab('intel')} darkMode={darkMode} />
       </div>
 
       <Footer />
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 
