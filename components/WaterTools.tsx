@@ -4,48 +4,88 @@ import { Calculator, Droplet, Activity, IndianRupee, ArrowRight, CheckCircle, Al
 import { DisclaimerBanner } from './ui/DisclaimerBanner';
 
 export const WaterTools = ({ language }: { language: 'en' | 'hi' }) => {
+  const [sidebarLang, setSidebarLang] = useState<'en' | 'hi'>(language);
+
+  const explanations = {
+    en: {
+      title: "How to use these tools",
+      tds: "TDS Blender: Mixes RO and Tap water to achieve ideal mineral levels (150-300 mg/L).",
+      intake: "Daily Intake: Calculates recommended water intake based on weight, age, and activity level.",
+      roi: "Filter ROI: Compares the cost of bottled water vs. a filter to show long-term savings."
+    },
+    hi: {
+      title: "इन उपकरणों का उपयोग कैसे करें",
+      tds: "टीडीएस ब्लेंडर: आदर्श खनिज स्तर (150-300 मिलीग्राम/लीटर) प्राप्त करने के लिए आरओ और नल के पानी को मिलाता है।",
+      intake: "दैनिक सेवन: वजन, उम्र और गतिविधि स्तर के आधार पर अनुशंसित पानी के सेवन की गणना करता है।",
+      roi: "फिल्टर आरओआई: दीर्घकालिक बचत दिखाने के लिए बोतलबंद पानी बनाम फिल्टर की लागत की तुलना करता है।"
+    }
+  };
+
+  const content = explanations[sidebarLang];
+
   return (
-    <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="max-w-5xl mx-auto pt-6 space-y-8"
-    >
-      <DisclaimerBanner />
-      <div className="bg-gov-card dark:bg-slate-900 rounded-[2rem] shadow-subtle dark:shadow-black/50 border border-slate-200 dark:border-slate-800 overflow-hidden transition-colors">
-        
-        {/* Header */}
-        <div className="p-8 md:p-10 border-b border-slate-200 dark:border-slate-800 bg-gov-bg dark:bg-slate-800/30">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 rounded-2xl">
-                <Calculator size={28} />
-            </div>
-            <div>
-                <h2 className="text-3xl font-bold text-slate-900 dark:text-white font-display">
-                  {language === 'en' ? 'Handy Water Tools' : 'उपयोगी जल उपकरण'}
-                </h2>
-                <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">
-                  {language === 'en' ? 'Quick calculators to help you make better choices about your water.' : 'आपके पानी के बारे में बेहतर विकल्प चुनने में मदद करने के लिए त्वरित कैलकुलेटर।'}
-                </p>
-            </div>
+    <div className="max-w-7xl mx-auto pt-6 grid grid-cols-1 lg:grid-cols-4 gap-8">
+      {/* Sidebar */}
+      <div className="lg:col-span-1 space-y-6">
+        <div className="bg-gov-card dark:bg-slate-900 rounded-[2rem] shadow-subtle dark:shadow-black/50 border border-slate-200 dark:border-slate-800 p-6 sticky top-24">
+          <h3 className="text-xl font-bold text-slate-900 dark:text-white font-display mb-4">{content.title}</h3>
+          
+          <div className="flex gap-2 mb-6">
+            <button onClick={() => setSidebarLang('en')} className={`px-3 py-1 rounded-full text-xs font-bold ${sidebarLang === 'en' ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-700'}`}>EN</button>
+            <button onClick={() => setSidebarLang('hi')} className={`px-3 py-1 rounded-full text-xs font-bold ${sidebarLang === 'hi' ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-700'}`}>HI</button>
+          </div>
+
+          <div className="space-y-4 text-sm text-slate-600 dark:text-slate-400">
+            <p><strong>TDS Blender:</strong> {content.tds}</p>
+            <p><strong>Daily Intake:</strong> {content.intake}</p>
+            <p><strong>Filter ROI:</strong> {content.roi}</p>
           </div>
         </div>
-
-        <div className="p-8 md:p-10 space-y-12">
-          {/* Tool A: TDS Blending */}
-          <TdsBlendingTool language={language} />
-          
-          <hr className="border-slate-200 dark:border-slate-800" />
-          
-          {/* Tool B: Daily Intake */}
-          <DailyIntakeTool language={language} />
-          
-          <hr className="border-slate-200 dark:border-slate-800" />
-          
-          {/* Tool C: Filter ROI */}
-          <FilterRoiTool language={language} />
-        </div>
       </div>
-    </motion.div>
+
+      {/* Main Tools */}
+      <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="lg:col-span-3 space-y-8"
+      >
+        <DisclaimerBanner />
+        <div className="bg-gov-card dark:bg-slate-900 rounded-[2rem] shadow-subtle dark:shadow-black/50 border border-slate-200 dark:border-slate-800 overflow-hidden transition-colors">
+          
+          {/* Header */}
+          <div className="p-8 md:p-10 border-b border-slate-200 dark:border-slate-800 bg-gov-bg dark:bg-slate-800/30">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="p-3 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 rounded-2xl">
+                  <Calculator size={28} />
+              </div>
+              <div>
+                  <h2 className="text-3xl font-bold text-slate-900 dark:text-white font-display">
+                    {language === 'en' ? 'Handy Water Tools' : 'उपयोगी जल उपकरण'}
+                  </h2>
+                  <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">
+                    {language === 'en' ? 'Quick calculators to help you make better choices about your water.' : 'आपके पानी के बारे में बेहतर विकल्प चुनने में मदद करने के लिए त्वरित कैलकुलेटर।'}
+                  </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-8 md:p-10 space-y-12">
+            {/* Tool A: TDS Blending */}
+            <TdsBlendingTool language={language} />
+            
+            <hr className="border-slate-200 dark:border-slate-800" />
+            
+            {/* Tool B: Daily Intake */}
+            <DailyIntakeTool language={language} />
+            
+            <hr className="border-slate-200 dark:border-slate-800" />
+            
+            {/* Tool C: Filter ROI */}
+            <FilterRoiTool language={language} />
+          </div>
+        </div>
+      </motion.div>
+    </div>
   );
 };
 

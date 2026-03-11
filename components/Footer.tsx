@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Bot, Accessibility, Globe } from 'lucide-react';
+import { Shield, Bot, Accessibility, Globe, Info } from 'lucide-react';
 
 export const Footer = () => {
     return (
@@ -44,15 +44,26 @@ export const Footer = () => {
                         <p className="text-xs text-slate-500 mt-1">Sankalp Innovation Challenge 2026</p>
                     </div>
                 </div>
-                <div className="border-t border-white/10 pt-6 mt-4 px-4">
-                    <div className="max-w-3xl mx-auto text-center space-y-4">
-                        <p className="text-[10px] text-gov-teal uppercase tracking-[0.2em] font-bold">
-                            Disclaimer: Demo Mode & Mock Data
+                
+                {/* Data Simulation Disclaimer */}
+                <div className="bg-blue-500/5 border-y border-blue-500/10 py-8 px-4">
+                    <div className="max-w-3xl mx-auto text-center space-y-3">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-bold uppercase tracking-widest mb-2">
+                            <Info size={12} /> Data Simulation Active
+                        </div>
+                        <p className="text-xs text-slate-300 font-semibold leading-relaxed">
+                            JalDrishti AI is currently in active development.
                         </p>
-                        <p className="text-[10px] text-slate-500 leading-relaxed">
-                            JalDrishti AI is currently in prototype phase. Some data points shown in the dashboard and maps may be simulated for demonstration purposes. AI-based visual analysis should be verified with laboratory testing for critical safety decisions.
+                        <p className="text-[11px] text-slate-400 leading-relaxed">
+                            To demonstrate platform capabilities, some data points are simulated. 
+                            AI-based visual analysis is a preliminary screening tool and should be verified with laboratory testing for critical safety decisions. 
                         </p>
-                        <p className="text-xs text-slate-500 pb-4">&copy; 2026 JalDrishti AI. All rights reserved.</p>
+                    </div>
+                </div>
+
+                <div className="pt-8 px-4">
+                    <div className="max-w-7xl mx-auto text-center">
+                        <p className="text-[10px] text-slate-500 uppercase tracking-widest">&copy; 2026 JalDrishti AI. All rights reserved.</p>
                     </div>
                 </div>
             </footer>

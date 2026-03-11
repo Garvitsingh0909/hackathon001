@@ -41,11 +41,13 @@ export const WaterMap = ({ language = 'en' }: { language?: 'en' | 'hi' }) => {
     if (!searchQuery.trim()) return;
     setIsSearching(true);
     setSearchResult(null);
+    console.log('[WaterMap] Searching for state/region intelligence', { searchQuery });
     try {
       const result = await searchWaterNews(`Current water quality and contamination issues in ${searchQuery} India 2024 2025`);
+      console.log('[WaterMap] Search successful', result);
       setSearchResult(result.text);
     } catch (error) {
-      console.error("Search failed:", error);
+      console.error("[WaterMap] Search failed:", error);
       setSearchResult("Unable to fetch real-time data for this region. Please try again later.");
     } finally {
       setIsSearching(false);

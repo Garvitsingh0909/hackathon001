@@ -1,7 +1,15 @@
 import { GoogleGenAI, Modality } from "@google/genai";
 
+// Logging utility
+const log = {
+  info: (msg: string, data?: any) => console.log(`[JalDrishti INFO] ${msg}`, data || ''),
+  error: (msg: string, error?: any) => console.error(`[JalDrishti ERROR] ${msg}`, error || ''),
+  warn: (msg: string, data?: any) => console.warn(`[JalDrishti WARN] ${msg}`, data || ''),
+};
+
 // Client-side Claude API wrapper
 export const chatWithClaude = async (messages: any[], language: string, onChunk: (text: string) => void) => {
+  log.info('Starting chat with Claude', { messageCount: messages.length, language });
   try {
     const response = await fetch('/api/chat', {
       method: 'POST',
@@ -12,7 +20,9 @@ export const chatWithClaude = async (messages: any[], language: string, onChunk:
     });
 
     if (!response.ok) {
-      throw new Error('Network response was not ok');
+      const errorText = await response.text();
+      log.error('Chat API response not ok', { status: response.status, errorText });
+      throw new Error(`Network response was not ok: ${response.status} ${errorText}`);
     }
 
     const reader = response.body?.getReader();
@@ -20,9 +30,13 @@ export const chatWithClaude = async (messages: any[], language: string, onChunk:
     let fullText = '';
 
     if (reader) {
+      log.info('Reading chat stream');
       while (true) {
         const { done, value } = await reader.read();
-        if (done) break;
+        if (done) {
+          log.info('Chat stream reading complete');
+          break;
+        }
         
         const chunk = decoder.decode(value, { stream: true });
         const lines = chunk.split('\n');
@@ -36,7 +50,7 @@ export const chatWithClaude = async (messages: any[], language: string, onChunk:
                 onChunk(fullText);
               }
             } catch (e) {
-              console.error('Error parsing stream chunk', e);
+              log.error('Error parsing stream chunk', { line, error: e });
             }
           }
         }
@@ -44,7 +58,7 @@ export const chatWithClaude = async (messages: any[], language: string, onChunk:
     }
     return fullText;
   } catch (error) {
-    console.error('Chat failed:', error);
+    log.error('Chat failed', error);
     return "I am currently in offline mode. Please check the dashboard for the latest available data.";
   }
 };
@@ -53,26 +67,32 @@ export const chatWithClaude = async (messages: any[], language: string, onChunk:
 let currentAudio: HTMLAudioElement | null = null;
 
 export const playGeminiTTS = async (text: string, onStart?: () => void, onEnd?: () => void, lang: string = 'en-IN') => {
+    log.info('Starting Gemini TTS', { textLength: text.length, lang });
     try {
         if (currentAudio) {
+            log.info('Pausing existing audio');
             currentAudio.pause();
             currentAudio = null;
         }
 
         if (onStart) onStart();
 
-        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+        const apiKey = process.env.GEMINI_API_KEY || '';
+        if (!apiKey) {
+            log.warn('GEMINI_API_KEY is missing, falling back to browser TTS');
+            throw new Error('GEMINI_API_KEY is missing');
+        }
+
+        const ai = new GoogleGenAI({ apiKey });
         
         // Map language to voice and prompt
         const isHindi = lang.startsWith('hi');
-        const voiceName = isHindi ? 'Kore' : 'Zephyr'; // Zephyr for English, Kore for Hindi (just a choice)
-        const prompt = isHindi 
-            ? `Translate and speak this in Hindi: ${text}` 
-            : `Speak this in English: ${text}`;
+        const voiceName = isHindi ? 'Kore' : 'Zephyr';
+        log.info('Using voice', { voiceName, isHindi });
 
         const response = await ai.models.generateContent({
             model: "gemini-2.5-flash-preview-tts",
-            contents: [{ parts: [{ text: text }] }], // Use original text, model handles lang if prompt is right or just text is right
+            contents: [{ parts: [{ text: text }] }],
             config: {
                 responseModalities: [Modality.AUDIO],
                 speechConfig: {
@@ -85,32 +105,42 @@ export const playGeminiTTS = async (text: string, onStart?: () => void, onEnd?: 
 
         const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
         if (base64Audio) {
+            log.info('Audio data received, starting playback');
             const audioUrl = `data:audio/mp3;base64,${base64Audio}`;
             currentAudio = new Audio(audioUrl);
             currentAudio.onended = () => {
+                log.info('Audio playback ended');
                 if (onEnd) onEnd();
                 currentAudio = null;
             };
-            currentAudio.onerror = () => {
-                console.error("Audio playback error");
+            currentAudio.onerror = (e) => {
+                log.error('Audio playback error', e);
                 if (onEnd) onEnd();
             };
             await currentAudio.play();
         } else {
+            log.error('No audio data in Gemini response');
             throw new Error("No audio data received");
         }
     } catch (error) {
-        console.error("Gemini TTS Error:", error);
+        log.error("Gemini TTS Error", error);
         // Fallback to browser TTS if Gemini fails
         playBrowserTTS(text, onStart, onEnd, lang);
     }
 };
 
 // Gemini API Implementation
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+const apiKey = process.env.GEMINI_API_KEY || '';
+const ai = new GoogleGenAI({ apiKey });
 
 export const analyzeWaterImage = async (base64Image: string, mimeType: string = 'image/jpeg') => {
+  log.info('Starting Water Image Analysis', { mimeType });
   try {
+    if (!apiKey) {
+        log.warn('GEMINI_API_KEY is missing, using fallback analysis');
+        throw new Error('GEMINI_API_KEY is missing');
+    }
+
     const response = await ai.models.generateContent({
       model: "gemini-3.1-pro-preview",
       contents: [
@@ -133,7 +163,15 @@ export const analyzeWaterImage = async (base64Image: string, mimeType: string = 
       }
     });
 
-    const result = JSON.parse(response.text || '{}');
+    const text = response.text;
+    if (!text) {
+        log.error('Empty response from Gemini Image Analysis');
+        throw new Error('Empty response from Gemini');
+    }
+
+    log.info('Gemini Image Analysis response received', { text });
+    const result = JSON.parse(text);
+    
     return {
       algaeLevel: result.algaeLevel || "Moderate",
       foamDetected: !!result.foamDetected,
@@ -144,7 +182,7 @@ export const analyzeWaterImage = async (base64Image: string, mimeType: string = 
       details: result.details || "Visual analysis completed."
     };
   } catch (error) {
-    console.error("Gemini Image Analysis Error:", error);
+    log.error("Gemini Image Analysis Error", error);
     // Fallback
     return {
         algaeLevel: "Moderate",
@@ -159,7 +197,13 @@ export const analyzeWaterImage = async (base64Image: string, mimeType: string = 
 };
 
 export const searchWaterNews = async (query: string) => {
+  log.info('Searching water news', { query });
   try {
+    if (!apiKey) {
+        log.warn('GEMINI_API_KEY is missing, using fallback news');
+        throw new Error('GEMINI_API_KEY is missing');
+    }
+
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: `Search for the latest water quality news and updates for: ${query}`,
@@ -168,16 +212,19 @@ export const searchWaterNews = async (query: string) => {
       },
     });
 
+    const text = response.text;
+    log.info('Search news response received', { textLength: text?.length });
+
     const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
     const urls = chunks?.map((c: any) => c.web?.uri).filter(Boolean) || [];
 
     return {
-      text: response.text || "No recent news found.",
+      text: text || "No recent news found.",
       urls: urls,
       groundingMetadata: response.candidates?.[0]?.groundingMetadata
     };
   } catch (error) {
-    console.error("Gemini Search Error:", error);
+    log.error("Gemini Search Error", error);
     return {
         text: "## Local Updates (Offline)\n\nUnable to fetch real-time news. Please check back later.",
         urls: [],
@@ -187,7 +234,13 @@ export const searchWaterNews = async (query: string) => {
 };
 
 export const findNearbyStations = async (lat: number, lng: number) => {
+  log.info('Finding nearby stations', { lat, lng });
   try {
+    if (!apiKey) {
+        log.warn('GEMINI_API_KEY is missing, using fallback stations');
+        throw new Error('GEMINI_API_KEY is missing');
+    }
+
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
       contents: "Find water quality monitoring stations, river sensors, or water treatment plants near this location.",
@@ -204,14 +257,17 @@ export const findNearbyStations = async (lat: number, lng: number) => {
       },
     });
 
+    const text = response.text;
+    log.info('Find nearby stations response received', { textLength: text?.length });
+
     const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
     
     return {
-      text: response.text || "Found nearby stations.",
+      text: text || "Found nearby stations.",
       chunks: chunks
     };
   } catch (error) {
-    console.error("Gemini Maps Error:", error);
+    log.error("Gemini Maps Error", error);
     return {
         text: "Unable to locate nearby stations in real-time.",
         chunks: []
@@ -220,20 +276,25 @@ export const findNearbyStations = async (lat: number, lng: number) => {
 };
 
 export const getQuickStat = async (dataContext: string) => {
+  log.info('Getting quick stat', { contextLength: dataContext.length });
   try {
+    if (!apiKey) throw new Error('GEMINI_API_KEY is missing');
+
     const response = await ai.models.generateContent({
       model: "gemini-3.1-flash-lite-preview",
       contents: `Provide a very brief (1 sentence) status update on water quality based on this context: ${dataContext}`,
     });
     return response.text || "Status unavailable.";
   } catch (error) {
+    log.error('Quick stat error', error);
     return "Status update unavailable.";
   }
 };
 
 export const playBrowserTTS = (text: string, onStart?: () => void, onEnd?: () => void, lang: string = 'en-US') => {
+    log.info('Starting Browser TTS', { textLength: text.length, lang });
     if (!('speechSynthesis' in window)) {
-        console.error("Browser does not support TTS");
+        log.error("Browser does not support TTS");
         if (onEnd) onEnd();
         return;
     }
@@ -252,11 +313,14 @@ export const playBrowserTTS = (text: string, onStart?: () => void, onEnd?: () =>
                                voices.find(v => v.name.includes('Samantha')) ||
                                voices.find(v => v.lang === 'en-US');
         
-        if (preferredVoice) utterance.voice = preferredVoice;
+        if (preferredVoice) {
+            log.info('Using browser voice', { voiceName: preferredVoice.name });
+            utterance.voice = preferredVoice;
+        }
 
         utterance.onstart = () => { if (onStart) onStart(); };
         utterance.onend = () => { if (onEnd) onEnd(); };
-        utterance.onerror = (e) => { console.error("TTS Error:", e); if (onEnd) onEnd(); };
+        utterance.onerror = (e) => { log.error("Browser TTS Error", e); if (onEnd) onEnd(); };
 
         window.speechSynthesis.speak(utterance);
     };

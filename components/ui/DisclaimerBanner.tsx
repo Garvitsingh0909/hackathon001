@@ -1,25 +1,14 @@
 import React from 'react';
+import { Info } from 'lucide-react';
 
 export const DisclaimerBanner = () => {
   return (
-    <div style={{
-      background: "rgba(245,158,11,0.08)",
-      border: "1px solid rgba(245,158,11,0.25)",
-      borderRadius: 10,
-      padding: "10px 16px",
-      display: "flex",
-      alignItems: "center",
-      gap: 10,
-      marginBottom: 20,
-      fontSize: 13,
-      color: "rgba(255,255,255,0.6)",
-    }}>
-      <span style={{ fontSize: 16 }}>⚠️</span>
+    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 flex items-center gap-3 mb-5 text-sm text-slate-700 dark:text-slate-300">
+      <Info size={16} className="text-blue-600 dark:text-blue-400 flex-shrink-0" />
       <span>
-        <strong style={{ color: "rgba(245,158,11,0.9)" }}>Demo Mode:</strong>
-        {" "}All citizen reports, sensor readings, and water quality data shown 
-        here are mock data for demonstration purposes only. 
-        Real data will appear after pilot launch.
+        <strong className="text-blue-700 dark:text-blue-400">Data Simulation Active:</strong>
+        {" "}For demonstration purposes, some data points are simulated. 
+        AI-based analysis is a preliminary screening tool.
       </span>
     </div>
   );

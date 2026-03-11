@@ -43,6 +43,11 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose, initialMe
     const analyserRef = useRef<AnalyserNode | null>(null);
     const animationFrameRef = useRef<number | null>(null);
 
+    const messagesRef = useRef<ChatMessage[]>(messages);
+    useEffect(() => {
+        messagesRef.current = messages;
+    }, [messages]);
+
     const playResponse = useCallback(async (text: string) => {
         if (!audioEnabled) return;
         
@@ -79,7 +84,8 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose, initialMe
         setIsLoading(true);
 
         try {
-            let apiHistory = messages.map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.text }));
+            // Use ref to get latest messages without making it a dependency
+            let apiHistory = messagesRef.current.map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.text }));
             apiHistory.push({ role: 'user', content: userMsg.text });
             
             // Anthropic requires alternating roles starting with user
@@ -123,7 +129,7 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose, initialMe
         } finally {
             setIsLoading(false);
         }
-    }, [input, isLoading, messages, selectedLang, playResponse]);
+    }, [input, isLoading, selectedLang, playResponse]); // Removed messages from dependencies
 
     const handleFinalResult = useCallback((text: string) => {
         const cleanText = text.trim();
@@ -163,11 +169,14 @@ export const Assistant: React.FC<AssistantProps> = ({ isOpen, onClose, initialMe
 
     const isRecording = voiceState === 'listening';
 
+    const initialMessageProcessed = useRef(false);
+
     useEffect(() => {
-        if (initialMessage && isOpen) {
+        if (initialMessage && isOpen && !initialMessageProcessed.current) {
             handleSend(initialMessage);
+            initialMessageProcessed.current = true;
         }
-    }, [initialMessage, isOpen]);
+    }, [initialMessage, isOpen, handleSend]);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

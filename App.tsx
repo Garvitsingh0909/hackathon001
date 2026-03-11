@@ -22,7 +22,7 @@ function AppContent() {
   const { user, login, logout, isAdmin } = useAuth();
   const [activeTab, setActiveTab] = useState('home');
   const [language, setLanguage] = useState<'en' | 'hi'>('en');
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState(1);
   const [userState, setUserState] = useState('');
@@ -169,7 +169,7 @@ function AppContent() {
               <div className="p-6 md:p-8">
                 <div className="flex justify-between items-center mb-6">
                   <div className="flex gap-2">
-                    {[1, 2, 3].map(step => (
+                    {[1, 2, 3, 4].map(step => (
                       <div key={step} className={`h-2 w-8 rounded-full ${step <= onboardingStep ? 'bg-gov-navy' : 'bg-slate-200 dark:bg-slate-700'}`} />
                     ))}
                   </div>
@@ -178,13 +178,35 @@ function AppContent() {
 
                 {onboardingStep === 1 && (
                   <div className="space-y-4">
+                    <div className="h-16 w-16 bg-blue-50 dark:bg-blue-900/50 rounded-2xl flex items-center justify-center text-3xl mb-6">🌐</div>
+                    <h2 className="text-2xl font-bold text-gov-navy dark:text-white font-display">Select Language</h2>
+                    <p className="text-slate-600 dark:text-slate-400 mb-4">Please select your preferred language.</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button 
+                        onClick={() => setLanguage('en')}
+                        className={`p-3 rounded-xl border font-medium transition-all ${language === 'en' ? 'bg-blue-50 border-blue-500 text-blue-700 dark:bg-blue-900/30 dark:border-blue-500 dark:text-blue-300' : 'bg-gov-card border-slate-200 text-slate-700 hover:border-blue-300 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'}`}
+                      >
+                        English
+                      </button>
+                      <button 
+                        onClick={() => setLanguage('hi')}
+                        className={`p-3 rounded-xl border font-medium transition-all ${language === 'hi' ? 'bg-blue-50 border-blue-500 text-blue-700 dark:bg-blue-900/30 dark:border-blue-500 dark:text-blue-300' : 'bg-gov-card border-slate-200 text-slate-700 hover:border-blue-300 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'}`}
+                      >
+                        हिन्दी
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {onboardingStep === 2 && (
+                  <div className="space-y-4">
                     <div className="h-16 w-16 bg-blue-50 dark:bg-blue-900/50 rounded-2xl flex items-center justify-center text-3xl mb-6">👋</div>
                     <h2 className="text-2xl font-bold text-gov-navy dark:text-white font-display">Welcome to JalDrishti AI</h2>
                     <p className="text-slate-600 dark:text-slate-400">Your personal water quality assistant. We help you analyze, understand, and improve the water you drink every day.</p>
                   </div>
                 )}
 
-                {onboardingStep === 2 && (
+                {onboardingStep === 3 && (
                   <div className="space-y-4">
                     <div className="h-16 w-16 bg-blue-50 dark:bg-blue-900/50 rounded-2xl flex items-center justify-center text-3xl mb-6">💧</div>
                     <h2 className="text-2xl font-bold text-gov-navy dark:text-white font-display">Tell us about your water</h2>
@@ -203,7 +225,7 @@ function AppContent() {
                   </div>
                 )}
 
-                {onboardingStep === 3 && (
+                {onboardingStep === 4 && (
                   <div className="space-y-4">
                     <div className="h-16 w-16 bg-blue-50 dark:bg-blue-900/50 rounded-2xl flex items-center justify-center text-3xl mb-6">📍</div>
                     <h2 className="text-2xl font-bold text-gov-navy dark:text-white font-display">Where are you?</h2>
@@ -228,12 +250,12 @@ function AppContent() {
                 <div className="mt-8">
                   <button 
                     onClick={() => {
-                      if (onboardingStep < 3) setOnboardingStep(onboardingStep + 1);
+                      if (onboardingStep < 4) setOnboardingStep(onboardingStep + 1);
                       else handleFinishOnboarding();
                     }}
                     className="w-full py-4 bg-gov-navy hover:bg-gov-navy/90 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
                   >
-                    {onboardingStep < 3 ? 'Continue' : 'Get Started'} <ChevronRight size={20} />
+                    {onboardingStep < 4 ? 'Continue' : 'Get Started'} <ChevronRight size={20} />
                   </button>
                 </div>
               </div>

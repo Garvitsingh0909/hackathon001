@@ -111,6 +111,7 @@ export const AnalysisModule = () => {
   const analyze = async () => {
     if (!image) return;
     setLoading(true);
+    console.log('[AnalysisModule] Starting analysis for uploaded image');
     
     const simData = generateSimulatedData();
     
@@ -119,12 +120,14 @@ export const AnalysisModule = () => {
         
         try {
             const base64Data = image.split(',')[1];
+            console.log('[AnalysisModule] Calling analyzeWaterImage API');
             const apiPromise = analyzeWaterImage(base64Data);
-            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 15000));
+            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 20000));
             
             analysisResult = await Promise.race([apiPromise, timeoutPromise]) as any;
+            console.log('[AnalysisModule] API analysis successful', analysisResult);
         } catch (e) {
-            console.log("API timed out or failed, using simulation fallback");
+            console.warn("[AnalysisModule] API timed out or failed, using simulation fallback", e);
             analysisResult = {
                 overallScore: Math.round(simData.historicalData[5].value),
                 algaeLevel: simData.chlorophyll > 20 ? 'High' : simData.chlorophyll > 10 ? 'Moderate' : 'Low',
@@ -152,10 +155,12 @@ export const AnalysisModule = () => {
         };
 
         setSuccess(true);
+        console.log('[AnalysisModule] Final report generated', finalReport);
         
         // Save to Firestore if user is logged in
         if (user) {
             setSaveStatus('saving');
+            console.log('[AnalysisModule] Saving report to Firestore for user', user.uid);
             try {
                 await addDoc(collection(db, 'reports'), {
                     ...finalReport,
@@ -166,8 +171,9 @@ export const AnalysisModule = () => {
                     imageUrl: image // In a real app, we'd upload to Storage first
                 });
                 setSaveStatus('saved');
+                console.log('[AnalysisModule] Report saved to Firestore successfully');
             } catch (error) {
-                console.error("Error saving report:", error);
+                console.error("[AnalysisModule] Error saving report to Firestore:", error);
                 setSaveStatus('error');
             }
         }
@@ -177,8 +183,8 @@ export const AnalysisModule = () => {
             setSuccess(false);
         }, 1000);
     } catch (error: any) {
-        console.error("Analysis error", error);
-        alert(`Failed to analyze image. Error: ${error.message || 'Unknown error'}`);
+        console.error("[AnalysisModule] Critical analysis error", error);
+        alert(`Failed to analyze image. Error: ${error.message || 'Unknown error'}. Please try again.`);
     } finally {
         setLoading(false);
     }

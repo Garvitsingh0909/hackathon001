@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export type VoiceState = 'idle' | 'listening' | 'thinking' | 'speaking' | 'error';
 
@@ -7,10 +7,22 @@ export const useSpeechRecognition = (language: 'en' | 'hi', onFinalResult: (text
   const [liveTranscript, setLiveTranscript] = useState('');
   const [recognition, setRecognition] = useState<any>(null);
 
+  // Use refs for callbacks to avoid re-running the effect when they change
+  const onFinalResultRef = useRef(onFinalResult);
+  const showToastRef = useRef(showToast);
+
+  useEffect(() => {
+    onFinalResultRef.current = onFinalResult;
+  }, [onFinalResult]);
+
+  useEffect(() => {
+    showToastRef.current = showToast;
+  }, [showToast]);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (!("SpeechRecognition" in window || "webkitSpeechRecognition" in window)) {
-      showToast("Voice not supported in this browser — use Chrome");
+      showToastRef.current("Voice not supported in this browser — use Chrome");
       return;
     }
 
@@ -25,8 +37,8 @@ export const useSpeechRecognition = (language: 'en' | 'hi', onFinalResult: (text
       setVoiceState(prev => prev === 'listening' ? 'idle' : prev);
     };
     rec.onerror = (e: any) => {
-      if (e.error === "not-allowed") showToast("Microphone access denied");
-      if (e.error === "no-speech") showToast("No speech detected — try again");
+      if (e.error === "not-allowed") showToastRef.current("Microphone access denied");
+      if (e.error === "no-speech") showToastRef.current("No speech detected — try again");
       setVoiceState("error");
       setTimeout(() => setVoiceState("idle"), 2000);
     };
@@ -35,12 +47,12 @@ export const useSpeechRecognition = (language: 'en' | 'hi', onFinalResult: (text
         .map((r: any) => r[0].transcript).join("");
       setLiveTranscript(transcript);
       if (e.results[0].isFinal) {
-        onFinalResult(transcript);
+        onFinalResultRef.current(transcript);
       }
     };
 
     setRecognition(rec);
-  }, [language, onFinalResult, showToast]);
+  }, [language]); // Only depend on language
 
   const startListening = () => {
     if (recognition) {

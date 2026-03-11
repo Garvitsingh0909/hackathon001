@@ -49,11 +49,18 @@ export const AdminDashboard = () => {
 
     const updateStatus = async (reportId: string, newStatus: string) => {
         try {
-            await updateDoc(doc(db, 'reports', reportId), {
+            const reportRef = doc(db, 'reports', reportId);
+            await updateDoc(reportRef, {
                 status: newStatus
             });
-        } catch (error) {
-            console.error("Error updating status:", error);
+            console.log(`[AdminDashboard] Status updated for ${reportId}`);
+        } catch (error: any) {
+            console.error("[AdminDashboard] Error updating status:", error);
+            if (error.code === 'not-found') {
+                alert("This report no longer exists and may have been deleted.");
+            } else {
+                alert("Failed to update report status. Please try again.");
+            }
         }
     };
 

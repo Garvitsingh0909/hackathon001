@@ -22,18 +22,20 @@ export const WaterIntel = () => {
 
     const fetchNews = async () => {
         setLoading(true);
+        console.log('[WaterIntel] Fetching news for Tamsa River');
         try {
             const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 60000));
             const apiPromise = searchWaterNews("Tamsa River pollution and water quality Uttar Pradesh");
             
             const result = await Promise.race([apiPromise, timeoutPromise]) as any;
+            console.log('[WaterIntel] News fetch successful', result);
             
             setNews({
                 text: result.text || "No news found.",
                 sources: result.groundingMetadata?.groundingChunks || []
             });
         } catch (e) {
-            console.error("News fetch failed or timed out", e);
+            console.error("[WaterIntel] News fetch failed or timed out", e);
             setNews({
                 text: "## Local Updates (Cached)\n\n**Tamsa River Status:** Recent monitoring indicates stable water levels. Local authorities have increased sampling frequency near industrial zones.\n\n**Community Action:** Volunteer groups are organizing a cleanup drive this weekend at the City Center Ghat.",
                 sources: []
@@ -45,18 +47,20 @@ export const WaterIntel = () => {
 
     const fetchStations = async () => {
         setLoading(true);
+        console.log('[WaterIntel] Fetching nearby stations');
         try {
             const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 60000));
             const apiPromise = findNearbyStations(MOCK_LAT, MOCK_LNG);
             
             const result = await Promise.race([apiPromise, timeoutPromise]) as any;
+            console.log('[WaterIntel] Stations fetch successful', result);
             
             setStations({
                 text: result.text || "No stations found.",
                 chunks: result.chunks || []
             });
         } catch (e) {
-            console.error("Stations fetch failed or timed out", e);
+            console.error("[WaterIntel] Stations fetch failed or timed out", e);
             setStations({
                 text: "Unable to fetch live station data. Showing cached locations.",
                 chunks: [
