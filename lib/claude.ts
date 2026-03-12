@@ -148,7 +148,7 @@ export const analyzeWaterImage = async (base64Image: string, mimeType: string = 
   try {
     const response = await callGeminiWithRetry(async (ai) => {
         return await ai.models.generateContent({
-          model: "gemini-3.1-pro-preview",
+          model: "gemini-3.1-flash-image-preview",
           contents: [
             {
               parts: [

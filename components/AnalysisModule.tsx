@@ -19,6 +19,7 @@ const FAQ_ITEMS = [
 export const AnalysisModule = () => {
   const { user } = useAuth();
   const [image, setImage] = useState<string | null>(null);
+  const [mimeType, setMimeType] = useState<string>('image/jpeg');
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [success, setSuccess] = useState(false);
@@ -88,6 +89,7 @@ export const AnalysisModule = () => {
     if (file) {
       setLoading(true);
       try {
+        setMimeType(file.type);
         const resizedImage = await resizeImage(file);
         setImage(resizedImage);
         setResult(null);
@@ -135,7 +137,7 @@ export const AnalysisModule = () => {
         try {
             const base64Data = image.split(',')[1];
             console.log('[AnalysisModule] Calling analyzeWaterImage API');
-            const apiPromise = analyzeWaterImage(base64Data);
+            const apiPromise = analyzeWaterImage(base64Data, mimeType);
             const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 20000));
             
             analysisResult = await Promise.race([apiPromise, timeoutPromise]) as any;

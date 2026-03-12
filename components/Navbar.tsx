@@ -79,20 +79,21 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, languag
     <div className="fixed top-0 left-0 right-0 z-50">
         <nav className={`backdrop-blur-xl border-b transition-colors duration-300 ${darkMode ? 'bg-gov-navy/80 border-white/10' : 'bg-gov-card/80 border-slate-200'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
+            <div className="flex justify-between items-center h-16 w-full">
                 {/* Brand */}
-                <div className="flex items-center gap-3 cursor-pointer relative" onClick={handleLogoClick}>
-                    <div className={`absolute inset-0 rounded-full ${isRipple ? 'ripple' : ''}`}></div>
-                    <Logo darkMode={darkMode} />
+                <div className="flex items-center cursor-pointer" onClick={handleLogoClick}>
+                    <span className={`text-xl font-bold font-display tracking-tight ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+                        Jal<span className="text-blue-500">Drishti</span> <span className="text-emerald-500">AI</span>
+                    </span>
                 </div>
 
                 {/* Desktop Navigation - Hackathon Level */}
-                <div className="hidden md:flex items-center p-1.5 bg-slate-100/50 dark:bg-slate-800/50 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 rounded-full shadow-inner">
+                <div className="hidden md:flex items-center p-1.5 bg-slate-100/50 dark:bg-slate-800/50 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 rounded-full shadow-inner gap-x-6 flex-grow justify-center mx-8">
                     {navItems.map((item) => (
                         <button
                             key={item.id}
                             id={`nav-${item.id}`}
-                            className={`tour-${item.id} relative px-5 py-2 rounded-full text-sm font-bold tracking-wide transition-all duration-300 flex items-center gap-2 ${
+                            className={`tour-${item.id} relative px-6 py-2.5 rounded-full text-sm font-bold tracking-wide transition-all duration-300 flex items-center gap-2 ${
                                 activeTab === item.id 
                                 ? 'text-white shadow-lg'
                                 : (darkMode ? 'text-slate-400 hover:text-white hover:bg-white/5' : 'text-slate-500 hover:text-gov-navy hover:bg-slate-200/50')
