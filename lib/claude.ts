@@ -1,4 +1,4 @@
-import { GoogleGenAI, Modality } from "@google/genai";
+import { GoogleGenAI, Modality, Type } from "@google/genai";
 import { getAiInstance, handleGeminiError } from './geminiKeyManager';
 
 // Logging utility
@@ -10,7 +10,7 @@ const log = {
 
 async function callGeminiWithRetry<T>(fn: (ai: any) => Promise<T>): Promise<T> {
     let retries = 0;
-    const maxRetries = 7; // Number of keys
+    const maxRetries = 2; // Reduced retries since platform manages key
     while (retries < maxRetries) {
         try {
             const ai = getAiInstance();
@@ -24,7 +24,7 @@ async function callGeminiWithRetry<T>(fn: (ai: any) => Promise<T>): Promise<T> {
             throw error;
         }
     }
-    throw new Error("All Gemini API keys exhausted");
+    throw new Error("Gemini API call failed after retries");
 }
 
 // Client-side Claude API wrapper
@@ -148,24 +148,34 @@ export const analyzeWaterImage = async (base64Image: string, mimeType: string = 
   try {
     const response = await callGeminiWithRetry(async (ai) => {
         return await ai.models.generateContent({
-          model: "gemini-3.1-flash-image-preview",
-          contents: [
-            {
-              parts: [
-                {
-                  inlineData: {
-                    data: base64Image.split(',')[1] || base64Image,
-                    mimeType: mimeType,
-                  },
+          model: "gemini-3.1-pro-preview",
+          contents: {
+            parts: [
+              {
+                inlineData: {
+                  data: base64Image.split(',')[1] || base64Image,
+                  mimeType: mimeType,
                 },
-                {
-                  text: "Analyze this water source image. Provide a JSON response with: algaeLevel (None/Low/Moderate/High), foamDetected (boolean), turbidity (Clear/Slightly Cloudy/Cloudy/Opaque), color (string), overallScore (0-100), recommendation (string), and details (string).",
-                },
-              ],
-            },
-          ],
+              },
+              {
+                text: "Analyze this water source image. Provide a JSON response with: algaeLevel (None/Low/Moderate/High), foamDetected (boolean), turbidity (Clear/Slightly Cloudy/Cloudy/Opaque), color (string), overallScore (0-100), recommendation (string), and details (string).",
+              },
+            ],
+          },
           config: {
             responseMimeType: "application/json",
+            responseSchema: {
+              type: Type.OBJECT,
+              properties: {
+                algaeLevel: { type: Type.STRING },
+                foamDetected: { type: Type.BOOLEAN },
+                turbidity: { type: Type.STRING },
+                color: { type: Type.STRING },
+                overallScore: { type: Type.NUMBER },
+                recommendation: { type: Type.STRING },
+                details: { type: Type.STRING }
+              }
+            }
           }
         });
     });
