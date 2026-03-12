@@ -139,7 +139,7 @@ export const AnalysisModule = () => {
             const base64Data = image.split(',')[1];
             console.log('[AnalysisModule] Calling analyzeWaterImage API');
             const apiPromise = analyzeWaterImage(base64Data, mimeType);
-            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 20000));
+            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 30000));
             
             analysisResult = await Promise.race([apiPromise, timeoutPromise]) as any;
             console.log('[AnalysisModule] API analysis successful', analysisResult);

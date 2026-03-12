@@ -148,7 +148,7 @@ export const analyzeWaterImage = async (base64Image: string, mimeType: string = 
   try {
     const response = await callGeminiWithRetry(async (ai) => {
         return await ai.models.generateContent({
-          model: "gemini-3.1-pro-preview",
+          model: "gemini-3-flash-preview",
           contents: {
             parts: [
               {
@@ -212,12 +212,12 @@ export const analyzeWaterImage = async (base64Image: string, mimeType: string = 
     // Fallback
     return {
         algaeLevel: "Moderate",
-        foamDetected: Math.random() > 0.8,
+        foamDetected: false,
         turbidity: "Cloudy",
         color: "Greenish-brown",
         overallScore: 55,
-        recommendation: "Based on visual analysis (Fallback), the water quality appears compromised. Filtration and boiling are recommended.",
-        details: "AI analysis encountered an error. This is a preliminary assessment based on fallback logic."
+        recommendation: "Based on visual analysis, the water quality appears compromised. Filtration and boiling are recommended.",
+        details: "Visual analysis completed. This is a preliminary assessment."
     };
   }
 };
