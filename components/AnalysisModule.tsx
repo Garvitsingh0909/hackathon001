@@ -14,6 +14,60 @@ const FAQ_ITEMS = [
     { q: "Can it detect invisible chemicals?", a: "No. Visual analysis cannot detect dissolved chemicals, heavy metals, or microscopic pathogens. Always use proper testing kits for drinking water." }
 ];
 
+const ActionModal = ({ isOpen, onClose, score }: { isOpen: boolean, onClose: () => void, score: number }) => {
+    if (!isOpen) return null;
+    return (
+        <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm"
+        >
+            <motion.div 
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 max-w-lg w-full shadow-2xl border border-slate-200 dark:border-slate-800"
+            >
+                <div className="flex justify-between items-start mb-6">
+                    <div className={`p-4 rounded-2xl ${score < 50 ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-600'}`}>
+                        <AlertCircle size={32} />
+                    </div>
+                    <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+                        <X size={24} className="text-slate-400" />
+                    </button>
+                </div>
+                <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2 font-display">Safety Protocol Required</h3>
+                <p className="text-slate-500 dark:text-slate-400 mb-8 leading-relaxed">
+                    Based on the visual diagnostic score of <span className="font-bold text-slate-900 dark:text-white">{score}</span>, the following immediate actions are recommended to ensure safety.
+                </p>
+                
+                <div className="space-y-4 mb-8">
+                    {[
+                        { title: "Avoid Consumption", desc: "Do not drink this water without professional RO/UV treatment.", icon: Droplets },
+                        { title: "Boil Before Use", desc: "If no filter is available, boil water for at least 10 minutes.", icon: TrendingUp },
+                        { title: "Contact Authorities", desc: "Report this contamination level to the local water board.", icon: Info }
+                    ].map((step, i) => (
+                        <div key={i} className="flex gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700">
+                            <div className="text-blue-500 mt-1"><step.icon size={20} /></div>
+                            <div>
+                                <h4 className="font-bold text-slate-900 dark:text-white text-sm">{step.title}</h4>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">{step.desc}</p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+                
+                <button 
+                    onClick={onClose}
+                    className="w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold rounded-2xl hover:scale-[1.02] active:scale-[0.98] transition-all"
+                >
+                    I Understand
+                </button>
+            </motion.div>
+        </motion.div>
+    );
+};
+
 export const AnalysisModule = () => {
   const { user } = useAuth();
   const [image, setImage] = useState<string | null>(null);
@@ -25,6 +79,7 @@ export const AnalysisModule = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [isActionModalOpen, setIsActionModalOpen] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
 
   useEffect(() => {
@@ -298,65 +353,93 @@ export const AnalysisModule = () => {
                             exit={{ opacity: 0 }}
                             className="absolute inset-0 z-20 print:hidden"
                         >
-                            <div className="absolute inset-0 bg-blue-900/40 backdrop-blur-sm"></div>
+                            <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-md"></div>
                             
+                            {/* Tech Grid Background */}
+                            <div className="absolute inset-0 overflow-hidden opacity-20">
+                                <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+                                <motion.div 
+                                    animate={{ 
+                                        backgroundPosition: ["0px 0px", "40px 40px"] 
+                                    }}
+                                    transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+                                    className="absolute inset-0 bg-[radial-gradient(circle_800px_at_100%_200px,#3b82f61a,transparent)]"
+                                ></motion.div>
+                            </div>
+
                             {/* Water Droplet Fill Animation */}
                             <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="relative w-32 h-32">
-                                    {/* Tech Grid Background */}
-                                    <div className="absolute inset-0 grid grid-cols-4 grid-rows-4 gap-1 opacity-20">
-                                        {Array.from({ length: 16 }).map((_, i) => (
-                                            <div key={i} className="border border-white/40 rounded-sm"></div>
-                                        ))}
-                                    </div>
-                                    
-                                    <svg viewBox="0 0 24 24" className="w-full h-full text-white/10 absolute inset-0">
+                                <div className="relative w-48 h-48">
+                                    <svg viewBox="0 0 24 24" className="w-full h-full text-white/5 absolute inset-0">
                                         <path fill="currentColor" d="M12,20A6,6 0 0,1 6,14C6,10 12,3.25 12,3.25C12,3.25 18,10 18,14A6,6 0 0,1 12,20Z" />
                                     </svg>
                                     <motion.div 
                                         className="absolute bottom-0 left-0 w-full overflow-hidden"
                                         initial={{ height: "0%" }}
                                         animate={{ height: ["0%", "100%", "0%"] }}
-                                        transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+                                        transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
                                     >
-                                        <svg viewBox="0 0 24 24" className="w-32 h-32 text-blue-400 absolute bottom-0 left-0">
+                                        <svg viewBox="0 0 24 24" className="w-48 h-48 text-blue-500/40 absolute bottom-0 left-0 blur-sm">
+                                            <path fill="currentColor" d="M12,20A6,6 0 0,1 6,14C6,10 12,3.25 12,3.25C12,3.25 18,10 18,14A6,6 0 0,1 12,20Z" />
+                                        </svg>
+                                        <svg viewBox="0 0 24 24" className="w-48 h-48 text-blue-400 absolute bottom-0 left-0">
                                             <path fill="currentColor" d="M12,20A6,6 0 0,1 6,14C6,10 12,3.25 12,3.25C12,3.25 18,10 18,14A6,6 0 0,1 12,20Z" />
                                         </svg>
                                     </motion.div>
                                     
                                     {/* Scanning Data Points */}
-                                    <motion.div 
-                                        animate={{ opacity: [0, 1, 0] }}
-                                        transition={{ repeat: Infinity, duration: 1.5 }}
-                                        className="absolute top-1/4 left-1/4 w-2 h-2 bg-gov-teal rounded-full shadow-[0_0_10px_#64FFDA]"
-                                    />
-                                    <motion.div 
-                                        animate={{ opacity: [0, 1, 0] }}
-                                        transition={{ repeat: Infinity, duration: 1.5, delay: 0.5 }}
-                                        className="absolute bottom-1/3 right-1/4 w-2 h-2 bg-gov-teal rounded-full shadow-[0_0_10px_#64FFDA]"
-                                    />
+                                    {[...Array(6)].map((_, i) => (
+                                        <motion.div 
+                                            key={i}
+                                            animate={{ 
+                                                opacity: [0, 1, 0],
+                                                scale: [0.5, 1.2, 0.5],
+                                                x: [Math.random() * 100 - 50, Math.random() * 100 - 50],
+                                                y: [Math.random() * 100 - 50, Math.random() * 100 - 50]
+                                            }}
+                                            transition={{ repeat: Infinity, duration: 2 + Math.random() * 2, delay: i * 0.3 }}
+                                            className="absolute top-1/2 left-1/2 w-1.5 h-1.5 bg-blue-400 rounded-full shadow-[0_0_15px_#60a5fa]"
+                                        />
+                                    ))}
                                 </div>
                             </div>
                             
                             <motion.div 
                                 animate={{ top: ["0%", "100%"] }}
-                                transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                                className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-gov-teal to-transparent shadow-[0_0_20px_rgba(100,255,218,0.8)]"
+                                transition={{ repeat: Infinity, duration: 2.5, ease: "linear" }}
+                                className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-400 to-transparent shadow-[0_0_30px_rgba(96,165,250,0.8)] z-30"
                             />
-                            <div className="absolute bottom-10 left-0 right-0 flex justify-center flex-col items-center gap-4">
-                                <div className="bg-slate-950/80 backdrop-blur-xl px-4 py-2 rounded-full border border-white/10 text-white text-[10px] font-mono tracking-[0.2em] animate-pulse">
-                                    SYSTEM.SCANNING_PIXELS
+                            
+                            <div className="absolute bottom-12 left-0 right-0 flex justify-center flex-col items-center gap-6">
+                                <div className="flex flex-col items-center gap-2">
+                                    <div className="bg-slate-900/90 backdrop-blur-xl px-6 py-2 rounded-full border border-white/10 text-white text-[10px] font-mono tracking-[0.3em] uppercase">
+                                        Neural_Diagnostic_In_Progress
+                                    </div>
+                                    <div className="text-blue-400 font-mono text-[10px] tracking-widest animate-pulse">
+                                        ANALYZING_SPECTRAL_DENSITY...
+                                    </div>
                                 </div>
-                                <div className="w-64 h-1.5 bg-white/10 rounded-full overflow-hidden border border-white/5">
+                                
+                                <div className="w-72 h-1 bg-white/5 rounded-full overflow-hidden border border-white/5">
                                     <motion.div 
-                                        className="h-full bg-gradient-to-r from-blue-500 to-gov-teal"
+                                        className="h-full bg-gradient-to-r from-blue-600 via-blue-400 to-emerald-400"
                                         initial={{ width: "0%" }}
                                         animate={{ width: `${progress}%` }}
                                     />
                                 </div>
-                                <div className="flex gap-8">
-                                    <p className="text-white/60 text-[10px] font-mono">PROGRESS: {progress}%</p>
-                                    <p className="text-white/60 text-[10px] font-mono">LATENCY: 42ms</p>
+                                <div className="flex gap-12">
+                                    <div className="flex flex-col items-center">
+                                        <span className="text-white/40 text-[8px] font-mono uppercase tracking-widest mb-1">Progress</span>
+                                        <span className="text-white text-xs font-mono">{progress}%</span>
+                                    </div>
+                                    <div className="flex flex-col items-center">
+                                        <span className="text-white/40 text-[8px] font-mono uppercase tracking-widest mb-1">Confidence</span>
+                                        <span className="text-white text-xs font-mono">{(85 + progress * 0.1).toFixed(1)}%</span>
+                                    </div>
+                                    <div className="flex flex-col items-center">
+                                        <span className="text-white/40 text-[8px] font-mono uppercase tracking-widest mb-1">Samples</span>
+                                        <span className="text-white text-xs font-mono">1,024</span>
+                                    </div>
                                 </div>
                             </div>
                         </motion.div>
@@ -616,9 +699,15 @@ export const AnalysisModule = () => {
   );
 };
 
-const MetricCard = ({ label, value }: { label: string, value: string }) => (
-    <div className="bg-gov-card dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-subtle">
-        <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-wider mb-1">{label}</p>
-        <p className="font-bold text-gov-navy dark:text-slate-200 text-lg font-display">{value}</p>
+const MetricCard = ({ label, value, icon: Icon, color }: { label: string, value: string, icon: any, color: string }) => (
+    <div className="bg-white dark:bg-slate-800/50 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-all group">
+        <div className="flex items-center justify-between mb-4">
+            <div className={`p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/50 ${color} group-hover:scale-110 transition-transform`}>
+                <Icon size={20} />
+            </div>
+            <div className="h-1 w-8 rounded-full bg-slate-100 dark:bg-slate-800"></div>
+        </div>
+        <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-[0.15em] mb-1">{label}</p>
+        <p className="font-bold text-slate-900 dark:text-slate-200 text-xl font-display">{value}</p>
     </div>
 );
