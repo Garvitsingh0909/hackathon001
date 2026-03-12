@@ -23,7 +23,6 @@ export const AnalysisModule = () => {
   const [success, setSuccess] = useState(false);
   const [result, setResult] = useState<WaterQualityReport | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isOfflineMode, setIsOfflineMode] = useState(false);
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -48,41 +47,6 @@ export const AnalysisModule = () => {
     }
   }, []);
 
-  const resizeImage = (file: File): Promise<string> => {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
-          
-          const MAX_SIZE = 1024;
-          if (width > height) {
-            if (width > MAX_SIZE) {
-              height *= MAX_SIZE / width;
-              width = MAX_SIZE;
-            }
-          } else {
-            if (height > MAX_SIZE) {
-              width *= MAX_SIZE / height;
-              height = MAX_SIZE;
-            }
-          }
-          
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx?.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL('image/jpeg', 0.8));
-        };
-        img.src = e.target?.result as string;
-      };
-      reader.readAsDataURL(file);
-    });
-  };
-
   const [isDragging, setIsDragging] = useState(false);
 
   const handleDragOver = (e: React.DragEvent<HTMLLabelElement>) => {
@@ -95,65 +59,34 @@ export const AnalysisModule = () => {
     setIsDragging(false);
   };
 
-  const handleDrop = async (e: React.DragEvent<HTMLLabelElement>) => {
+  const processFile = (file: File) => {
+    if (file && file.type.startsWith('image/')) {
+      setLoading(true);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImage(reader.result as string);
+        setMimeType(file.type);
+        setResult(null);
+        setLoading(false);
+      };
+      reader.onerror = () => {
+        alert("Failed to read image file.");
+        setLoading(false);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLLabelElement>) => {
     e.preventDefault();
     setIsDragging(false);
     const file = e.dataTransfer.files?.[0];
-    if (file && file.type.startsWith('image/')) {
-      setLoading(true);
-      try {
-        setMimeType('image/jpeg');
-        const resizedImage = await resizeImage(file);
-        setImage(resizedImage);
-        setResult(null);
-      } catch (error) {
-        console.error("Image processing failed", error);
-        alert("Failed to process image.");
-      } finally {
-        setLoading(false);
-      }
-    }
+    if (file) processFile(file);
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setLoading(true);
-      try {
-        // resizeImage always outputs image/jpeg
-        setMimeType('image/jpeg');
-        const resizedImage = await resizeImage(file);
-        setImage(resizedImage);
-        setResult(null);
-      } catch (error) {
-        console.error("Image processing failed", error);
-        alert("Failed to process image.");
-      } finally {
-        setLoading(false);
-      }
-    }
-  };
-
-  const generateSimulatedData = () => {
-      const baseScore = Math.floor(Math.random() * 40) + 40;
-      
-      const historicalData = Array.from({ length: 6 }).map((_, i) => {
-          const date = new Date();
-          date.setMonth(date.getMonth() - (5 - i));
-          return {
-              date: date.toLocaleString('default', { month: 'short' }),
-              value: Math.max(0, Math.min(100, baseScore + (Math.random() * 20 - 10)))
-          };
-      });
-
-      return {
-          ph: Number((7 + (Math.random() * 1.5 - 0.75)).toFixed(1)),
-          dissolvedOxygen: Number((6 + (Math.random() * 4)).toFixed(1)),
-          chlorophyll: Number((10 + (Math.random() * 20)).toFixed(1)),
-          nitrogen: Number((1.5 + (Math.random() * 2)).toFixed(2)),
-          phosphorus: Number((0.1 + (Math.random() * 0.2)).toFixed(3)),
-          historicalData
-      };
+    if (file) processFile(file);
   };
 
   const analyze = async () => {
@@ -161,57 +94,26 @@ export const AnalysisModule = () => {
     setLoading(true);
     console.log('[AnalysisModule] Starting analysis for uploaded image');
     
-    const simData = generateSimulatedData();
-    
     try {
-        let analysisResult;
-        
-        try {
-            const base64Data = image.split(',')[1];
-            console.log('[AnalysisModule] Calling analyzeWaterImage API');
-            const apiPromise = analyzeWaterImage(base64Data, mimeType);
-            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 30000));
-            
-            analysisResult = await Promise.race([apiPromise, timeoutPromise]) as any;
-            console.log('[AnalysisModule] API analysis successful', analysisResult);
-            setIsOfflineMode(false);
-        } catch (e) {
-            console.warn("[AnalysisModule] API timed out or failed, using simulation fallback", e);
-            setIsOfflineMode(true);
-            analysisResult = {
-                overallScore: Math.round(simData.historicalData[5].value),
-                algaeLevel: simData.chlorophyll > 20 ? 'High' : simData.chlorophyll > 10 ? 'Moderate' : 'Low',
-                turbidity: 'Cloudy',
-                recommendation: "Based on the visual analysis, the water shows signs of organic matter. Recommended to test for specific contaminants.",
-                details: "Visual inspection suggests potential eutrophication. The color indicates presence of algae or suspended solids.",
-                status: 'Pending'
-            };
-        }
+        const base64Data = image.split(',')[1];
+        console.log('[AnalysisModule] Calling analyzeWaterImage API');
+        const analysisResult = await analyzeWaterImage(base64Data, mimeType);
+        console.log('[AnalysisModule] API analysis successful', analysisResult);
         
         const finalReport: WaterQualityReport = {
             ...analysisResult,
-            recommendation: (() => {
-                let rec = analysisResult.recommendation || "";
-                if (analysisResult.algaeLevel === 'High') {
-                    rec += " High algae levels detected, which may indicate a harmful algal bloom. Avoid contact and ingestion.";
-                }
-                if (analysisResult.turbidity === 'Cloudy') {
-                    rec += " Cloudy water detected. Filtering and boiling are strongly recommended before use.";
-                }
-                return rec;
-            })(),
             id: Date.now().toString(),
+            userId: user.uid,
             locationName: "Sample Location",
             coordinates: { lat: 25.942, lng: 83.554 },
             timestamp: new Date().toISOString(),
-            foamDetected: false,
             status: 'Pending',
-            ph: simData.ph,
-            dissolvedOxygen: simData.dissolvedOxygen,
-            chlorophyll: simData.chlorophyll,
-            nitrogen: simData.nitrogen,
-            phosphorus: simData.phosphorus,
-            historicalData: simData.historicalData
+            ph: Number((7 + (Math.random() * 1.5 - 0.75)).toFixed(1)),
+            dissolvedOxygen: Number((6 + (Math.random() * 4)).toFixed(1)),
+            chlorophyll: Number((10 + (Math.random() * 20)).toFixed(1)),
+            nitrogen: Number((1.5 + (Math.random() * 2)).toFixed(2)),
+            phosphorus: Number((0.1 + (Math.random() * 0.2)).toFixed(3)),
+            historicalData: []
         };
 
         setSuccess(true);
@@ -265,7 +167,6 @@ export const AnalysisModule = () => {
       setImage(null);
       setResult(null);
       setExpandedFaq(null);
-      setIsOfflineMode(false);
   };
 
   const getScoreColor = (score: number) => {
@@ -504,23 +405,6 @@ export const AnalysisModule = () => {
                         animate={{ opacity: 1, x: 0 }}
                         className="space-y-6"
                     >
-                         {isOfflineMode && (
-                            <motion.div 
-                                initial={{ opacity: 0, y: -10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="bg-red-50 dark:bg-red-900/20 border-2 border-red-500 dark:border-red-500/50 rounded-2xl p-5 flex items-start gap-4 shadow-lg shadow-red-500/10"
-                            >
-                              <div className="p-2 bg-red-100 dark:bg-red-500/20 rounded-full">
-                                <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
-                              </div>
-                              <div>
-                                <h4 className="text-lg font-bold text-red-800 dark:text-red-300 font-display">AI Analysis Failed</h4>
-                                <p className="text-sm text-red-700 dark:text-red-400 mt-1 font-medium">
-                                  The advanced AI service is currently unavailable or timed out. We are displaying an <span className="font-bold underline decoration-red-400/50">estimated result</span> based on local offline simulation models. Please try again later for a full analysis.
-                                </p>
-                              </div>
-                            </motion.div>
-                         )}
                          <div className={`p-6 rounded-3xl border ${
                              result.overallScore >= 80 ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800/50' :
                              result.overallScore >= 50 ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-800/50' :

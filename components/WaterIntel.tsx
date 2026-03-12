@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Map, Search, Newspaper, MapPin, ExternalLink, Loader2, AlertTriangle, ShieldAlert, ShieldCheck, Volume2 } from 'lucide-react';
+import { Map, Search, Newspaper, MapPin, ExternalLink, Loader2, AlertTriangle, ShieldAlert, ShieldCheck, Volume2, FileText } from 'lucide-react';
 import { searchWaterNews, findNearbyStations, playBrowserTTS } from '../lib/claude';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DisclaimerBanner } from './ui/DisclaimerBanner';
+import { api } from '../services/api';
+import { WaterQualityReport } from '../types';
 
 export const WaterIntel = () => {
-    const [activeSection, setActiveSection] = useState<'news' | 'stations' | 'risk'>('news');
+    const [activeSection, setActiveSection] = useState<'news' | 'stations' | 'risk' | 'reports'>('news');
     const [news, setNews] = useState<{text: string, sources: any[]} | null>(null);
     const [stations, setStations] = useState<{text: string, chunks: any[]} | null>(null);
+    const [reports, setReports] = useState<WaterQualityReport[]>([]);
     const [loading, setLoading] = useState(false);
     const [isSpeaking, setIsSpeaking] = useState(false);
     
@@ -73,9 +76,22 @@ export const WaterIntel = () => {
         }
     };
 
+    const fetchReports = async () => {
+        setLoading(true);
+        try {
+            const data = await api.getReports();
+            setReports(data);
+        } catch (e) {
+            console.error("[WaterIntel] Reports fetch failed", e);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
         if (activeSection === 'news' && !news) fetchNews();
         if (activeSection === 'stations' && !stations) fetchStations();
+        if (activeSection === 'reports' && reports.length === 0) fetchReports();
     }, [activeSection]);
 
     const handleSpeak = (text: string) => {
@@ -189,6 +205,19 @@ export const WaterIntel = () => {
                         />
                     )}
                     <AlertTriangle size={18} className={activeSection === 'risk' ? 'animate-pulse' : ''} /> <span className="hidden sm:inline font-display">Risk Checker</span>
+                </button>
+                <button
+                    onClick={() => setActiveSection('reports')}
+                    className={`relative px-6 py-3 rounded-full text-sm font-bold tracking-wide transition-all duration-300 flex items-center gap-2 ${activeSection === 'reports' ? 'text-white shadow-lg' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50'}`}
+                >
+                    {activeSection === 'reports' && (
+                        <motion.div
+                            layoutId="intel-tab-active"
+                            className="absolute inset-0 rounded-full -z-10 bg-gradient-to-r from-purple-600 to-indigo-600 shadow-[0_0_15px_rgba(129,140,248,0.4)]"
+                            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                        />
+                    )}
+                    <FileText size={18} className={activeSection === 'reports' ? 'animate-pulse' : ''} /> <span className="hidden sm:inline font-display">Recent Reports</span>
                 </button>
             </div>
 
@@ -311,6 +340,30 @@ export const WaterIntel = () => {
                                 })}
                             </div>
                          </motion.div>
+                    )}
+
+                    {activeSection === 'reports' && reports && (
+                        <motion.div variants={container} initial="hidden" animate="show">
+                            <motion.div variants={item} className="mb-8 border-b border-slate-100 dark:border-slate-800 pb-6">
+                                <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-3 font-display">
+                                    <div className="p-2 bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-xl"><FileText size={24} /></div>
+                                    Recent Reports
+                                </h2>
+                                <p className="text-slate-500 dark:text-slate-400 ml-14">Latest water quality reports from the community</p>
+                            </motion.div>
+                            <div className="space-y-4">
+                                {reports.map((report) => (
+                                    <motion.div variants={item} key={report.id} className="p-6 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <h4 className="font-bold text-lg text-slate-900 dark:text-white">{report.locationName}</h4>
+                                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${report.status === 'Resolved' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>{report.status}</span>
+                                        </div>
+                                        <p className="text-slate-600 dark:text-slate-300 mb-2">{report.details}</p>
+                                        <p className="text-sm text-slate-400 dark:text-slate-500">{new Date(report.timestamp).toLocaleDateString()}</p>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        </motion.div>
                     )}
 
                     {activeSection === 'risk' && (

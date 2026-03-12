@@ -21,8 +21,10 @@ import {
 } from 'lucide-react';
 import { WaterQualityReport } from '../types';
 import { api } from '../services/api';
+import { db } from '../src/firebase';
+import { doc, updateDoc, deleteDoc, getDoc } from 'firebase/firestore';
 
-export const AdminDashboard = ({ isAdmin }: { isAdmin: boolean }) => {
+export const AdminDashboard = ({ isAdmin, setActiveTab }: { isAdmin: boolean, setActiveTab: (tab: string) => void }) => {
     const [reports, setReports] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -45,19 +47,32 @@ export const AdminDashboard = ({ isAdmin }: { isAdmin: boolean }) => {
 
     const updateStatus = async (reportId: string, newStatus: string) => {
         try {
-            // Mock update
+            const reportRef = doc(db, 'reports', reportId);
+            // Check if document exists
+            const reportSnap = await getDoc(reportRef);
+            if (!reportSnap.exists()) {
+                throw new Error("Report not found");
+            }
+            await updateDoc(reportRef, {
+                status: newStatus
+            });
             setReports(prev => prev.map(r => r.id === reportId ? { ...r, status: newStatus } : r));
             console.log(`[AdminDashboard] Status updated for ${reportId}`);
         } catch (error: any) {
-            console.error("[AdminDashboard] Error updating status:", error);
-            alert("Failed to update report status. Please try again.");
+            if (error.message === "Report not found") {
+                alert("This report no longer exists.");
+                setReports(prev => prev.filter(r => r.id !== reportId));
+            } else {
+                console.error("[AdminDashboard] Error updating status:", error);
+                alert("Failed to update report status. Please try again.");
+            }
         }
     };
 
     const deleteReport = async (reportId: string) => {
         if (window.confirm("Are you sure you want to delete this report?")) {
             try {
-                // Mock delete
+                await deleteDoc(doc(db, 'reports', reportId));
                 setReports(prev => prev.filter(r => r.id !== reportId));
             } catch (error) {
                 console.error("Error deleting report:", error);
@@ -136,6 +151,12 @@ export const AdminDashboard = ({ isAdmin }: { isAdmin: boolean }) => {
                     </div>
                     
                     <div className="flex flex-wrap items-center gap-3">
+                        <button 
+                            onClick={() => setActiveTab('admin-users')}
+                            className="px-4 py-2 bg-gov-navy text-white rounded-xl text-sm font-bold hover:bg-gov-navy/90 transition-all"
+                        >
+                            Manage Users
+                        </button>
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                             <input 
@@ -240,7 +261,8 @@ export const AdminDashboard = ({ isAdmin }: { isAdmin: boolean }) => {
                                             </button>
                                             <button 
                                                 onClick={() => deleteReport(report.id)}
-                                                className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
+                                                disabled={!isAdmin}
+                                                className={`p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all ${!isAdmin ? 'opacity-50 cursor-not-allowed' : ''}`}
                                             >
                                                 <Trash2 size={18} />
                                             </button>

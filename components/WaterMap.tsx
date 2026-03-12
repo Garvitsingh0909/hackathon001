@@ -1,104 +1,69 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, AlertTriangle, ShieldAlert, ShieldCheck, Info, MessageSquare, Volume2, Loader2, Search, X } from 'lucide-react';
-import { TRANSLATIONS } from '../constants';
+import { motion } from 'framer-motion';
+import { MapPin, Volume2 } from 'lucide-react';
 import { DisclaimerBanner } from './ui/DisclaimerBanner';
-import { playBrowserTTS, searchWaterNews } from '../lib/claude';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+import { api } from '../services/api';
+import { RiverSegment } from '../types';
+import { playBrowserTTS } from '../lib/claude';
 
-const stateRisks: Record<string, { risk: 'critical' | 'high' | 'medium' | 'low', issues: string[], color: string }> = {
-  "West Bengal":    { risk: "critical", issues: ["Arsenic", "Iron"], color: "#dc2626" },
-  "Bihar":          { risk: "critical", issues: ["Arsenic", "Iron", "Fluoride"], color: "#dc2626" },
-  "Jharkhand":      { risk: "critical", issues: ["Arsenic", "Iron"], color: "#dc2626" },
-  "Assam":          { risk: "high",     issues: ["Arsenic", "Fluoride"], color: "#ea580c" },
-  "Rajasthan":      { risk: "critical", issues: ["Fluoride", "High TDS"], color: "#dc2626" },
-  "Andhra Pradesh": { risk: "high",     issues: ["Fluoride", "TDS"], color: "#ea580c" },
-  "Telangana":      { risk: "high",     issues: ["Fluoride", "TDS"], color: "#ea580c" },
-  "Punjab":         { risk: "high",     issues: ["Pesticides", "Uranium"], color: "#ea580c" },
-  "Haryana":        { risk: "high",     issues: ["Nitrates", "Salinity"], color: "#ea580c" },
-  "Gujarat":        { risk: "medium",   issues: ["Fluoride", "Salinity"], color: "#d97706" },
-  "Uttar Pradesh":  { risk: "medium",   issues: ["TDS", "Hardness"], color: "#d97706" },
-  "Madhya Pradesh": { risk: "medium",   issues: ["Fluoride", "TDS"], color: "#d97706" },
-  "Maharashtra":    { risk: "low",      issues: ["Seasonal turbidity"], color: "#16a34a" },
-  "Karnataka":      { risk: "low",      issues: ["Fluoride in some districts"], color: "#16a34a" },
-  "Tamil Nadu":     { risk: "medium",   issues: ["Saltwater intrusion", "TDS"], color: "#d97706" },
-  "Kerala":         { risk: "low",      issues: ["Generally safe"], color: "#16a34a" },
-  "Odisha":         { risk: "medium",   issues: ["Iron", "Fluoride"], color: "#d97706" },
-  "Chhattisgarh":   { risk: "medium",   issues: ["Fluoride", "Iron"], color: "#d97706" },
-  "Himachal Pradesh":{ risk: "low",     issues: ["Generally safe"], color: "#16a34a" },
-  "Uttarakhand":    { risk: "low",      issues: ["Generally safe"], color: "#16a34a" },
-  "Delhi":          { risk: "medium",   issues: ["TDS", "Heavy metals"], color: "#d97706" },
-};
+// Fix for default Leaflet icons
+// @ts-ignore
+import icon from 'leaflet/dist/images/marker-icon.png';
+// @ts-ignore
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 
-export const WaterMap = ({ language = 'en' }: { language?: 'en' | 'hi' }) => {
-  const t = TRANSLATIONS[language].map;
-  const [filter, setFilter] = useState<'all' | 'critical' | 'high' | 'medium' | 'low'>('all');
-  const [isSpeaking, setIsSpeaking] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchResult, setSearchResult] = useState<string | null>(null);
+let DefaultIcon = L.icon({
+    iconUrl: icon,
+    shadowUrl: iconShadow,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41]
+});
+L.Marker.prototype.options.icon = DefaultIcon;
 
-  const handleStateSearch = async () => {
-    if (!searchQuery.trim()) return;
-    setIsSearching(true);
-    setSearchResult(null);
-    console.log('[WaterMap] Searching for state/region intelligence', { searchQuery });
-    try {
-      const result = await searchWaterNews(`Current water quality and contamination issues in ${searchQuery} India 2024 2025`);
-      console.log('[WaterMap] Search successful', result);
-      setSearchResult(result.text);
-    } catch (error) {
-      console.error("[WaterMap] Search failed:", error);
-      setSearchResult("Unable to fetch real-time data for this region. Please try again later.");
-    } finally {
-      setIsSearching(false);
-    }
-  };
+interface StateData {
+    id: string;
+    name: string;
+    coordinates: [number, number];
+    quality: string;
+    details: string;
+}
 
-  const handleSpeak = (state: string, data: any) => {
-    if (isSpeaking === state) {
-      window.speechSynthesis.cancel();
-      setIsSpeaking(null);
-      return;
-    }
+const INDIA_STATES: StateData[] = [
+    { id: 'up', name: 'Uttar Pradesh', coordinates: [26.8467, 80.9462], quality: 'Moderate', details: 'High turbidity in Tamsa and Ganga basins. Industrial runoff remains a concern.' },
+    { id: 'bh', name: 'Bihar', coordinates: [25.0961, 85.3131], quality: 'Critical', details: 'Arsenic contamination reported in groundwater across 18 districts. High flood risk.' },
+    { id: 'mh', name: 'Maharashtra', coordinates: [19.7515, 75.7139], quality: 'Good', details: 'Improved treatment in urban centers. Drought conditions in Marathwada affect availability.' },
+    { id: 'rj', name: 'Rajasthan', coordinates: [27.0238, 74.2179], quality: 'Warning', details: 'High fluoride levels in groundwater. Indira Gandhi Canal is the primary source.' },
+    { id: 'wb', name: 'West Bengal', coordinates: [22.9868, 87.8550], quality: 'Critical', details: 'Severe arsenic issues in southern districts. Salinity intrusion in Sundarbans.' },
+    { id: 'tn', name: 'Tamil Nadu', coordinates: [11.1271, 78.6569], quality: 'Good', details: 'Strong desalination initiatives. Cauvery water sharing remains a key governance issue.' },
+    { id: 'ka', name: 'Karnataka', coordinates: [15.3173, 75.7139], quality: 'Moderate', details: 'Vrishabhavathi river pollution in Bengaluru. Good reservoir levels in the west.' },
+    { id: 'gj', name: 'Gujarat', coordinates: [22.2587, 71.1924], quality: 'Good', details: 'Narmada canal network has improved access. Industrial zones monitored for chemical runoff.' },
+    { id: 'mp', name: 'Madhya Pradesh', coordinates: [22.9734, 78.6569], quality: 'Moderate', details: 'Narmada river quality is stable. Chambal basin shows signs of agricultural runoff.' },
+    { id: 'kl', name: 'Kerala', coordinates: [10.8505, 76.2711], quality: 'Good', details: 'High rainfall ensures availability. Bacterial contamination in open wells is a seasonal issue.' }
+];
 
-    const text = `${state} has a ${data.risk} water risk level. Key issues include ${data.issues.join(', ')}.`;
-    setIsSpeaking(state);
-    playBrowserTTS(
-      text,
-      () => setIsSpeaking(state),
-      () => setIsSpeaking(null)
-    );
-  };
+export const WaterMap = ({ language }: { language: 'en' | 'hi' }) => {
+  const [segments, setSegments] = useState<RiverSegment[]>([]);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   useEffect(() => {
-    return () => {
-      window.speechSynthesis.cancel();
+    const fetchSegments = async () => {
+        const data = await api.getSegments();
+        setSegments(data);
     };
+    fetchSegments();
   }, []);
 
-  const filteredStates = Object.entries(stateRisks).filter(([_, data]) => {
-    if (filter === 'all') return true;
-    return data.risk === filter;
-  });
-
-  const getRiskIcon = (risk: string) => {
-    switch (risk) {
-      case 'critical': return <ShieldAlert size={18} className="text-red-600 dark:text-red-400" />;
-      case 'high': return <AlertTriangle size={18} className="text-orange-600 dark:text-orange-400" />;
-      case 'medium': return <Info size={18} className="text-amber-600 dark:text-amber-400" />;
-      case 'low': return <ShieldCheck size={18} className="text-green-600 dark:text-green-400" />;
-      default: return null;
-    }
-  };
-
-  const getRiskBg = (risk: string) => {
-    switch (risk) {
-      case 'critical': return 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800/50';
-      case 'high': return 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800/50';
-      case 'medium': return 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50';
-      case 'low': return 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800/50';
-      default: return '';
-    }
+  const handleStateClick = (state: StateData) => {
+    const text = `Water quality in ${state.name} is ${state.quality}. ${state.details}`;
+    playBrowserTTS(
+        text,
+        () => setIsSpeaking(true),
+        () => setIsSpeaking(false),
+        language === 'hi' ? 'hi-IN' : 'en-IN'
+    );
   };
 
   return (
@@ -108,149 +73,71 @@ export const WaterMap = ({ language = 'en' }: { language?: 'en' | 'hi' }) => {
         className="max-w-5xl mx-auto pt-6"
     >
       <DisclaimerBanner />
-      <div className="bg-gov-card dark:bg-slate-900 rounded-[2rem] shadow-subtle dark:shadow-black/50 border border-slate-200 dark:border-slate-800 overflow-hidden transition-colors">
-        
-        {/* Header */}
-        <div className="p-8 md:p-10 border-b border-slate-200 dark:border-slate-800 bg-gov-bg dark:bg-slate-800/30">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 rounded-2xl">
-                <MapPin size={28} />
-            </div>
-            <div>
-                <h2 className="text-3xl font-bold text-slate-900 dark:text-white font-display">{t.title}</h2>
-                <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{t.subtitle}</p>
-            </div>
-          </div>
+      <div className="bg-gov-card dark:bg-slate-900 rounded-[2rem] shadow-subtle dark:shadow-black/50 border border-slate-200 dark:border-slate-800 overflow-hidden transition-colors h-[600px] relative">
+        <MapContainer center={[20.5937, 78.9629]} zoom={5} style={{ height: '100%', width: '100%' }}>
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
           
-          {/* Legend & Filters */}
-          <div className="mt-8 flex flex-col md:flex-row gap-4 justify-between items-center">
-            <div className="flex flex-wrap items-center gap-2 bg-slate-100/50 dark:bg-slate-800/50 backdrop-blur-md p-1.5 rounded-full shadow-inner border border-slate-200/50 dark:border-slate-700/50">
-              <FilterBtn label={t.all} active={filter === 'all'} onClick={() => setFilter('all')} color="from-slate-400 to-slate-500" />
-              <FilterBtn label={t.critical} active={filter === 'critical'} onClick={() => setFilter('critical')} color="from-red-500 to-rose-600" />
-              <FilterBtn label={t.high} active={filter === 'high'} onClick={() => setFilter('high')} color="from-orange-500 to-amber-600" />
-              <FilterBtn label={t.medium} active={filter === 'medium'} onClick={() => setFilter('medium')} color="from-amber-400 to-yellow-500" />
-              <FilterBtn label={t.low} active={filter === 'low'} onClick={() => setFilter('low')} color="from-emerald-400 to-green-500" />
-            </div>
-            
-            <div className="flex gap-2 w-full md:w-auto">
-              <div className="relative flex-1 md:w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                <input 
-                  type="text" 
-                  placeholder="Search state/region..." 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleStateSearch()}
-                  className="w-full pl-9 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                />
-              </div>
-              <button 
-                onClick={handleStateSearch}
-                disabled={isSearching || !searchQuery.trim()}
-                className="px-4 py-2 bg-gov-navy dark:bg-blue-600 text-white text-sm font-bold rounded-full hover:scale-105 transition-all disabled:bg-slate-300"
-              >
-                {isSearching ? <Loader2 className="animate-spin" size={16} /> : 'Search'}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Search Result Overlay */}
-        <AnimatePresence>
-          {searchResult && (
-            <motion.div 
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="px-8 md:px-10 pb-8"
+          {/* State Markers */}
+          {INDIA_STATES.map((state) => (
+            <Marker 
+                key={state.id} 
+                position={state.coordinates}
+                eventHandlers={{
+                    click: () => handleStateClick(state),
+                }}
             >
-              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-3xl p-6 border border-blue-100 dark:border-blue-800/50 relative">
-                <button 
-                  onClick={() => setSearchResult(null)}
-                  className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
-                >
-                  <X size={20} />
-                </button>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 bg-blue-100 dark:bg-blue-800 rounded-xl text-blue-600 dark:text-blue-400">
-                    <Search size={20} />
-                  </div>
-                  <h3 className="font-bold text-lg">Real-time Intelligence: {searchQuery}</h3>
-                  <button 
-                    onClick={() => handleSpeak(searchQuery, { risk: 'search', issues: [searchResult] })}
-                    className={`p-2 rounded-full transition-all ${isSpeaking === searchQuery ? 'bg-blue-600 text-white' : 'text-blue-600 hover:bg-blue-100'}`}
-                  >
-                    {isSpeaking === searchQuery ? <Loader2 className="animate-spin" size={16} /> : <Volume2 size={16} />}
-                  </button>
+              <Popup>
+                <div className="p-2 min-w-[200px]">
+                    <div className="flex justify-between items-center mb-2">
+                        <h3 className="font-bold text-lg text-gov-navy">{state.name}</h3>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                            state.quality === 'Good' ? 'bg-emerald-100 text-emerald-700' :
+                            state.quality === 'Moderate' ? 'bg-blue-100 text-blue-700' :
+                            state.quality === 'Warning' ? 'bg-amber-100 text-amber-700' :
+                            'bg-red-100 text-red-700'
+                        }`}>{state.quality}</span>
+                    </div>
+                    <p className="text-xs text-slate-600 leading-relaxed mb-3">{state.details}</p>
+                    <button 
+                        onClick={() => handleStateClick(state)}
+                        className="w-full py-2 bg-gov-navy text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition-colors"
+                    >
+                        <Volume2 size={14} /> Listen to Report
+                    </button>
                 </div>
-                <div className="prose prose-sm dark:prose-invert max-w-none text-slate-600 dark:text-slate-300">
-                  {searchResult}
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              </Popup>
+            </Marker>
+          ))}
 
-        {/* State Cards List */}
-        <div className="p-8 md:p-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredStates.map(([state, data]) => (
-                <motion.div 
-                key={state}
-                layout
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                className={`p-4 md:p-6 rounded-2xl border ${getRiskBg(data.risk)} flex flex-col justify-between h-full`}
-              >
-                <div>
-                  <div className="flex justify-between items-start mb-3">
-                    <h3 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white font-display">{state}</h3>
-                    <div className="flex gap-1.5">
-                      <button 
-                        onClick={() => handleSpeak(state, data)}
-                        className={`p-1.5 rounded-lg backdrop-blur-sm border transition-all ${isSpeaking === state ? 'bg-blue-600 text-white border-blue-600' : 'bg-white/50 dark:bg-black/20 text-slate-600 dark:text-slate-300 border-transparent hover:bg-white/80'}`}
-                      >
-                        {isSpeaking === state ? <Loader2 className="animate-spin" size={14} /> : <Volume2 size={14} />}
-                      </button>
-                      <div className="p-1.5 bg-white/50 dark:bg-black/20 rounded-lg backdrop-blur-sm">
-                        {getRiskIcon(data.risk)}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="mb-4">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">{t.keyIssues}</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {data.issues.map(issue => (
-                        <span key={issue} className="px-2 py-0.5 bg-white/60 dark:bg-black/30 rounded-full text-xs font-medium text-slate-700 dark:text-slate-300 border border-slate-200/50 dark:border-slate-700/50">
-                          {issue}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
+          {/* River Segment Markers (Local) */}
+          {segments.map((segment) => (
+            <Marker key={segment.id} position={[segment.coordinates.lat, segment.coordinates.lng]}>
+              <Popup>
+                <div className="p-2">
+                    <h3 className="font-bold text-lg">{segment.name}</h3>
+                    <p className="text-sm">Status: {segment.status}</p>
+                    <p className="text-sm">DO: {segment.paramDo} mg/L</p>
+                    <p className="text-sm">pH: {segment.paramPh}</p>
                 </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
+              </Popup>
+            </Marker>
+          ))}
+        </MapContainer>
+
+        {isSpeaking && (
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[1000] bg-gov-navy text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 animate-bounce">
+                <div className="flex gap-1">
+                    <div className="w-1 h-4 bg-gov-teal animate-[music-bar_1s_infinite_0.1s]"></div>
+                    <div className="w-1 h-4 bg-gov-teal animate-[music-bar_1s_infinite_0.3s]"></div>
+                    <div className="w-1 h-4 bg-gov-teal animate-[music-bar_1s_infinite_0.5s]"></div>
+                </div>
+                <span className="text-xs font-bold tracking-widest uppercase">AI Voice Active</span>
+            </div>
+        )}
       </div>
     </motion.div>
   );
 };
-
-const FilterBtn = ({ label, active, onClick, color }: any) => (
-  <button 
-    onClick={onClick}
-    className={`relative px-5 py-2 rounded-full text-sm font-bold tracking-wide transition-all duration-300 ${active ? 'text-white shadow-md' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50'}`}
-  >
-    {active && (
-      <motion.div
-        layoutId="map-filter-active"
-        className={`absolute inset-0 rounded-full -z-10 bg-gradient-to-r ${color} shadow-lg`}
-        transition={{ type: "spring", stiffness: 300, damping: 25 }}
-      />
-    )}
-    <span className="font-display">{label}</span>
-  </button>
-);

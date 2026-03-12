@@ -1,5 +1,6 @@
 export interface WaterQualityReport {
     id: string;
+    userId: string;
     locationName: string;
     coordinates: { lat: number; lng: number };
     algaeLevel: 'None' | 'Low' | 'Moderate' | 'High' | 'Critical' | 'Unknown';

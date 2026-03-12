@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { auth, googleProvider, signInWithPopup, signOut, onAuthStateChanged } from './firebase';
+import { auth, googleProvider, signInWithPopup, signOut, onAuthStateChanged, db } from './firebase';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 interface UserProfile {
     uid: string;
@@ -27,16 +28,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             if (firebaseUser) {
-                // Simplified auth: just use the Firebase Auth object. 
-                // This prevents login failures if Firestore rules block access or DB is down.
-                setUser({
-                    uid: firebaseUser.uid,
-                    email: firebaseUser.email || '',
-                    displayName: firebaseUser.displayName || '',
-                    photoURL: firebaseUser.photoURL || '',
-                    role: firebaseUser.email === 'devansh0547@gmail.com' ? 'admin' : 'user',
-                    createdAt: new Date().toISOString()
-                });
+                const userRef = doc(db, 'users', firebaseUser.uid);
+                const userSnap = await getDoc(userRef);
+
+                if (userSnap.exists()) {
+                    setUser(userSnap.data() as UserProfile);
+                } else {
+                    const newUser: UserProfile = {
+                        uid: firebaseUser.uid,
+                        email: firebaseUser.email || '',
+                        displayName: firebaseUser.displayName || '',
+                        photoURL: firebaseUser.photoURL || '',
+                        role: 'user',
+                        createdAt: new Date().toISOString()
+                    };
+                    await setDoc(userRef, {
+                        ...newUser,
+                        createdAt: serverTimestamp()
+                    });
+                    setUser(newUser);
+                }
             } else {
                 setUser(null);
             }

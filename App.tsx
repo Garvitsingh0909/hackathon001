@@ -6,6 +6,7 @@ import { AnalysisModule } from './components/AnalysisModule';
 import { WaterIntel } from './components/WaterIntel';
 import { AdminDashboard } from './components/AdminDashboard';
 import { AdminMap } from './components/AdminMap';
+import { UserManagement } from './components/admin/UserManagement';
 import { WaterMap } from './components/WaterMap';
 import { WaterTools } from './components/WaterTools';
 import { WaterFAQ } from './components/WaterFAQ';
@@ -59,20 +60,6 @@ function AppContent() {
 
   const t = TRANSLATIONS[language].nav;
 
-  const getSeasonalAlert = () => {
-    const month = new Date().getMonth(); // 0-11
-    if (month >= 5 && month <= 8) {
-      return { type: 'monsoon', text: "⚠️ Monsoon Alert: Boil water before drinking. Turbidity and bacteria risk is HIGH." };
-    } else if (month >= 2 && month <= 4) {
-      return { type: 'summer', text: "☀️ Summer Alert: TDS rises as water evaporates. Re-test your water." };
-    } else if (month >= 9 && month <= 10) {
-      return { type: 'post-monsoon', text: "🍂 Post-monsoon: Check for leftover contamination from floods." };
-    }
-    return null;
-  };
-
-  const seasonalAlert = getSeasonalAlert();
-
   const renderContent = () => {
     switch (activeTab) {
       case 'home': 
@@ -85,17 +72,24 @@ function AppContent() {
       case 'admin': 
         return isAdmin ? (
           <div className="space-y-8">
-            <AdminDashboard isAdmin={isAdmin} />
+            <AdminDashboard isAdmin={isAdmin} setActiveTab={setActiveTab} />
             <AdminMap />
           </div>
         ) : <Dashboard onChangeTab={setActiveTab} language={language} />;
+      case 'admin-users':
+        return isAdmin ? <UserManagement /> : <Dashboard onChangeTab={setActiveTab} language={language} />;
       default: 
         return <Dashboard onChangeTab={setActiveTab} language={language} />;
     }
   };
 
   return (
-    <div className={`min-h-screen flex flex-col font-sans selection:bg-gov-teal/20 selection:text-gov-navy ${darkMode ? 'bg-gov-navy text-white' : 'bg-gov-bg text-slate-900'}`}>
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 1 }}
+      className={`min-h-screen flex flex-col font-sans selection:bg-blue-500/20 ${darkMode ? 'bg-gov-dark-navy text-white' : 'bg-gov-bg text-slate-900'}`}
+    >
       <Navbar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
@@ -108,28 +102,16 @@ function AppContent() {
         onLogin={login}
         onLogout={logout}
       />
-      <Tour />
       
-      {/* Seasonal Alert Banner */}
-      {seasonalAlert && (
-        <div className={`w-full py-2 px-4 text-sm font-bold flex items-center justify-center gap-2 mt-16 z-30 relative ${
-            seasonalAlert.type === 'monsoon' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-400' :
-            seasonalAlert.type === 'summer' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-400' :
-            'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-400'
-        }`}>
-          {seasonalAlert.text}
-        </div>
-      )}
-
       {/* Main Container */}
-      <main className={`flex-grow ${seasonalAlert ? 'pt-8' : 'pt-28'} pb-24 md:pb-12 px-4 sm:px-6 lg:px-8 w-full max-w-7xl mx-auto transition-all duration-300`}>
+      <main className="flex-grow pt-24 pb-24 md:pb-12 px-4 sm:px-6 lg:px-8 w-full max-w-screen-2xl mx-auto transition-all duration-200">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
             className="w-full"
           >
             {renderContent()}
@@ -263,7 +245,7 @@ function AppContent() {
       </div>
 
       <Footer />
-    </div>
+    </motion.div>
   );
 }
 
