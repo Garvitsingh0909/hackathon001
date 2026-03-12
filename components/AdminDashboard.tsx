@@ -19,9 +19,8 @@ import {
     ArrowUpRight,
     ArrowDownRight
 } from 'lucide-react';
-import { db } from '../src/firebase';
-import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { WaterQualityReport } from '../types';
+import { api } from '../services/api';
 
 export const AdminDashboard = ({ isAdmin }: { isAdmin: boolean }) => {
     const [reports, setReports] = useState<any[]>([]);
@@ -31,43 +30,35 @@ export const AdminDashboard = ({ isAdmin }: { isAdmin: boolean }) => {
     const [selectedReport, setSelectedReport] = useState<any | null>(null);
 
     useEffect(() => {
-        const q = query(collection(db, 'reports'), orderBy('createdAt', 'desc'));
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const reportsData = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-            setReports(reportsData);
-            setLoading(false);
-        }, (error) => {
-            console.error("Error fetching reports:", error);
-            setLoading(false);
-        });
-
-        return () => unsubscribe();
+        const fetchReports = async () => {
+            try {
+                const data = await api.getReports();
+                setReports(data);
+            } catch (error) {
+                console.error("Error fetching reports:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchReports();
     }, []);
 
     const updateStatus = async (reportId: string, newStatus: string) => {
         try {
-            const reportRef = doc(db, 'reports', reportId);
-            await updateDoc(reportRef, {
-                status: newStatus
-            });
+            // Mock update
+            setReports(prev => prev.map(r => r.id === reportId ? { ...r, status: newStatus } : r));
             console.log(`[AdminDashboard] Status updated for ${reportId}`);
         } catch (error: any) {
             console.error("[AdminDashboard] Error updating status:", error);
-            if (error.code === 'not-found') {
-                alert("This report no longer exists and may have been deleted.");
-            } else {
-                alert("Failed to update report status. Please try again.");
-            }
+            alert("Failed to update report status. Please try again.");
         }
     };
 
     const deleteReport = async (reportId: string) => {
         if (window.confirm("Are you sure you want to delete this report?")) {
             try {
-                await deleteDoc(doc(db, 'reports', reportId));
+                // Mock delete
+                setReports(prev => prev.filter(r => r.id !== reportId));
             } catch (error) {
                 console.error("Error deleting report:", error);
             }

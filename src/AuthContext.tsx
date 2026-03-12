@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { auth, googleProvider, signInWithPopup, signOut, onAuthStateChanged, db } from './firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { auth, googleProvider, signInWithPopup, signOut, onAuthStateChanged } from './firebase';
 
 interface UserProfile {
     uid: string;
@@ -28,36 +27,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             if (firebaseUser) {
-                try {
-                    const userDocRef = doc(db, 'users', firebaseUser.uid);
-                    const userDoc = await getDoc(userDocRef);
-
-                    if (userDoc.exists()) {
-                        setUser(userDoc.data() as UserProfile);
-                    } else {
-                        const newUser: UserProfile = {
-                            uid: firebaseUser.uid,
-                            email: firebaseUser.email || '',
-                            displayName: firebaseUser.displayName || '',
-                            photoURL: firebaseUser.photoURL || '',
-                            role: firebaseUser.email === 'devansh0547@gmail.com' ? 'admin' : 'user',
-                            createdAt: new Date().toISOString()
-                        };
-                        await setDoc(userDocRef, newUser);
-                        setUser(newUser);
-                    }
-                } catch (error) {
-                    console.error("Firestore error during auth, falling back to local user state:", error);
-                    // Fallback so the user is still logged in even if DB fails
-                    setUser({
-                        uid: firebaseUser.uid,
-                        email: firebaseUser.email || '',
-                        displayName: firebaseUser.displayName || '',
-                        photoURL: firebaseUser.photoURL || '',
-                        role: firebaseUser.email === 'devansh0547@gmail.com' ? 'admin' : 'user',
-                        createdAt: new Date().toISOString()
-                    });
-                }
+                // Simplified auth: just use the Firebase Auth object. 
+                // This prevents login failures if Firestore rules block access or DB is down.
+                setUser({
+                    uid: firebaseUser.uid,
+                    email: firebaseUser.email || '',
+                    displayName: firebaseUser.displayName || '',
+                    photoURL: firebaseUser.photoURL || '',
+                    role: firebaseUser.email === 'devansh0547@gmail.com' ? 'admin' : 'user',
+                    createdAt: new Date().toISOString()
+                });
             } else {
                 setUser(null);
             }

@@ -223,20 +223,73 @@ export const analyzeWaterImage = async (base64Image: string, mimeType: string = 
 };
 
 export const searchWaterNews = async (query: string) => {
-  log.info('Searching water news (Mocked)', { query });
-  return {
-    text: `## Local Updates (Offline Mode)\n\nRecent reports indicate fluctuating water quality in the region. Authorities are advising residents to boil water before consumption due to potential contamination. Local initiatives are underway to improve water treatment facilities.`,
-    urls: [],
-    groundingMetadata: { groundingChunks: [] }
-  };
+  log.info('Searching water news', { query });
+  try {
+    const response = await callGeminiWithRetry(async (ai) => {
+        return await ai.models.generateContent({
+            model: "gemini-3-flash-preview",
+            contents: `Find the latest news and updates about water quality for: ${query}. Summarize the findings.`,
+            config: {
+                tools: [{ googleSearch: {} }],
+            }
+        });
+    });
+    
+    const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+    const urls = chunks.map((c: any) => c.web?.uri).filter(Boolean);
+    
+    return {
+        text: response.text || "No information found.",
+        urls: urls,
+        groundingMetadata: response.candidates?.[0]?.groundingMetadata
+    };
+  } catch (e) {
+    log.error("Search failed", e);
+    return {
+      text: `## Local Updates (Offline Mode)\n\nRecent reports indicate fluctuating water quality in the region. Authorities are advising residents to boil water before consumption due to potential contamination. Local initiatives are underway to improve water treatment facilities.`,
+      urls: [],
+      groundingMetadata: { groundingChunks: [] }
+    };
+  }
 };
 
 export const findNearbyStations = async (lat: number, lng: number) => {
-  log.info('Finding nearby stations (Mocked)', { lat, lng });
-  return {
-    text: `## Nearby Stations (Offline Mode)\n\n- Central Water Commission Monitoring Station (2.4 km)\n- Municipal Water Treatment Plant (5.1 km)\n- Local Reservoir Testing Site (8.3 km)`,
-    chunks: []
-  };
+  log.info('Finding nearby stations', { lat, lng });
+  try {
+    const response = await callGeminiWithRetry(async (ai) => {
+        return await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: "Find nearby water quality monitoring stations, water treatment plants, or environmental testing facilities.",
+            config: {
+                tools: [{ googleMaps: {} }],
+                toolConfig: {
+                    retrievalConfig: {
+                        latLng: {
+                            latitude: lat,
+                            longitude: lng
+                        }
+                    }
+                }
+            }
+        });
+    });
+    
+    const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+    const urls = chunks.map((c: any) => c.maps?.uri).filter(Boolean);
+    
+    return {
+        text: response.text || "No stations found nearby.",
+        chunks: chunks,
+        urls: urls
+    };
+  } catch (e) {
+    log.error("Maps search failed", e);
+    return {
+      text: `## Nearby Stations (Offline Mode)\n\n- Central Water Commission Monitoring Station (2.4 km)\n- Municipal Water Treatment Plant (5.1 km)\n- Local Reservoir Testing Site (8.3 km)`,
+      chunks: [],
+      urls: []
+    };
+  }
 };
 
 export const getQuickStat = async (dataContext: string) => {

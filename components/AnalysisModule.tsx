@@ -7,8 +7,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { DisclaimerBanner } from './ui/DisclaimerBanner';
 import { useAuth } from '../src/AuthContext';
-import { db } from '../src/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 const FAQ_ITEMS = [
     { q: "How accurate is this visual analysis?", a: "This AI analysis provides a preliminary assessment based on visual indicators like color, turbidity, and visible algae. It is not a substitute for laboratory testing." },
@@ -83,6 +81,38 @@ export const AnalysisModule = () => {
       };
       reader.readAsDataURL(file);
     });
+  };
+
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleDragOver = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      setLoading(true);
+      try {
+        setMimeType('image/jpeg');
+        const resizedImage = await resizeImage(file);
+        setImage(resizedImage);
+        setResult(null);
+      } catch (error) {
+        console.error("Image processing failed", error);
+        alert("Failed to process image.");
+      } finally {
+        setLoading(false);
+      }
+    }
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -187,23 +217,16 @@ export const AnalysisModule = () => {
         setSuccess(true);
         console.log('[AnalysisModule] Final report generated', finalReport);
         
-        // Save to Firestore if user is logged in
+        // Save to mock API if user is logged in
         if (user) {
             setSaveStatus('saving');
-            console.log('[AnalysisModule] Saving report to Firestore for user', user.uid);
+            console.log('[AnalysisModule] Saving report for user', user.uid);
             try {
-                await addDoc(collection(db, 'reports'), {
-                    ...finalReport,
-                    userId: user.uid,
-                    userEmail: user.email,
-                    userName: user.displayName,
-                    createdAt: serverTimestamp(),
-                    imageUrl: image // In a real app, we'd upload to Storage first
-                });
+                await api.submitReport(finalReport);
                 setSaveStatus('saved');
-                console.log('[AnalysisModule] Report saved to Firestore successfully');
+                console.log('[AnalysisModule] Report saved successfully');
             } catch (error) {
-                console.error("[AnalysisModule] Error saving report to Firestore:", error);
+                console.error("[AnalysisModule] Error saving report:", error);
                 setSaveStatus('error');
             }
         }
@@ -329,18 +352,23 @@ export const AnalysisModule = () => {
             <motion.label 
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
-                className="group flex flex-col items-center justify-center w-full h-80 border-2 border-slate-200 dark:border-slate-700 border-dashed rounded-3xl cursor-pointer bg-gov-bg dark:bg-slate-800/50 hover:bg-gov-teal/5 dark:hover:bg-gov-teal/20 hover:border-gov-teal dark:hover:border-gov-teal transition-all duration-300 relative overflow-hidden"
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                className={`group flex flex-col items-center justify-center w-full h-80 border-2 ${isDragging ? 'border-gov-teal bg-gov-teal/10' : 'border-slate-200 dark:border-slate-700 bg-gov-bg dark:bg-slate-800/50'} border-dashed rounded-3xl cursor-pointer hover:bg-gov-teal/5 dark:hover:bg-gov-teal/20 hover:border-gov-teal dark:hover:border-gov-teal transition-all duration-300 relative overflow-hidden`}
             >
               <div className="absolute inset-0 bg-grid-slate-200/50 dark:bg-grid-slate-700/50 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))] dark:[mask-image:linear-gradient(0deg,black,rgba(0,0,0,0.6))] -z-10"></div>
               <div className="flex flex-col items-center justify-center pt-5 pb-6 relative z-10">
                 <motion.div 
                     animate={{ y: [0, -5, 0] }}
                     transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-                    className="p-5 bg-gov-card dark:bg-slate-800 rounded-full shadow-subtle mb-4 group-hover:shadow-subtle-hover transition-all duration-300 text-gov-teal dark:text-gov-teal ring-4 ring-gov-teal/10 dark:ring-gov-teal/30"
+                    className={`p-5 rounded-full shadow-subtle mb-4 group-hover:shadow-subtle-hover transition-all duration-300 ring-4 ${isDragging ? 'bg-gov-teal text-white ring-gov-teal/30' : 'bg-gov-card dark:bg-slate-800 text-gov-teal dark:text-gov-teal ring-gov-teal/10 dark:ring-gov-teal/30'}`}
                 >
                     <Upload className="w-8 h-8" />
                 </motion.div>
-                <p className="mb-2 text-lg text-slate-700 dark:text-slate-200 font-semibold font-display">Click to upload photo</p>
+                <p className="mb-2 text-lg text-slate-700 dark:text-slate-200 font-semibold font-display">
+                    {isDragging ? 'Drop image here' : 'Click or drag to upload photo'}
+                </p>
                 <p className="text-sm text-slate-400 dark:text-slate-500">SVG, PNG, JPG or GIF (MAX. 800x400px)</p>
               </div>
               <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
@@ -512,13 +540,14 @@ export const AnalysisModule = () => {
                                     )}
                                 </div>
                                 <motion.button 
-                                    whileHover={{ scale: 1.1 }}
-                                    whileTap={{ scale: 0.9 }}
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
                                     onClick={playAudioReport}
                                     disabled={isPlaying}
-                                    className={`p-3 rounded-full shadow-subtle border print:hidden ${isPlaying ? 'bg-gov-teal/10 text-gov-teal border-gov-teal/20 dark:bg-gov-teal/20 dark:text-gov-teal dark:border-gov-teal/30' : 'bg-gov-card dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:scale-105'} transition-all`}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-full shadow-subtle border print:hidden ${isPlaying ? 'bg-gov-teal/10 text-gov-teal border-gov-teal/20 dark:bg-gov-teal/20 dark:text-gov-teal dark:border-gov-teal/30' : 'bg-gov-card dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'} transition-all`}
                                 >
-                                    {isPlaying ? <Loader2 className="animate-spin" size={20} /> : <Volume2 size={20} />}
+                                    {isPlaying ? <Loader2 className="animate-spin" size={18} /> : <Volume2 size={18} />}
+                                    <span className="text-sm font-bold">{isPlaying ? 'Playing...' : 'Read Aloud'}</span>
                                 </motion.button>
                             </div>
                             
