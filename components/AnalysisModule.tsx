@@ -156,6 +156,16 @@ export const AnalysisModule = () => {
         
         const finalReport: WaterQualityReport = {
             ...analysisResult,
+            recommendation: (() => {
+                let rec = analysisResult.recommendation || "";
+                if (analysisResult.algaeLevel === 'High') {
+                    rec += " High algae levels detected, which may indicate a harmful algal bloom. Avoid contact and ingestion.";
+                }
+                if (analysisResult.turbidity === 'Cloudy') {
+                    rec += " Cloudy water detected. Filtering and boiling are strongly recommended before use.";
+                }
+                return rec;
+            })(),
             id: Date.now().toString(),
             locationName: "Sample Location",
             coordinates: { lat: 25.942, lng: 83.554 },
