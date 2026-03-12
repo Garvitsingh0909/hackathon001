@@ -187,7 +187,16 @@ export const analyzeWaterImage = async (base64Image: string, mimeType: string = 
     }
 
     log.info('Gemini Image Analysis response received', { text });
-    const result = JSON.parse(text);
+    
+    // Strip markdown JSON blocks if present
+    let cleanText = text.trim();
+    if (cleanText.startsWith('```json')) {
+      cleanText = cleanText.replace(/^```json\n?/, '').replace(/\n?```$/, '');
+    } else if (cleanText.startsWith('```')) {
+      cleanText = cleanText.replace(/^```\n?/, '').replace(/\n?```$/, '');
+    }
+    
+    const result = JSON.parse(cleanText);
     
     return {
       algaeLevel: result.algaeLevel || "Moderate",

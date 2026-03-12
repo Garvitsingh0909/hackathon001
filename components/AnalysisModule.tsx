@@ -89,7 +89,8 @@ export const AnalysisModule = () => {
     if (file) {
       setLoading(true);
       try {
-        setMimeType(file.type);
+        // resizeImage always outputs image/jpeg
+        setMimeType('image/jpeg');
         const resizedImage = await resizeImage(file);
         setImage(resizedImage);
         setResult(null);

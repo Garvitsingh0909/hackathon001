@@ -272,9 +272,10 @@ function AppContent() {
       </AnimatePresence>
 
       {/* Mobile Bottom Navigation - Hackathon Level */}
-      <div className={`fixed bottom-0 left-0 right-0 h-[72px] md:hidden z-50 px-6 flex justify-between items-center backdrop-blur-xl border-t shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transition-colors duration-300 ${darkMode ? 'bg-gov-dark-navy/90 border-white/10' : 'bg-white/90 border-slate-200/50'}`}>
+      <div className={`fixed bottom-0 left-0 right-0 h-[72px] md:hidden z-50 px-4 flex justify-between items-center backdrop-blur-xl border-t shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transition-colors duration-300 ${darkMode ? 'bg-gov-dark-navy/90 border-white/10' : 'bg-white/90 border-slate-200/50'}`}>
         <NavBtn id="mobile-nav-home" icon={Home} label={t.home} active={activeTab === 'home'} onClick={() => setActiveTab('home')} darkMode={darkMode} />
         <NavBtn id="mobile-nav-analyze" icon={Camera} label={t.analyze} active={activeTab === 'analyze'} onClick={() => setActiveTab('analyze')} darkMode={darkMode} />
+        <NavBtn id="mobile-nav-tools" icon={Calculator} label={t.tools} active={activeTab === 'tools'} onClick={() => setActiveTab('tools')} darkMode={darkMode} />
         <NavBtn id="mobile-nav-admin" icon={LayoutDashboard} label={t.admin} active={activeTab === 'admin'} onClick={() => setActiveTab('admin')} darkMode={darkMode} />
         <NavBtn id="mobile-nav-intel" icon={MapIcon} label={t.intel} active={activeTab === 'intel'} onClick={() => setActiveTab('intel')} darkMode={darkMode} />
       </div>
