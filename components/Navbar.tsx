@@ -88,12 +88,12 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, languag
                 </div>
 
                 {/* Desktop Navigation - Hackathon Level */}
-                <div className="hidden md:flex items-center p-1.5 bg-slate-100/50 dark:bg-slate-800/50 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 rounded-full shadow-inner gap-x-6 flex-grow justify-center mx-8">
+                <div className="hidden md:flex items-center p-1.5 bg-slate-100/50 dark:bg-slate-800/50 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 rounded-full shadow-inner gap-x-2 mx-4">
                     {navItems.map((item) => (
                         <button
                             key={item.id}
                             id={`nav-${item.id}`}
-                            className={`tour-${item.id} relative px-6 py-2.5 rounded-full text-sm font-bold tracking-wide transition-all duration-300 flex items-center gap-2 ${
+                            className={`tour-${item.id} relative px-4 py-2 rounded-full text-sm font-bold tracking-wide transition-all duration-300 flex items-center gap-2 ${
                                 activeTab === item.id 
                                 ? 'text-white shadow-lg'
                                 : (darkMode ? 'text-slate-400 hover:text-white hover:bg-white/5' : 'text-slate-500 hover:text-gov-navy hover:bg-slate-200/50')
