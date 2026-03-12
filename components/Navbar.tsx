@@ -12,6 +12,7 @@ interface NavbarProps {
     darkMode: boolean;
     toggleDarkMode: () => void;
     user?: any;
+    isAdmin?: boolean;
     onLogin?: () => void;
     onLogout?: () => void;
 }
@@ -24,7 +25,7 @@ const TIPS = [
     "Harvest rainwater to recharge groundwater levels 🌧️"
 ];
 
-export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, language, setLanguage, darkMode, toggleDarkMode, user, onLogin, onLogout }) => {
+export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, language, setLanguage, darkMode, toggleDarkMode, user, isAdmin, onLogin, onLogout }) => {
   const t = TRANSLATIONS[language].nav;
   const [time, setTime] = useState(new Date());
   const [currentTip, setCurrentTip] = useState(0);
@@ -70,7 +71,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, languag
       { id: 'map', label: t.map, icon: MapPin },
       { id: 'tools', label: t.tools, icon: Calculator },
       { id: 'faq', label: t.faq, icon: HelpCircle },
-      { id: 'admin', label: t.admin, icon: Map },
+      ...(isAdmin ? [{ id: 'admin', label: t.admin, icon: Map }] : []),
   ];
 
   const istTime = time.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
@@ -88,12 +89,12 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, languag
                 </div>
 
                 {/* Desktop Navigation - Hackathon Level */}
-                <div className="hidden md:flex items-center p-1.5 bg-slate-100/50 dark:bg-slate-800/50 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 rounded-full shadow-inner gap-x-2 mx-4">
+                <div className="hidden md:flex flex-1 justify-center items-center p-1.5 bg-slate-100/50 dark:bg-slate-800/50 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 rounded-full shadow-inner gap-x-2 mx-4 max-w-3xl">
                     {navItems.map((item) => (
                         <button
                             key={item.id}
                             id={`nav-${item.id}`}
-                            className={`tour-${item.id} relative px-4 py-2 rounded-full text-sm font-bold tracking-wide transition-all duration-300 flex items-center gap-2 ${
+                            className={`tour-${item.id} relative px-4 py-2 rounded-full text-sm font-bold tracking-wide transition-all duration-300 flex items-center justify-center gap-2 flex-1 ${
                                 activeTab === item.id 
                                 ? 'text-white shadow-lg'
                                 : (darkMode ? 'text-slate-400 hover:text-white hover:bg-white/5' : 'text-slate-500 hover:text-gov-navy hover:bg-slate-200/50')

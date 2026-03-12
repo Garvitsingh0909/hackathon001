@@ -105,17 +105,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, language }) =
                     {t.hero.desc}
                 </p>
 
-                <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                <div className="flex flex-col sm:flex-row gap-4 pt-6 w-full max-w-xl">
                     <button 
                         onClick={() => onChangeTab('admin')}
-                        className="h-12 px-6 bg-transparent border border-white/20 text-white rounded-xl font-medium hover:bg-white/10 transition-all flex items-center justify-center gap-2"
+                        className="flex-1 h-14 px-6 bg-transparent border border-white/20 text-white rounded-xl font-medium hover:bg-white/10 transition-all flex items-center justify-center gap-2"
                     >
                         {t.hero.btnSecondary}
                         <ArrowRight size={18} />
                     </button>
                     <button 
                         onClick={() => document.dispatchEvent(new CustomEvent('open-starter-guide'))}
-                        className="h-12 px-6 bg-gov-teal/20 border border-gov-teal/50 text-white rounded-xl font-medium hover:bg-gov-teal/30 transition-all flex items-center justify-center gap-2"
+                        className="flex-1 h-14 px-6 bg-gov-teal/20 border border-gov-teal/50 text-white rounded-xl font-medium hover:bg-gov-teal/30 transition-all flex items-center justify-center gap-2"
                     >
                         <Volume2 size={18} />
                         {language === 'en' ? 'Starter Guide' : 'शुरुआती गाइड'}
@@ -178,7 +178,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, language }) =
       </motion.div>
 
       {/* 2. BENTO GRID DASHBOARD */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           
           {/* AI Insight - Spans 2 cols */}
           <motion.div variants={item} className="md:col-span-2 lg:col-span-2 bg-gov-light-surface dark:bg-gov-dark-navy/80 dark:backdrop-blur-xl rounded-3xl p-6 shadow-subtle border border-blue-100 dark:border-white/10 hover:shadow-subtle-hover transition-shadow relative overflow-hidden group flex flex-col justify-between">
@@ -327,18 +327,18 @@ const StatCard = ({ label, value, trend, icon: Icon, color }: any) => {
     };
 
     return (
-        <div className="bg-gov-light-surface dark:bg-gov-dark-navy/80 dark:backdrop-blur-xl p-6 rounded-3xl border border-blue-100 dark:border-white/10 shadow-subtle flex flex-col justify-between hover:shadow-subtle-hover transition-shadow h-full group">
-            <div className="flex justify-between items-start mb-4">
-                <div className={`p-3 rounded-2xl ${colorClasses[color] || colorClasses['blue']} group-hover:scale-110 transition-transform`}>
-                    <Icon size={24} />
+        <div className="bg-gov-light-surface dark:bg-gov-dark-navy/80 dark:backdrop-blur-xl p-8 rounded-3xl border border-blue-100 dark:border-white/10 shadow-subtle flex flex-col justify-between hover:shadow-subtle-hover transition-shadow h-full group">
+            <div className="flex justify-between items-start mb-6">
+                <div className={`p-4 rounded-2xl ${colorClasses[color] || colorClasses['blue']} group-hover:scale-110 transition-transform`}>
+                    <Icon size={28} />
                 </div>
-                <span className={`text-[10px] font-bold px-2 py-1 rounded-full border ${trend === 'Stable' || trend === 'Improving' ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/50' : 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800/50'}`}>
+                <span className={`text-[11px] font-bold px-3 py-1.5 rounded-full border ${trend === 'Stable' || trend === 'Improving' ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/50' : 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800/50'}`}>
                     {trend}
                 </span>
             </div>
             <div>
-                <h3 className="text-3xl font-bold text-slate-900 dark:text-white font-display mb-1">{value}</h3>
-                <p className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">{label}</p>
+                <h3 className="text-4xl font-bold text-slate-900 dark:text-white font-display mb-2">{value}</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm font-bold uppercase tracking-wider">{label}</p>
             </div>
         </div>
     );

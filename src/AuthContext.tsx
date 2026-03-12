@@ -28,22 +28,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             if (firebaseUser) {
-                const userDocRef = doc(db, 'users', firebaseUser.uid);
-                const userDoc = await getDoc(userDocRef);
+                try {
+                    const userDocRef = doc(db, 'users', firebaseUser.uid);
+                    const userDoc = await getDoc(userDocRef);
 
-                if (userDoc.exists()) {
-                    setUser(userDoc.data() as UserProfile);
-                } else {
-                    const newUser: UserProfile = {
+                    if (userDoc.exists()) {
+                        setUser(userDoc.data() as UserProfile);
+                    } else {
+                        const newUser: UserProfile = {
+                            uid: firebaseUser.uid,
+                            email: firebaseUser.email || '',
+                            displayName: firebaseUser.displayName || '',
+                            photoURL: firebaseUser.photoURL || '',
+                            role: firebaseUser.email === 'devansh0547@gmail.com' ? 'admin' : 'user',
+                            createdAt: new Date().toISOString()
+                        };
+                        await setDoc(userDocRef, newUser);
+                        setUser(newUser);
+                    }
+                } catch (error) {
+                    console.error("Firestore error during auth, falling back to local user state:", error);
+                    // Fallback so the user is still logged in even if DB fails
+                    setUser({
                         uid: firebaseUser.uid,
                         email: firebaseUser.email || '',
                         displayName: firebaseUser.displayName || '',
                         photoURL: firebaseUser.photoURL || '',
                         role: firebaseUser.email === 'devansh0547@gmail.com' ? 'admin' : 'user',
                         createdAt: new Date().toISOString()
-                    };
-                    await setDoc(userDocRef, newUser);
-                    setUser(newUser);
+                    });
                 }
             } else {
                 setUser(null);

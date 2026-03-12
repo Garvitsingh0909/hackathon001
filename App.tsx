@@ -104,6 +104,7 @@ function AppContent() {
         darkMode={darkMode}
         toggleDarkMode={() => setDarkMode(!darkMode)}
         user={user}
+        isAdmin={isAdmin}
         onLogin={login}
         onLogout={logout}
       />
@@ -135,25 +136,6 @@ function AppContent() {
           </motion.div>
         </AnimatePresence>
       </main>
-
-      {/* Mobile Bottom Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 p-2 flex justify-around z-40">
-        {[
-          { id: 'home', icon: Home },
-          { id: 'analyze', icon: Activity },
-          { id: 'map', icon: MapPin },
-          { id: 'tools', icon: Calculator },
-        ].map((item) => (
-          <button
-            key={item.id}
-            onClick={() => setActiveTab(item.id)}
-            className={`p-3 rounded-xl flex flex-col items-center gap-1 ${activeTab === item.id ? 'text-gov-teal' : 'text-slate-400'}`}
-          >
-            <item.icon size={24} />
-            <span className="text-[10px] font-bold">{item.id.charAt(0).toUpperCase() + item.id.slice(1)}</span>
-          </button>
-        ))}
-      </div>
 
       {/* Starter Guide Modal */}
       <StarterGuide isOpen={isStarterGuideOpen} onClose={() => setIsStarterGuideOpen(false)} language={language} />
@@ -276,7 +258,7 @@ function AppContent() {
         <NavBtn id="mobile-nav-home" icon={Home} label={t.home} active={activeTab === 'home'} onClick={() => setActiveTab('home')} darkMode={darkMode} />
         <NavBtn id="mobile-nav-analyze" icon={Camera} label={t.analyze} active={activeTab === 'analyze'} onClick={() => setActiveTab('analyze')} darkMode={darkMode} />
         <NavBtn id="mobile-nav-tools" icon={Calculator} label={t.tools} active={activeTab === 'tools'} onClick={() => setActiveTab('tools')} darkMode={darkMode} />
-        <NavBtn id="mobile-nav-admin" icon={LayoutDashboard} label={t.admin} active={activeTab === 'admin'} onClick={() => setActiveTab('admin')} darkMode={darkMode} />
+        {isAdmin && <NavBtn id="mobile-nav-admin" icon={LayoutDashboard} label={t.admin} active={activeTab === 'admin'} onClick={() => setActiveTab('admin')} darkMode={darkMode} />}
         <NavBtn id="mobile-nav-intel" icon={MapIcon} label={t.intel} active={activeTab === 'intel'} onClick={() => setActiveTab('intel')} darkMode={darkMode} />
       </div>
 

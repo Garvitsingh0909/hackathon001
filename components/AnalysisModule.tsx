@@ -25,6 +25,7 @@ export const AnalysisModule = () => {
   const [success, setSuccess] = useState(false);
   const [result, setResult] = useState<WaterQualityReport | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isOfflineMode, setIsOfflineMode] = useState(false);
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -143,8 +144,10 @@ export const AnalysisModule = () => {
             
             analysisResult = await Promise.race([apiPromise, timeoutPromise]) as any;
             console.log('[AnalysisModule] API analysis successful', analysisResult);
+            setIsOfflineMode(false);
         } catch (e) {
             console.warn("[AnalysisModule] API timed out or failed, using simulation fallback", e);
+            setIsOfflineMode(true);
             analysisResult = {
                 overallScore: Math.round(simData.historicalData[5].value),
                 algaeLevel: simData.chlorophyll > 20 ? 'High' : simData.chlorophyll > 10 ? 'Moderate' : 'Low',
@@ -239,6 +242,7 @@ export const AnalysisModule = () => {
       setImage(null);
       setResult(null);
       setExpandedFaq(null);
+      setIsOfflineMode(false);
   };
 
   const getScoreColor = (score: number) => {
@@ -472,6 +476,23 @@ export const AnalysisModule = () => {
                         animate={{ opacity: 1, x: 0 }}
                         className="space-y-6"
                     >
+                         {isOfflineMode && (
+                            <motion.div 
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="bg-red-50 dark:bg-red-900/20 border-2 border-red-500 dark:border-red-500/50 rounded-2xl p-5 flex items-start gap-4 shadow-lg shadow-red-500/10"
+                            >
+                              <div className="p-2 bg-red-100 dark:bg-red-500/20 rounded-full">
+                                <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
+                              </div>
+                              <div>
+                                <h4 className="text-lg font-bold text-red-800 dark:text-red-300 font-display">AI Analysis Failed</h4>
+                                <p className="text-sm text-red-700 dark:text-red-400 mt-1 font-medium">
+                                  The advanced AI service is currently unavailable or timed out. We are displaying an <span className="font-bold underline decoration-red-400/50">estimated result</span> based on local offline simulation models. Please try again later for a full analysis.
+                                </p>
+                              </div>
+                            </motion.div>
+                         )}
                          <div className={`p-6 rounded-3xl border ${
                              result.overallScore >= 80 ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800/50' :
                              result.overallScore >= 50 ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-800/50' :
