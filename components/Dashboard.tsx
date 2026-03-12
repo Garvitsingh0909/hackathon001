@@ -267,6 +267,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, language }) =
                             fillOpacity={1} 
                             fill="url(#colorValue)" 
                             animationDuration={1500}
+                            activeDot={{ r: 8, strokeWidth: 0, fill: '#0A3D6B' }}
+                            dot={{ r: 4, strokeWidth: 2, fill: '#fff', stroke: '#0A3D6B' }}
                         />
                     </AreaChart>
                     </ResponsiveContainer>
@@ -282,7 +284,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, language }) =
               
               <div className="space-y-3 flex-1">
                 {loading ? (
-                    [1,2,3].map(i => <div key={i} className="h-16 bg-blue-50 dark:bg-slate-700/50 rounded-2xl animate-pulse"></div>)
+                    [1,2,3].map(i => <SkeletonReport key={i} />)
                 ) : (
                     reports.slice(0, 3).map((report) => (
                         <div key={report.id} className="group flex items-center justify-between p-4 bg-white/50 dark:bg-slate-800/50 hover:bg-white dark:hover:bg-slate-700 border border-transparent hover:border-blue-200 dark:hover:border-slate-600 rounded-2xl transition-all duration-300 hover:shadow-md cursor-pointer">
@@ -341,6 +343,19 @@ const StatCard = ({ label, value, trend, icon: Icon, color }: any) => {
         </div>
     );
 };
+
+const SkeletonReport = () => (
+    <div className="group flex items-center justify-between p-4 bg-white/50 dark:bg-slate-800/50 border border-transparent rounded-2xl animate-pulse">
+        <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700"></div>
+            <div className="space-y-2">
+                <div className="h-4 w-32 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                <div className="h-3 w-20 bg-slate-200 dark:bg-slate-700 rounded"></div>
+            </div>
+        </div>
+        <div className="h-4 w-4 bg-slate-200 dark:bg-slate-700 rounded"></div>
+    </div>
+);
 
 const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {

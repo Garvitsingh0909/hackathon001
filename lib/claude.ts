@@ -1,4 +1,5 @@
 import { GoogleGenAI, Modality } from "@google/genai";
+import { getAiInstance, handleGeminiError } from './geminiKeyManager';
 
 // Logging utility
 const log = {
@@ -6,6 +7,25 @@ const log = {
   error: (msg: string, error?: any) => console.error(`[JalDrishti ERROR] ${msg}`, error || ''),
   warn: (msg: string, data?: any) => console.warn(`[JalDrishti WARN] ${msg}`, data || ''),
 };
+
+async function callGeminiWithRetry<T>(fn: (ai: any) => Promise<T>): Promise<T> {
+    let retries = 0;
+    const maxRetries = 7; // Number of keys
+    while (retries < maxRetries) {
+        try {
+            const ai = getAiInstance();
+            return await fn(ai);
+        } catch (error: any) {
+            if (handleGeminiError(error)) {
+                retries++;
+                log.info(`Retrying Gemini call, attempt ${retries}`);
+                continue;
+            }
+            throw error;
+        }
+    }
+    throw new Error("All Gemini API keys exhausted");
+}
 
 // Client-side Claude API wrapper
 export const chatWithClaude = async (messages: any[], language: string, onChunk: (text: string) => void) => {
@@ -77,30 +97,23 @@ export const playGeminiTTS = async (text: string, onStart?: () => void, onEnd?: 
 
         if (onStart) onStart();
 
-        const apiKey = process.env.GEMINI_API_KEY || '';
-        if (!apiKey) {
-            log.warn('GEMINI_API_KEY is missing, falling back to browser TTS');
-            throw new Error('GEMINI_API_KEY is missing');
-        }
-
-        const ai = new GoogleGenAI({ apiKey });
-        
-        // Map language to voice and prompt
         const isHindi = lang.startsWith('hi');
         const voiceName = isHindi ? 'Kore' : 'Zephyr';
         log.info('Using voice', { voiceName, isHindi });
 
-        const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash-preview-tts",
-            contents: [{ parts: [{ text: text }] }],
-            config: {
-                responseModalities: [Modality.AUDIO],
-                speechConfig: {
-                    voiceConfig: {
-                        prebuiltVoiceConfig: { voiceName },
+        const response = await callGeminiWithRetry(async (ai) => {
+            return await ai.models.generateContent({
+                model: "gemini-2.5-flash-preview-tts",
+                contents: [{ parts: [{ text: text }] }],
+                config: {
+                    responseModalities: [Modality.AUDIO],
+                    speechConfig: {
+                        voiceConfig: {
+                            prebuiltVoiceConfig: { voiceName },
+                        },
                     },
                 },
-            },
+            });
         });
 
         const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
@@ -130,37 +143,31 @@ export const playGeminiTTS = async (text: string, onStart?: () => void, onEnd?: 
 };
 
 // Gemini API Implementation
-const apiKey = process.env.GEMINI_API_KEY || '';
-const ai = new GoogleGenAI({ apiKey });
-
 export const analyzeWaterImage = async (base64Image: string, mimeType: string = 'image/jpeg') => {
   log.info('Starting Water Image Analysis', { mimeType });
   try {
-    if (!apiKey) {
-        log.warn('GEMINI_API_KEY is missing, using fallback analysis');
-        throw new Error('GEMINI_API_KEY is missing');
-    }
-
-    const response = await ai.models.generateContent({
-      model: "gemini-3.1-pro-preview",
-      contents: [
-        {
-          parts: [
+    const response = await callGeminiWithRetry(async (ai) => {
+        return await ai.models.generateContent({
+          model: "gemini-3.1-pro-preview",
+          contents: [
             {
-              inlineData: {
-                data: base64Image.split(',')[1] || base64Image,
-                mimeType: mimeType,
-              },
-            },
-            {
-              text: "Analyze this water source image. Provide a JSON response with: algaeLevel (None/Low/Moderate/High), foamDetected (boolean), turbidity (Clear/Slightly Cloudy/Cloudy/Opaque), color (string), overallScore (0-100), recommendation (string), and details (string).",
+              parts: [
+                {
+                  inlineData: {
+                    data: base64Image.split(',')[1] || base64Image,
+                    mimeType: mimeType,
+                  },
+                },
+                {
+                  text: "Analyze this water source image. Provide a JSON response with: algaeLevel (None/Low/Moderate/High), foamDetected (boolean), turbidity (Clear/Slightly Cloudy/Cloudy/Opaque), color (string), overallScore (0-100), recommendation (string), and details (string).",
+                },
+              ],
             },
           ],
-        },
-      ],
-      config: {
-        responseMimeType: "application/json",
-      }
+          config: {
+            responseMimeType: "application/json",
+          }
+        });
     });
 
     const text = response.text;
@@ -199,17 +206,14 @@ export const analyzeWaterImage = async (base64Image: string, mimeType: string = 
 export const searchWaterNews = async (query: string) => {
   log.info('Searching water news', { query });
   try {
-    if (!apiKey) {
-        log.warn('GEMINI_API_KEY is missing, using fallback news');
-        throw new Error('GEMINI_API_KEY is missing');
-    }
-
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: `Search for the latest water quality news and updates for: ${query}`,
-      config: {
-        tools: [{ googleSearch: {} }],
-      },
+    const response = await callGeminiWithRetry(async (ai) => {
+        return await ai.models.generateContent({
+          model: "gemini-3-flash-preview",
+          contents: `Search for the latest water quality news and updates for: ${query}`,
+          config: {
+            tools: [{ googleSearch: {} }],
+          },
+        });
     });
 
     const text = response.text;
@@ -236,25 +240,22 @@ export const searchWaterNews = async (query: string) => {
 export const findNearbyStations = async (lat: number, lng: number) => {
   log.info('Finding nearby stations', { lat, lng });
   try {
-    if (!apiKey) {
-        log.warn('GEMINI_API_KEY is missing, using fallback stations');
-        throw new Error('GEMINI_API_KEY is missing');
-    }
-
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: "Find water quality monitoring stations, river sensors, or water treatment plants near this location.",
-      config: {
-        tools: [{ googleMaps: {} }],
-        toolConfig: {
-          retrievalConfig: {
-            latLng: {
-              latitude: lat,
-              longitude: lng
+    const response = await callGeminiWithRetry(async (ai) => {
+        return await ai.models.generateContent({
+          model: "gemini-2.5-flash",
+          contents: "Find water quality monitoring stations, river sensors, or water treatment plants near this location.",
+          config: {
+            tools: [{ googleMaps: {} }],
+            toolConfig: {
+              retrievalConfig: {
+                latLng: {
+                  latitude: lat,
+                  longitude: lng
+                }
+              }
             }
-          }
-        }
-      },
+          },
+        });
     });
 
     const text = response.text;
@@ -278,11 +279,11 @@ export const findNearbyStations = async (lat: number, lng: number) => {
 export const getQuickStat = async (dataContext: string) => {
   log.info('Getting quick stat', { contextLength: dataContext.length });
   try {
-    if (!apiKey) throw new Error('GEMINI_API_KEY is missing');
-
-    const response = await ai.models.generateContent({
-      model: "gemini-3.1-flash-lite-preview",
-      contents: `Provide a very brief (1 sentence) status update on water quality based on this context: ${dataContext}`,
+    const response = await callGeminiWithRetry(async (ai) => {
+        return await ai.models.generateContent({
+          model: "gemini-3.1-flash-lite-preview",
+          contents: `Provide a very brief (1 sentence) status update on water quality based on this context: ${dataContext}`,
+        });
     });
     return response.text || "Status unavailable.";
   } catch (error) {

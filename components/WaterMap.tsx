@@ -195,35 +195,35 @@ export const WaterMap = ({ language = 'en' }: { language?: 'en' | 'hi' }) => {
         <div className="p-8 md:p-10">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredStates.map(([state, data]) => (
-              <motion.div 
+                <motion.div 
                 key={state}
                 layout
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                className={`p-6 rounded-2xl border ${getRiskBg(data.risk)} flex flex-col justify-between h-full`}
+                className={`p-4 md:p-6 rounded-2xl border ${getRiskBg(data.risk)} flex flex-col justify-between h-full`}
               >
                 <div>
-                  <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-xl font-bold text-slate-900 dark:text-white font-display">{state}</h3>
-                    <div className="flex gap-2">
+                  <div className="flex justify-between items-start mb-3">
+                    <h3 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white font-display">{state}</h3>
+                    <div className="flex gap-1.5">
                       <button 
                         onClick={() => handleSpeak(state, data)}
-                        className={`p-2 rounded-lg backdrop-blur-sm border transition-all ${isSpeaking === state ? 'bg-blue-600 text-white border-blue-600' : 'bg-white/50 dark:bg-black/20 text-slate-600 dark:text-slate-300 border-transparent hover:bg-white/80'}`}
+                        className={`p-1.5 rounded-lg backdrop-blur-sm border transition-all ${isSpeaking === state ? 'bg-blue-600 text-white border-blue-600' : 'bg-white/50 dark:bg-black/20 text-slate-600 dark:text-slate-300 border-transparent hover:bg-white/80'}`}
                       >
-                        {isSpeaking === state ? <Loader2 className="animate-spin" size={16} /> : <Volume2 size={16} />}
+                        {isSpeaking === state ? <Loader2 className="animate-spin" size={14} /> : <Volume2 size={14} />}
                       </button>
-                      <div className="p-2 bg-white/50 dark:bg-black/20 rounded-lg backdrop-blur-sm">
+                      <div className="p-1.5 bg-white/50 dark:bg-black/20 rounded-lg backdrop-blur-sm">
                         {getRiskIcon(data.risk)}
                       </div>
                     </div>
                   </div>
                   
-                  <div className="mb-6">
-                    <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">{t.keyIssues}</p>
-                    <div className="flex flex-wrap gap-2">
+                  <div className="mb-4">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">{t.keyIssues}</p>
+                    <div className="flex flex-wrap gap-1.5">
                       {data.issues.map(issue => (
-                        <span key={issue} className="px-3 py-1 bg-white/60 dark:bg-black/30 rounded-full text-sm font-medium text-slate-700 dark:text-slate-300 border border-slate-200/50 dark:border-slate-700/50">
+                        <span key={issue} className="px-2 py-0.5 bg-white/60 dark:bg-black/30 rounded-full text-xs font-medium text-slate-700 dark:text-slate-300 border border-slate-200/50 dark:border-slate-700/50">
                           {issue}
                         </span>
                       ))}

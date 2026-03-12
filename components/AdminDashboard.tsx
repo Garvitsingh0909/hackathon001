@@ -23,7 +23,7 @@ import { db } from '../src/firebase';
 import { collection, query, orderBy, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { WaterQualityReport } from '../types';
 
-export const AdminDashboard = () => {
+export const AdminDashboard = ({ isAdmin }: { isAdmin: boolean }) => {
     const [reports, setReports] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -219,8 +219,10 @@ export const AdminDashboard = () => {
                                     <td className="px-8 py-5">
                                         <select 
                                             value={report.status}
+                                            disabled={!isAdmin}
                                             onChange={(e) => updateStatus(report.id, e.target.value)}
                                             className={`text-xs font-bold px-3 py-1.5 rounded-full border focus:outline-none transition-all ${
+                                                !isAdmin ? 'cursor-not-allowed opacity-50 bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700' : 
                                                 report.status === 'Pending' ? 'bg-amber-50 text-amber-600 border-amber-200' :
                                                 report.status === 'Reviewed' ? 'bg-blue-50 text-blue-600 border-blue-200' :
                                                 'bg-emerald-50 text-emerald-600 border-emerald-200'

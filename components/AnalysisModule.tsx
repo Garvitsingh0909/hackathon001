@@ -20,12 +20,26 @@ export const AnalysisModule = () => {
   const { user } = useAuth();
   const [image, setImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [success, setSuccess] = useState(false);
   const [result, setResult] = useState<WaterQualityReport | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const audioContextRef = useRef<AudioContext | null>(null);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (loading) {
+        setProgress(0);
+        interval = setInterval(() => {
+            setProgress(prev => (prev >= 90 ? 90 : prev + 10));
+        }, 500);
+    } else {
+        setProgress(0);
+    }
+    return () => clearInterval(interval);
+  }, [loading]);
 
   useEffect(() => {
     return () => {
@@ -364,10 +378,18 @@ export const AnalysisModule = () => {
                                 transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
                                 className="absolute top-0 left-0 w-full h-1 bg-gov-teal shadow-[0_0_20px_rgba(34,184,166,1)]"
                             />
-                            <div className="absolute bottom-10 left-0 right-0 flex justify-center">
+                            <div className="absolute bottom-10 left-0 right-0 flex justify-center flex-col items-center gap-4">
                                 <div className="bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 text-white text-xs font-mono animate-pulse">
                                     ANALYZING PIXELS...
                                 </div>
+                                <div className="w-64 h-2 bg-white/20 rounded-full overflow-hidden">
+                                    <motion.div 
+                                        className="h-full bg-gov-teal"
+                                        initial={{ width: "0%" }}
+                                        animate={{ width: `${progress}%` }}
+                                    />
+                                </div>
+                                <p className="text-white text-xs font-mono">{progress}%</p>
                             </div>
                         </motion.div>
                     )}

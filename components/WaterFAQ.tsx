@@ -93,13 +93,13 @@ export const WaterFAQ = () => {
               </div>
             ) : (
               filteredFaqs.map((faq, idx) => (
-                <div key={idx} className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden bg-gov-card dark:bg-slate-800 hover:shadow-subtle-hover transition-shadow">
+                <div key={idx} className="border border-slate-700 rounded-xl overflow-hidden bg-slate-900 hover:border-slate-600 transition-all">
                   <button 
                     onClick={() => setExpanded(expanded === idx ? null : idx)}
-                    className="w-full px-6 py-5 flex justify-between items-center text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                    className="w-full px-4 py-3 flex justify-between items-center text-left hover:bg-slate-800 transition-colors"
                   >
-                    <span className="font-bold text-slate-800 dark:text-slate-200 pr-8">{faq.q}</span>
-                    {expanded === idx ? <ChevronUp size={20} className="text-blue-500 shrink-0" /> : <ChevronDown size={20} className="text-slate-400 shrink-0" />}
+                    <span className="font-medium text-sm text-slate-200 pr-4">{faq.q}</span>
+                    {expanded === idx ? <ChevronUp size={16} className="text-blue-400 shrink-0" /> : <ChevronDown size={16} className="text-slate-500 shrink-0" />}
                   </button>
                   <AnimatePresence>
                     {expanded === idx && (
@@ -107,9 +107,9 @@ export const WaterFAQ = () => {
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        className="px-6 pb-5 text-slate-600 dark:text-slate-400 leading-relaxed border-t border-slate-100 dark:border-slate-700 pt-4"
+                        className="px-4 pb-3 text-xs text-slate-400 leading-relaxed border-t border-slate-800 pt-2"
                       >
-                        <p className="mb-4">{faq.a}</p>
+                        <p>{faq.a}</p>
                       </motion.div>
                     )}
                   </AnimatePresence>

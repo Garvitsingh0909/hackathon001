@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, LayoutGrid, Activity, Map, FileText, Moon, Sun, Droplets, Clock, Lightbulb, Calculator, HelpCircle, MapPin, Share2, Mic } from 'lucide-react';
+import { Bell, LayoutGrid, Activity, Map, FileText, Moon, Sun, Droplets, Clock, Lightbulb, Calculator, HelpCircle, MapPin, Share2, MessageSquare } from 'lucide-react';
 import { TRANSLATIONS } from '../constants';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Logo } from './Logo';
 
 interface NavbarProps {
     activeTab: string;
@@ -27,6 +28,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, languag
   const t = TRANSLATIONS[language].nav;
   const [time, setTime] = useState(new Date());
   const [currentTip, setCurrentTip] = useState(0);
+  const [showTip, setShowTip] = useState(false);
   const [isRipple, setIsRipple] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
@@ -81,23 +83,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, languag
                 {/* Brand */}
                 <div className="flex items-center gap-3 cursor-pointer relative" onClick={handleLogoClick}>
                     <div className={`absolute inset-0 rounded-full ${isRipple ? 'ripple' : ''}`}></div>
-                    <div className="relative h-10 w-10 flex items-center justify-center z-10">
-                        <img 
-                            src="/logo.svg" 
-                            alt="JalDrishti AI" 
-                            className="h-full w-full object-contain"
-                            onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                                e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                            }} 
-                        />
-                        <div className="hidden bg-gov-navy p-1.5 rounded-lg absolute inset-0 flex items-center justify-center">
-                            <Droplets className="text-white h-6 w-6" strokeWidth={2.5} />
-                        </div>
-                    </div>
-                    <span className={`text-lg font-bold font-display tracking-tight z-10 ${darkMode ? 'text-white' : 'text-gov-navy'}`}>
-                        JalDrishti<span className="text-gov-teal">.AI</span>
-                    </span>
+                    <Logo darkMode={darkMode} />
                 </div>
 
                 {/* Desktop Navigation - Hackathon Level */}
@@ -129,7 +115,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, languag
                     {/* Right Actions */}
                 <div className="flex items-center gap-2 sm:gap-4">
                     {/* AI Enhanced Badge */}
-                    <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/50">
+                    <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/50">
                         <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
                         <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">AI Enhanced</span>
                     </div>
@@ -140,6 +126,29 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, languag
                         <span>{istTime} IST</span>
                     </div>
 
+                    {/* Tip Toggle */}
+                    <div className="relative">
+                        <button 
+                            onClick={() => setShowTip(!showTip)}
+                            className={`w-10 h-10 flex items-center justify-center rounded-full transition-all ${darkMode ? 'bg-white/5 text-amber-400 hover:bg-white/10' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
+                            aria-label="Toggle Tip"
+                        >
+                            <Lightbulb size={18} />
+                        </button>
+                        <AnimatePresence>
+                            {showTip && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                    className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-4 z-50"
+                                >
+                                    <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{TIPS[currentTip]}</p>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+
                     {/* Share Button */}
                     <button 
                         onClick={handleShare}
@@ -147,15 +156,6 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, languag
                         aria-label="Share JalDrishti AI"
                     >
                         <Share2 size={18} />
-                    </button>
-
-                    {/* Assistant Trigger */}
-                    <button 
-                        onClick={() => document.dispatchEvent(new CustomEvent('open-assistant'))}
-                        className={`w-10 h-10 flex items-center justify-center rounded-full transition-all hover:scale-105 ${darkMode ? 'bg-blue-900/30 text-blue-400 hover:bg-blue-900/50 border border-blue-500/30' : 'bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200'}`}
-                        aria-label="Open Assistant"
-                    >
-                        <Mic size={18} />
                     </button>
 
                     {/* Dark Mode Toggle */}
@@ -239,26 +239,6 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, languag
             </div>
         </div>
         </nav>
-        
-        {/* Tip of the Day Banner */}
-        <div className={`w-full py-1.5 px-4 text-xs font-medium flex items-center justify-center gap-2 border-b ${darkMode ? 'bg-slate-800/80 border-slate-700 text-slate-300' : 'bg-blue-50/80 border-blue-100 text-blue-800'} backdrop-blur-md`}>
-            <Lightbulb size={14} className="text-amber-500 shrink-0" />
-            <span className="font-bold shrink-0">Tip of the Day:</span>
-            <div className="overflow-hidden relative h-4 w-full max-w-md">
-                <AnimatePresence mode="wait">
-                    <motion.p
-                        key={currentTip}
-                        initial={{ y: 20, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        exit={{ y: -20, opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="absolute inset-0 truncate"
-                    >
-                        {TIPS[currentTip]}
-                    </motion.p>
-                </AnimatePresence>
-            </div>
-        </div>
     </div>
   );
 };

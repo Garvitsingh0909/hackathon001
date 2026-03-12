@@ -6,7 +6,6 @@ import { AnalysisModule } from './components/AnalysisModule';
 import { WaterIntel } from './components/WaterIntel';
 import { AdminDashboard } from './components/AdminDashboard';
 import { AdminMap } from './components/AdminMap';
-import { Assistant } from './components/Assistant';
 import { WaterMap } from './components/WaterMap';
 import { WaterTools } from './components/WaterTools';
 import { WaterFAQ } from './components/WaterFAQ';
@@ -28,7 +27,6 @@ function AppContent() {
   const [userState, setUserState] = useState('');
   const [userSource, setUserSource] = useState('');
   const [isStarterGuideOpen, setIsStarterGuideOpen] = useState(false);
-  const [isAssistantOpen, setIsAssistantOpen] = useState(false);
 
   useEffect(() => {
     const hasSeenOnboarding = localStorage.getItem('jaldrishti_onboarding');
@@ -37,12 +35,9 @@ function AppContent() {
     }
     
     const handleOpenGuide = () => setIsStarterGuideOpen(true);
-    const handleOpenAssistant = () => setIsAssistantOpen(true);
     document.addEventListener('open-starter-guide', handleOpenGuide);
-    document.addEventListener('open-assistant', handleOpenAssistant);
     return () => {
       document.removeEventListener('open-starter-guide', handleOpenGuide);
-      document.removeEventListener('open-assistant', handleOpenAssistant);
     };
   }, []);
 
@@ -90,7 +85,7 @@ function AppContent() {
       case 'admin': 
         return isAdmin ? (
           <div className="space-y-8">
-            <AdminDashboard />
+            <AdminDashboard isAdmin={isAdmin} />
             <AdminMap />
           </div>
         ) : <Dashboard onChangeTab={setActiveTab} language={language} />;
@@ -125,7 +120,7 @@ function AppContent() {
         </div>
       )}
 
-      {/* Main Container - Centered and Max Width restricted for big screens */}
+      {/* Main Container */}
       <main className={`flex-grow ${seasonalAlert ? 'pt-8' : 'pt-28'} pb-24 md:pb-12 px-4 sm:px-6 lg:px-8 w-full max-w-7xl mx-auto transition-all duration-300`}>
         <AnimatePresence mode="wait">
           <motion.div
@@ -141,15 +136,27 @@ function AppContent() {
         </AnimatePresence>
       </main>
 
+      {/* Mobile Bottom Navigation */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 p-2 flex justify-around z-40">
+        {[
+          { id: 'home', icon: Home },
+          { id: 'analyze', icon: Activity },
+          { id: 'map', icon: MapPin },
+          { id: 'tools', icon: Calculator },
+        ].map((item) => (
+          <button
+            key={item.id}
+            onClick={() => setActiveTab(item.id)}
+            className={`p-3 rounded-xl flex flex-col items-center gap-1 ${activeTab === item.id ? 'text-gov-teal' : 'text-slate-400'}`}
+          >
+            <item.icon size={24} />
+            <span className="text-[10px] font-bold">{item.id.charAt(0).toUpperCase() + item.id.slice(1)}</span>
+          </button>
+        ))}
+      </div>
+
       {/* Starter Guide Modal */}
       <StarterGuide isOpen={isStarterGuideOpen} onClose={() => setIsStarterGuideOpen(false)} language={language} />
-
-      {/* Assistant Component */}
-      <Assistant 
-        isOpen={isAssistantOpen} 
-        onClose={() => setIsAssistantOpen(false)} 
-        onNavigate={(tab) => setActiveTab(tab)}
-      />
 
       {/* Onboarding Overlay */}
       <AnimatePresence>
@@ -268,17 +275,6 @@ function AppContent() {
       <div className={`fixed bottom-0 left-0 right-0 h-[72px] md:hidden z-50 px-6 flex justify-between items-center backdrop-blur-xl border-t shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transition-colors duration-300 ${darkMode ? 'bg-gov-dark-navy/90 border-white/10' : 'bg-white/90 border-slate-200/50'}`}>
         <NavBtn id="mobile-nav-home" icon={Home} label={t.home} active={activeTab === 'home'} onClick={() => setActiveTab('home')} darkMode={darkMode} />
         <NavBtn id="mobile-nav-analyze" icon={Camera} label={t.analyze} active={activeTab === 'analyze'} onClick={() => setActiveTab('analyze')} darkMode={darkMode} />
-        
-        {/* Floating Assistant Trigger */}
-        <div className="absolute left-1/2 -translate-x-1/2 -top-6">
-          <button 
-            onClick={() => setIsAssistantOpen(true)}
-            className="w-14 h-14 bg-gov-navy dark:bg-blue-600 text-white rounded-full shadow-lg shadow-blue-500/40 flex items-center justify-center border-4 border-white dark:border-slate-900 transition-transform hover:scale-110 active:scale-95"
-          >
-            <Mic size={24} />
-          </button>
-        </div>
-
         <NavBtn id="mobile-nav-admin" icon={LayoutDashboard} label={t.admin} active={activeTab === 'admin'} onClick={() => setActiveTab('admin')} darkMode={darkMode} />
         <NavBtn id="mobile-nav-intel" icon={MapIcon} label={t.intel} active={activeTab === 'intel'} onClick={() => setActiveTab('intel')} darkMode={darkMode} />
       </div>
