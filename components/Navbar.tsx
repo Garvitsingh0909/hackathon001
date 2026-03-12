@@ -43,26 +43,26 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, languag
     <div className="fixed top-0 left-0 right-0 z-50">
         <nav className={`backdrop-blur-xl border-b transition-all duration-300 ${darkMode ? 'bg-slate-950/80 border-white/5' : 'bg-white/80 border-slate-200/50'}`}>
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
+            <div className="flex justify-between items-center h-14">
                 {/* Brand */}
                 <div 
                   className="flex items-center gap-2 cursor-pointer group" 
                   onClick={() => setActiveTab('home')}
                 >
-                    <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-600/20 group-hover:scale-110 transition-transform">
-                      <Droplets size={18} />
+                    <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-600/20 group-hover:scale-110 transition-transform">
+                      <Droplets size={16} />
                     </div>
-                    <span className={`text-xl font-extrabold font-display tracking-tight ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+                    <span className={`text-lg font-extrabold font-display tracking-tight ${darkMode ? 'text-white' : 'text-slate-900'}`}>
                         Jal<span className="text-blue-500">Drishti</span>
                     </span>
                 </div>
 
                 {/* Desktop Navigation */}
-                <div className="hidden md:flex items-center gap-x-1 bg-slate-100/50 dark:bg-white/5 p-1 rounded-2xl border border-slate-200/50 dark:border-white/5">
+                <div className="hidden md:flex items-center gap-x-1 bg-slate-100/50 dark:bg-white/5 p-1 rounded-xl border border-slate-200/50 dark:border-white/5">
                     {navItems.map((item) => (
                         <button
                             key={item.id}
-                            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all relative ${
+                            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all relative ${
                                 activeTab === item.id 
                                 ? 'text-blue-600 dark:text-blue-400'
                                 : (darkMode ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900')
@@ -72,7 +72,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, languag
                             {activeTab === item.id && (
                               <motion.div 
                                 layoutId="navActive"
-                                className="absolute inset-0 bg-white dark:bg-slate-800 rounded-xl shadow-sm -z-10"
+                                className="absolute inset-0 bg-white dark:bg-slate-800 rounded-lg shadow-sm -z-10"
                                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
                               />
                             )}
@@ -82,43 +82,43 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, languag
                 </div>
 
                 {/* Right Actions */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                     {/* Dark Mode Toggle */}
                     <button 
                         onClick={toggleDarkMode}
-                        className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all ${darkMode ? 'bg-white/5 text-amber-400 hover:bg-white/10' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                        className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all ${darkMode ? 'bg-white/5 text-amber-400 hover:bg-white/10' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
                     >
-                        {darkMode ? <Sun size={18} /> : <Moon size={18} />}
+                        {darkMode ? <Sun size={16} /> : <Moon size={16} />}
                     </button>
 
                     {/* Language Toggle */}
-                    <div className={`flex items-center p-1 rounded-xl border ${darkMode ? 'bg-white/5 border-white/10' : 'bg-slate-100 border-slate-200'}`}>
+                    <div className={`flex items-center p-0.5 rounded-lg border ${darkMode ? 'bg-white/5 border-white/10' : 'bg-slate-100 border-slate-200'}`}>
                         <button 
                             onClick={() => setLanguage('en')}
-                            className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all ${language === 'en' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-slate-500'}`}
+                            className={`px-2 py-0.5 rounded-md text-[9px] font-bold transition-all ${language === 'en' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-slate-500'}`}
                         >
                             EN
                         </button>
                         <button 
                             onClick={() => setLanguage('hi')}
-                            className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all ${language === 'hi' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-slate-500'}`}
+                            className={`px-2 py-0.5 rounded-md text-[9px] font-bold transition-all ${language === 'hi' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-slate-500'}`}
                         >
                             HI
                         </button>
                     </div>
                     
                     {/* Profile */}
-                    <div className="flex items-center gap-3 pl-3 border-l border-slate-200 dark:border-white/10">
+                    <div className="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-white/10">
                         {user ? (
                             <div className="relative">
                                 <button 
                                     onClick={() => setShowProfileMenu(!showProfileMenu)}
-                                    className="h-10 w-10 rounded-xl overflow-hidden border-2 border-transparent hover:border-blue-500 transition-all"
+                                    className="h-8 w-8 rounded-lg overflow-hidden border-2 border-transparent hover:border-blue-500 transition-all"
                                 >
                                     {user.photoURL ? (
                                         <img src={user.photoURL} alt={user.displayName} className="w-full h-full object-cover" />
                                     ) : (
-                                        <div className="w-full h-full bg-blue-600 text-white flex items-center justify-center text-sm font-bold">
+                                        <div className="w-full h-full bg-blue-600 text-white flex items-center justify-center text-[10px] font-bold">
                                             {user.displayName?.charAt(0) || 'U'}
                                         </div>
                                     )}

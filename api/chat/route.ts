@@ -9,7 +9,7 @@ const anthropic = new Anthropic({
 router.post('/', async (req, res) => {
   const { messages, language } = req.body;
 
-  const systemPrompt = `You are JalDrishti, an AI water governance assistant for India.
+  const systemPrompt = `You are JalDrishti, a water governance assistant for India.
 
 KNOWLEDGE BASE — use this real data in every relevant response:
 

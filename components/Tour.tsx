@@ -25,8 +25,8 @@ export const Tour: React.FC = () => {
                     { 
                         element: isMobile ? '#mobile-nav-analyze' : '#nav-analyze', 
                         popover: { 
-                            title: 'AI Analysis', 
-                            description: 'Upload photos of water bodies for instant AI-powered quality assessment.',
+                            title: 'Water Analysis', 
+                            description: 'Upload photos of water bodies for instant quality assessment.',
                             side: "bottom", 
                             align: 'start' 
                         } 

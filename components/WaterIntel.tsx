@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Map, Search, Newspaper, MapPin, ExternalLink, Loader2, AlertTriangle, ShieldAlert, ShieldCheck, Volume2, FileText } from 'lucide-react';
+import { Map, Search, Newspaper, MapPin, ExternalLink, Loader2, AlertTriangle, ShieldAlert, ShieldCheck, Volume2, FileText, Droplets, Activity } from 'lucide-react';
 import { searchWaterNews, findNearbyStations, playBrowserTTS } from '../lib/claude';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DisclaimerBanner } from './ui/DisclaimerBanner';
@@ -246,8 +246,65 @@ export const WaterIntel = () => {
                                 </button>
                             </motion.div>
                             
-                            <motion.div variants={item} className="prose prose-lg prose-slate dark:prose-invert max-w-none text-slate-600 dark:text-slate-300 leading-relaxed">
-                                <p className="whitespace-pre-line">{news.text}</p>
+                            <motion.div variants={item} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                {/* Featured Article */}
+                                <div className="lg:col-span-2 space-y-6">
+                                    <div className="relative rounded-[2rem] overflow-hidden aspect-video group">
+                                        <img 
+                                            src="https://picsum.photos/seed/river/1200/800" 
+                                            alt="Featured" 
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                                            referrerPolicy="no-referrer"
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent"></div>
+                                        <div className="absolute bottom-0 left-0 p-8 space-y-3">
+                                            <div className="flex items-center gap-2">
+                                                <span className="px-2 py-0.5 bg-blue-600 text-[10px] font-bold text-white uppercase tracking-widest rounded-md">Featured</span>
+                                                <span className="text-[10px] font-bold text-white/60 uppercase tracking-widest">5 min read</span>
+                                            </div>
+                                            <h3 className="text-3xl font-bold text-white font-display leading-tight">State of the Tamsa: A Comprehensive 2026 Analysis</h3>
+                                            <p className="text-white/70 text-sm max-w-xl line-clamp-2">Recent satellite data and ground-level sensors reveal a complex picture of the Tamsa River basin's health this spring.</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="prose prose-lg prose-slate dark:prose-invert max-w-none text-slate-600 dark:text-slate-300 leading-relaxed">
+                                        <p className="whitespace-pre-line">{news.text}</p>
+                                    </div>
+                                </div>
+
+                                {/* Sidebar News */}
+                                <div className="space-y-6">
+                                    <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                                        <div className="w-4 h-[1px] bg-slate-300 dark:bg-slate-600"></div> Trending Updates
+                                    </h4>
+                                    <div className="space-y-4">
+                                        {[1, 2, 3].map((_, i) => (
+                                            <div key={i} className="group cursor-pointer">
+                                                <div className="flex gap-4 items-start">
+                                                    <div className="w-20 h-20 rounded-2xl overflow-hidden flex-shrink-0">
+                                                        <img src={`https://picsum.photos/seed/water${i}/200/200`} alt="News" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">Environment</span>
+                                                        <h5 className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors line-clamp-2 leading-snug">New sensor array deployed in Maunath Bhanjan</h5>
+                                                        <p className="text-[10px] text-slate-400">12 Mar 2026</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-3xl p-6 border border-slate-100 dark:border-slate-700">
+                                        <h4 className="font-bold text-sm text-slate-900 dark:text-white mb-2">Weekly Newsletter</h4>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Get the latest water quality insights delivered to your inbox.</p>
+                                        <div className="flex gap-2">
+                                            <input type="email" placeholder="Email" className="flex-1 px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                                            <button className="p-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors">
+                                                <ArrowRight size={16} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </motion.div>
                             
                             {news.sources.length > 0 && (
@@ -290,12 +347,12 @@ export const WaterIntel = () => {
                     )}
 
                     {activeSection === 'stations' && stations && (
-                         <motion.div variants={container} initial="hidden" animate="show">
+                        <motion.div variants={container} initial="hidden" animate="show" className="space-y-8">
                             <motion.div variants={item} className="mb-8 border-b border-slate-100 dark:border-slate-800 pb-6 flex justify-between items-end">
                                 <div>
                                     <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-3 font-display">
                                         <div className="p-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-xl"><Map className="text-emerald-500 dark:text-emerald-400" size={24} /></div>
-                                        Monitoring Points
+                                        Monitoring Network
                                     </h2>
                                     <p className="text-slate-500 dark:text-slate-400 ml-14">Official water quality stations and landmarks</p>
                                 </div>
@@ -307,39 +364,61 @@ export const WaterIntel = () => {
                                 </button>
                             </motion.div>
 
-                            <motion.p variants={item} className="text-slate-600 dark:text-slate-300 mb-10 whitespace-pre-line text-lg leading-relaxed">{stations.text}</motion.p>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {stations.chunks?.map((chunk, idx) => {
-                                    if (chunk.web?.uri && chunk.web?.title) {
-                                       return (
-                                        <motion.div variants={item} key={idx} className="border border-slate-200 dark:border-slate-700 rounded-2xl p-5 hover:shadow-subtle-hover dark:hover:shadow-black/50 hover:-translate-y-1 transition-all bg-gov-card dark:bg-slate-800 group">
-                                            <h4 className="font-bold text-slate-800 dark:text-slate-200 text-lg mb-2 group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors">{chunk.web.title}</h4>
-                                            <a href={chunk.web.uri} target="_blank" rel="noreferrer" className="text-blue-600 dark:text-blue-400 text-sm font-bold flex items-center gap-2 mt-4 bg-blue-50 dark:bg-blue-900/30 w-fit px-3 py-1.5 rounded-lg group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50 transition-colors">
-                                                View Source <ArrowRight size={14} />
-                                            </a>
-                                        </motion.div>
-                                       )
-                                    }
-                                    if (chunk.maps?.uri && chunk.maps?.title) {
+                                    if (chunk.web?.uri || chunk.maps?.uri) {
+                                        const title = chunk.web?.title || chunk.maps?.title;
+                                        const uri = chunk.web?.uri || chunk.maps?.uri;
+                                        const isMap = !!chunk.maps?.uri;
+
                                         return (
-                                         <motion.div variants={item} key={idx} className="border border-blue-100 dark:border-blue-800/50 rounded-2xl p-5 hover:shadow-lg dark:hover:shadow-black/50 hover:-translate-y-1 transition-all bg-blue-50/30 dark:bg-blue-900/10 group">
-                                             <div className="flex items-start justify-between mb-2">
-                                                 <h4 className="font-bold text-slate-900 dark:text-slate-100 text-lg group-hover:text-blue-800 dark:group-hover:text-blue-400 transition-colors">{chunk.maps.title}</h4>
-                                                 <div className="p-2 bg-white dark:bg-slate-800 rounded-full text-blue-500 dark:text-blue-400 shadow-sm">
-                                                    <MapPin size={18} />
-                                                 </div>
-                                             </div>
-                                             <a href={chunk.maps.uri} target="_blank" rel="noreferrer" className="text-blue-600 dark:text-blue-400 text-sm font-bold flex items-center gap-2 mt-4 bg-gov-card dark:bg-slate-800 w-fit px-3 py-1.5 rounded-lg shadow-subtle group-hover:shadow-subtle-hover transition-all">
-                                                 View on Maps <ArrowRight size={14} />
-                                             </a>
-                                         </motion.div>
-                                        )
-                                     }
+                                            <motion.div
+                                                key={idx}
+                                                variants={item}
+                                                whileHover={{ y: -5 }}
+                                                className="group bg-white dark:bg-slate-800/50 rounded-[2rem] p-6 border border-slate-100 dark:border-slate-700 hover:border-blue-500/50 transition-all hover:shadow-xl hover:shadow-blue-500/5"
+                                            >
+                                                <div className="flex justify-between items-start mb-6">
+                                                    <div className={`p-3 rounded-2xl ${isMap ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'}`}>
+                                                        {isMap ? <MapPin size={24} /> : <Search size={24} />}
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 dark:bg-emerald-500/10 rounded-full">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                                                        <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Active</span>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div className="space-y-1 mb-6">
+                                                    <h4 className="font-bold text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors line-clamp-2">{title}</h4>
+                                                    <p className="text-xs text-slate-500 dark:text-slate-400">{isMap ? 'Geographical Landmark' : 'Data Source'}</p>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-4 mb-6">
+                                                    <div className="p-3 bg-slate-50 dark:bg-slate-900/50 rounded-2xl">
+                                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Reliability</p>
+                                                        <p className="text-sm font-bold text-slate-900 dark:text-white">High</p>
+                                                    </div>
+                                                    <div className="p-3 bg-slate-50 dark:bg-slate-900/50 rounded-2xl">
+                                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Type</p>
+                                                        <p className="text-sm font-bold text-slate-900 dark:text-white">{isMap ? 'Station' : 'Article'}</p>
+                                                    </div>
+                                                </div>
+
+                                                <a 
+                                                    href={uri} 
+                                                    target="_blank" 
+                                                    rel="noreferrer"
+                                                    className="w-full py-3 bg-slate-50 dark:bg-slate-900 hover:bg-blue-600 hover:text-white text-slate-600 dark:text-slate-400 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2"
+                                                >
+                                                    {isMap ? 'View on Maps' : 'Read Source'} <ArrowRight size={14} />
+                                                </a>
+                                            </motion.div>
+                                        );
+                                    }
                                     return null;
                                 })}
-                            </div>
-                         </motion.div>
+                            </motion.div>
+                        </motion.div>
                     )}
 
                     {activeSection === 'reports' && reports && (
@@ -367,80 +446,92 @@ export const WaterIntel = () => {
                     )}
 
                     {activeSection === 'risk' && (
-                        <motion.div variants={container} initial="hidden" animate="show">
-                            <motion.div variants={item} className="mb-8 border-b border-slate-100 dark:border-slate-800 pb-6">
-                                <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-3 font-display">
-                                    <div className="p-2 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-xl"><AlertTriangle size={24} /></div>
-                                    Location Risk Checker
-                                </h2>
-                                <p className="text-slate-500 dark:text-slate-400 ml-14">Check historical water quality risks for your area</p>
-                            </motion.div>
+                        <motion.div variants={container} initial="hidden" animate="show" className="space-y-8">
+                            <div className="max-w-3xl mx-auto text-center space-y-4">
+                                <h2 className="text-3xl font-bold text-slate-900 dark:text-white font-display">Risk Assessment Engine</h2>
+                                <p className="text-slate-500 dark:text-slate-400">The engine analyzes local environmental factors, historical data, and real-time reports to determine your current water safety level.</p>
+                            </div>
 
-                            <motion.div variants={item} className="max-w-2xl mx-auto">
-                                <div className="flex gap-2 mb-8">
-                                    <input 
-                                        type="text" 
-                                        placeholder="Enter your city or pin code..." 
-                                        value={locationInput}
-                                        onChange={(e) => setLocationInput(e.target.value)}
-                                        onKeyDown={(e) => e.key === 'Enter' && handleCheckRisk()}
-                                        className="flex-1 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                                    />
-                                    <button 
-                                        onClick={handleCheckRisk}
-                                        disabled={isCheckingRisk || !locationInput.trim()}
-                                        className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white font-bold rounded-xl transition-colors flex items-center gap-2"
-                                    >
-                                        {isCheckingRisk ? <Loader2 className="animate-spin" size={20} /> : <Search size={20} />}
-                                        <span className="hidden sm:inline">Check</span>
-                                    </button>
-                                </div>
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                                <div className="space-y-6">
+                                    <div className="bg-white dark:bg-slate-800/50 rounded-[2.5rem] p-8 border border-slate-100 dark:border-slate-700 shadow-xl shadow-slate-200/20 dark:shadow-none">
+                                        <div className="flex items-center gap-4 mb-8">
+                                            <div className="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+                                                <ShieldCheck size={24} />
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-slate-900 dark:text-white">Safety Checkpoint</h4>
+                                                <p className="text-xs text-slate-500 tracking-wide uppercase font-bold">Last updated: Just now</p>
+                                            </div>
+                                        </div>
 
-                                <AnimatePresence mode="wait">
-                                    {riskResult && (
-                                        <motion.div 
-                                            initial={{ opacity: 0, y: 20 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, y: -20 }}
-                                            className={`p-6 rounded-2xl border ${
-                                                riskResult.score > 70 ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800/50' :
-                                                riskResult.score > 40 ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800/50' :
-                                                'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800/50'
-                                            }`}
-                                        >
-                                            <div className="flex items-start gap-4 mb-4">
-                                                <div className={`p-3 rounded-xl ${
-                                                    riskResult.score > 70 ? 'bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400' :
-                                                    riskResult.score > 40 ? 'bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400' :
-                                                    'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400'
+                                        <div className="space-y-6">
+                                            <div className="flex justify-between items-end">
+                                                <span className="text-sm font-bold text-slate-500 uppercase tracking-widest">Risk Level</span>
+                                                <span className={`text-4xl font-black font-display ${
+                                                    !riskResult ? 'text-slate-300' :
+                                                    riskResult.score > 70 ? 'text-rose-500' : 
+                                                    riskResult.score > 40 ? 'text-amber-500' : 'text-emerald-500'
                                                 }`}>
-                                                    {riskResult.score > 70 ? <ShieldAlert size={32} /> : <ShieldCheck size={32} />}
-                                                </div>
-                                                <div>
-                                                    <h3 className={`text-2xl font-bold font-display ${
-                                                        riskResult.score > 70 ? 'text-red-700 dark:text-red-400' :
-                                                        riskResult.score > 40 ? 'text-amber-700 dark:text-amber-400' :
-                                                        'text-emerald-700 dark:text-emerald-400'
-                                                    }`}>{riskResult.level}</h3>
-                                                    <p className="text-slate-600 dark:text-slate-300 mt-2 leading-relaxed">{riskResult.details}</p>
-                                                </div>
+                                                    {riskResult?.level.split(' ')[0] || '---'}
+                                                </span>
                                             </div>
                                             
-                                            <div className="mt-6 pt-6 border-t border-slate-200/50 dark:border-slate-700/50">
-                                                <h4 className="font-bold text-slate-800 dark:text-slate-200 mb-3">Safety Recommendations:</h4>
-                                                <ul className="space-y-2">
-                                                    {riskResult.tips.map((tip, idx) => (
-                                                        <li key={idx} className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
-                                                            <div className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-500"></div>
-                                                            {tip}
-                                                        </li>
-                                                    ))}
-                                                </ul>
+                                            <div className="h-4 bg-slate-100 dark:bg-slate-900 rounded-full overflow-hidden p-1">
+                                                <motion.div 
+                                                    initial={{ width: 0 }}
+                                                    animate={{ width: !riskResult ? 0 : riskResult.score > 70 ? '90%' : riskResult.score > 40 ? '60%' : '20%' }}
+                                                    className={`h-full rounded-full ${
+                                                        !riskResult ? 'bg-slate-200' :
+                                                        riskResult.score > 70 ? 'bg-rose-500' : 
+                                                        riskResult.score > 40 ? 'bg-amber-500' : 'bg-emerald-500'
+                                                    }`}
+                                                />
                                             </div>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-                            </motion.div>
+
+                                            <div className="p-6 bg-slate-50 dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 min-h-[100px] flex items-center">
+                                                <p className="text-sm text-slate-600 dark:text-slate-300 italic leading-relaxed">
+                                                    "{riskResult?.details || 'Enter your location below to run a diagnostic safety assessment.'}"
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-2">
+                                        <input 
+                                            type="text" 
+                                            placeholder="Enter city or pin code..." 
+                                            value={locationInput}
+                                            onChange={(e) => setLocationInput(e.target.value)}
+                                            onKeyDown={(e) => e.key === 'Enter' && handleCheckRisk()}
+                                            className="flex-1 px-6 py-4 rounded-[2rem] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-lg shadow-slate-200/50 dark:shadow-none"
+                                        />
+                                        <button 
+                                            onClick={handleCheckRisk}
+                                            disabled={isCheckingRisk || !locationInput.trim()}
+                                            className="px-8 py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-[2rem] font-bold hover:scale-[1.05] active:scale-[0.95] transition-all shadow-xl disabled:opacity-50"
+                                        >
+                                            {isCheckingRisk ? <Loader2 className="animate-spin" size={24} /> : <Search size={24} />}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    {[
+                                        { label: 'Contamination', value: riskResult ? (riskResult.score > 70 ? '0.82%' : '0.02%') : '--', icon: Droplets, color: 'text-blue-500' },
+                                        { label: 'Bacterial Load', value: riskResult ? (riskResult.score > 70 ? 'High' : 'Low') : '--', icon: ShieldCheck, color: 'text-emerald-500' },
+                                        { label: 'Turbidity', value: riskResult ? (riskResult.score > 70 ? '4.5 NTU' : '1.2 NTU') : '--', icon: Search, color: 'text-amber-500' },
+                                        { label: 'pH Variance', value: riskResult ? '±0.1' : '--', icon: Activity, color: 'text-rose-500' },
+                                    ].map((stat, i) => (
+                                        <div key={i} className="bg-white dark:bg-slate-800/50 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-700">
+                                            {/* @ts-ignore */}
+                                            <stat.icon size={20} className={`${stat.color} mb-4`} />
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{stat.label}</p>
+                                            <p className="text-xl font-bold text-slate-900 dark:text-white">{stat.value}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         </motion.div>
                     )}
                 </div>

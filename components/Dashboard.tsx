@@ -17,7 +17,7 @@ interface DashboardProps {
 export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, language }) => {
     const [reports, setReports] = useState<WaterQualityReport[]>([]);
     const [chartData, setChartData] = useState<{name: string, value: number}[]>([]);
-    const [aiSummary, setAiSummary] = useState("Initializing regional data streams...");
+    const [systemSummary, setSystemSummary] = useState("Initializing regional data streams...");
     const [loading, setLoading] = useState(true);
     
     const t = TRANSLATIONS[language];
@@ -35,15 +35,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, language }) =
                 setChartData(trendData);
                 setLoading(false); // Stop loading immediately after core data
 
-                // 2. Fetch AI summary in background
+                // 2. Fetch system summary in background
                 if (reportData.length > 0) {
                     const latest = reportData[0];
                     const context = `Latest report from ${latest.locationName} shows ${latest.overallScore}/100 score. Algae: ${latest.algaeLevel}. Status: ${latest.status}.`;
                     
-                    // Non-blocking AI call
+                    // Non-blocking system call
                     getQuickStat(context).then(summary => {
-                        if (summary) setAiSummary(summary);
-                    }).catch(err => console.error("AI Summary failed", err));
+                        if (summary) setSystemSummary(summary);
+                    }).catch(err => console.error("Summary failed", err));
                 }
             } catch (e) {
                 console.error(e);
@@ -76,48 +76,50 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, language }) =
 
   return (
     <div className="space-y-10 pt-4">
-      <DisclaimerBanner />
-      
       {/* 1. HERO SECTION (Refined & Hooking) */}
-      <div className="relative overflow-hidden rounded-3xl bg-slate-900 text-white min-h-[400px] flex items-center shadow-2xl">
+      <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 text-white min-h-[480px] flex items-center shadow-2xl group">
           {/* High-quality background image with overlay */}
-          <div className="absolute inset-0 z-0">
-            <img 
+          <div className="absolute inset-0 z-0 overflow-hidden">
+            <motion.img 
+              initial={{ scale: 1.1 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 10, repeat: Infinity, repeatType: "reverse" }}
               src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=2000&q=80" 
               alt="Clean Water Nature" 
-              className="w-full h-full object-cover opacity-40 scale-105"
+              className="w-full h-full object-cover opacity-40"
               referrerPolicy="no-referrer"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/80 to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-900/90 to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/50 to-transparent"></div>
           </div>
 
-          <div className="relative z-10 w-full px-8 md:px-12 py-12">
-            <div className="max-w-2xl space-y-6">
+          <div className="relative z-10 w-full px-8 md:px-16 py-12">
+            <div className="max-w-3xl space-y-8">
                 <motion.div 
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6 }}
-                  className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 backdrop-blur-md"
+                  className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl"
                 >
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></span>
-                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-200">{t.hero.label}</span>
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/70">{t.hero.label}</span>
                 </motion.div>
                 
                 <motion.h1 
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.2 }}
-                  className="text-5xl md:text-7xl font-bold leading-[1.1] font-display tracking-tight"
+                  className="text-6xl md:text-8xl font-bold leading-[0.95] font-display tracking-tight"
                 >
                     {t.hero.titleStart} <br/>
-                    <span className="text-blue-400">{t.hero.titleEnd}</span>
+                    <span className="bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">{t.hero.titleEnd}</span>
                 </motion.h1>
                 
                 <motion.p 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 1, delay: 0.4 }}
-                  className="text-slate-300 text-lg md:text-xl max-w-lg font-light leading-relaxed"
+                  className="text-slate-400 text-xl md:text-2xl max-w-xl font-light leading-relaxed"
                 >
                     {t.hero.desc}
                 </motion.p>
@@ -126,18 +128,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, language }) =
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: 0.6 }}
-                  className="flex flex-col sm:flex-row gap-4 pt-4"
+                  className="flex flex-col sm:flex-row gap-5 pt-4"
                 >
                     <button 
                         onClick={() => onChangeTab('analyze')}
-                        className="h-14 px-8 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20"
+                        className="h-16 px-10 bg-white text-slate-950 rounded-2xl font-bold transition-all flex items-center justify-center gap-3 shadow-2xl hover:scale-[1.02] active:scale-[0.98]"
                     >
                         {t.dashboard.submitReport}
-                        <ArrowRight size={20} />
+                        <ArrowRight size={22} />
                     </button>
                     <button 
                         onClick={() => onChangeTab('admin')}
-                        className="h-14 px-8 bg-white/10 border border-white/20 text-white rounded-2xl font-bold hover:bg-white/20 transition-all backdrop-blur-md"
+                        className="h-16 px-10 bg-white/5 border border-white/10 text-white rounded-2xl font-bold hover:bg-white/10 transition-all backdrop-blur-md flex items-center justify-center"
                     >
                         {t.hero.btnSecondary}
                     </button>
@@ -146,23 +148,28 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, language }) =
           </div>
           
           {/* Subtle floating element for "fanciness" */}
-          <div className="absolute right-12 bottom-12 hidden xl:block">
+          <div className="absolute right-16 bottom-16 hidden xl:block">
             <motion.div 
-              animate={{ y: [0, -15, 0] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              className="bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-3xl shadow-2xl"
+              animate={{ y: [0, -20, 0], rotate: [0, 2, 0] }}
+              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+              className="bg-white/5 backdrop-blur-2xl border border-white/10 p-8 rounded-[2rem] shadow-2xl"
             >
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 rounded-2xl bg-blue-500/20 flex items-center justify-center text-blue-400">
-                  <Droplet size={24} />
+              <div className="flex items-center gap-5 mb-6">
+                <div className="w-14 h-14 rounded-2xl bg-blue-500/20 flex items-center justify-center text-blue-400 shadow-inner">
+                  <Droplet size={28} />
                 </div>
                 <div>
-                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Live Index</div>
-                  <div className="text-2xl font-bold text-white">92.4</div>
+                  <div className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] mb-1">Live Basin Index</div>
+                  <div className="text-3xl font-bold text-white font-mono">92.4</div>
                 </div>
               </div>
-              <div className="h-1.5 w-48 bg-white/10 rounded-full overflow-hidden">
-                <div className="h-full bg-blue-500 w-[92%]"></div>
+              <div className="h-2 w-56 bg-white/5 rounded-full overflow-hidden p-[1px]">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: "92%" }}
+                  transition={{ duration: 2, delay: 1 }}
+                  className="h-full bg-gradient-to-r from-blue-500 to-emerald-400 rounded-full shadow-[0_0_10px_rgba(52,211,153,0.5)]"
+                ></motion.div>
               </div>
             </motion.div>
           </div>
@@ -176,10 +183,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, language }) =
               <div>
                 <div className="flex items-center gap-2 mb-3">
                     <Activity size={18} className="text-blue-600" />
-                    <h3 className="font-bold text-slate-800 dark:text-white text-sm">{t.dashboard.aiAnalysis.replace('AI ', '')}</h3>
+                    <h3 className="font-bold text-slate-800 dark:text-white text-sm">System Analysis</h3>
                 </div>
                 <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mb-4">
-                    {loading ? "Loading data..." : aiSummary}
+                    {loading ? "Loading data..." : systemSummary}
                 </p>
               </div>
               <button onClick={() => onChangeTab('analyze')} className="text-xs font-bold text-gov-teal hover:underline flex items-center gap-1">
@@ -275,26 +282,46 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, language }) =
           </div>
 
       </div>
+      
+      <div className="pt-8 opacity-50">
+        <DisclaimerBanner />
+      </div>
     </div>
   );
 };
 
 const StatCard = ({ label, value, trend, icon: Icon, color }: any) => {
     return (
-        <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm flex flex-col justify-between h-full">
-            <div className="flex justify-between items-start mb-4">
-                <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded-lg text-gov-teal">
-                    <Icon size={20} />
+        <motion.div 
+            whileHover={{ y: -5, transition: { duration: 0.2 } }}
+            className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-white/5 shadow-sm hover:shadow-xl transition-all flex flex-col justify-between h-full group"
+        >
+            <div className="flex justify-between items-start mb-6">
+                <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-2xl text-gov-teal group-hover:bg-gov-teal group-hover:text-white transition-colors duration-300">
+                    <Icon size={24} />
                 </div>
-                <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 border border-emerald-100 dark:border-emerald-800/50">
-                    {trend}
-                </span>
+                <div className="flex flex-col items-end">
+                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 border border-emerald-100 dark:border-emerald-800/50 mb-1">
+                        {trend}
+                    </span>
+                    <div className="flex gap-0.5">
+                        {[1, 2, 3].map(i => (
+                            <div key={i} className="w-1 h-3 bg-emerald-500/20 rounded-full overflow-hidden">
+                                <motion.div 
+                                    animate={{ height: ["20%", "100%", "20%"] }}
+                                    transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
+                                    className="w-full bg-emerald-500"
+                                />
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </div>
             <div>
-                <h3 className="text-2xl font-bold text-slate-900 dark:text-white font-display mb-1">{value}</h3>
-                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-wider">{label}</p>
+                <h3 className="text-4xl font-bold text-slate-900 dark:text-white font-display mb-1 tracking-tight">{value}</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em]">{label}</p>
             </div>
-        </div>
+        </motion.div>
     );
 };
 

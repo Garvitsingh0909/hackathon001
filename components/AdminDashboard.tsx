@@ -147,7 +147,7 @@ export const AdminDashboard = ({ isAdmin, setActiveTab }: { isAdmin: boolean, se
                 <div className="p-8 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h2 className="text-2xl font-bold font-display">Water Quality Reports</h2>
-                        <p className="text-slate-500 text-sm">Manage and review all AI-analyzed water samples</p>
+                        <p className="text-slate-500 text-sm">Manage and review all analyzed water samples</p>
                     </div>
                     
                     <div className="flex flex-wrap items-center gap-3">

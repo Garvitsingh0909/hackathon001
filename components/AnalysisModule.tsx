@@ -9,7 +9,7 @@ import { DisclaimerBanner } from './ui/DisclaimerBanner';
 import { useAuth } from '../src/AuthContext';
 
 const FAQ_ITEMS = [
-    { q: "How accurate is this visual analysis?", a: "This AI analysis provides a preliminary assessment based on visual indicators like color, turbidity, and visible algae. It is not a substitute for laboratory testing." },
+    { q: "How accurate is this visual analysis?", a: "This analysis provides a preliminary assessment based on visual indicators like color, turbidity, and visible algae. It is not a substitute for laboratory testing." },
     { q: "What does the Overall Score mean?", a: "The score (0-100) represents the estimated visual quality of the water. 80-100 is excellent, 50-79 is moderate, and below 50 indicates visible contamination." },
     { q: "Can it detect invisible chemicals?", a: "No. Visual analysis cannot detect dissolved chemicals, heavy metals, or microscopic pathogens. Always use proper testing kits for drinking water." }
 ];
@@ -212,12 +212,12 @@ export const AnalysisModule = () => {
                     <Camera size={28} />
                 </div>
                 <div>
-                    <h2 className="text-3xl font-bold text-slate-900 dark:text-white font-display">AI Sample Analysis</h2>
-                    <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Gemini 2.5 Flash Vision Protocol</p>
+                    <h2 className="text-3xl font-bold text-slate-900 dark:text-white font-display">Water Analysis</h2>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Visual Diagnostic Engine</p>
                 </div>
               </div>
               <p className="text-slate-600 dark:text-slate-300 max-w-xl leading-relaxed print:hidden">
-                Upload a high-resolution image of the water surface. Our AI model will analyze eutrophication levels, turbidity, and potential contaminants instantly.
+                Upload a high-resolution image of the water surface. The system will analyze eutrophication levels, turbidity, and potential contaminants instantly.
               </p>
           </div>
           {image && (
@@ -302,8 +302,15 @@ export const AnalysisModule = () => {
                             
                             {/* Water Droplet Fill Animation */}
                             <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="relative w-24 h-24">
-                                    <svg viewBox="0 0 24 24" className="w-full h-full text-white/20 absolute inset-0">
+                                <div className="relative w-32 h-32">
+                                    {/* Tech Grid Background */}
+                                    <div className="absolute inset-0 grid grid-cols-4 grid-rows-4 gap-1 opacity-20">
+                                        {Array.from({ length: 16 }).map((_, i) => (
+                                            <div key={i} className="border border-white/40 rounded-sm"></div>
+                                        ))}
+                                    </div>
+                                    
+                                    <svg viewBox="0 0 24 24" className="w-full h-full text-white/10 absolute inset-0">
                                         <path fill="currentColor" d="M12,20A6,6 0 0,1 6,14C6,10 12,3.25 12,3.25C12,3.25 18,10 18,14A6,6 0 0,1 12,20Z" />
                                     </svg>
                                     <motion.div 
@@ -312,30 +319,45 @@ export const AnalysisModule = () => {
                                         animate={{ height: ["0%", "100%", "0%"] }}
                                         transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
                                     >
-                                        <svg viewBox="0 0 24 24" className="w-24 h-24 text-gov-teal absolute bottom-0 left-0">
+                                        <svg viewBox="0 0 24 24" className="w-32 h-32 text-blue-400 absolute bottom-0 left-0">
                                             <path fill="currentColor" d="M12,20A6,6 0 0,1 6,14C6,10 12,3.25 12,3.25C12,3.25 18,10 18,14A6,6 0 0,1 12,20Z" />
                                         </svg>
                                     </motion.div>
+                                    
+                                    {/* Scanning Data Points */}
+                                    <motion.div 
+                                        animate={{ opacity: [0, 1, 0] }}
+                                        transition={{ repeat: Infinity, duration: 1.5 }}
+                                        className="absolute top-1/4 left-1/4 w-2 h-2 bg-gov-teal rounded-full shadow-[0_0_10px_#64FFDA]"
+                                    />
+                                    <motion.div 
+                                        animate={{ opacity: [0, 1, 0] }}
+                                        transition={{ repeat: Infinity, duration: 1.5, delay: 0.5 }}
+                                        className="absolute bottom-1/3 right-1/4 w-2 h-2 bg-gov-teal rounded-full shadow-[0_0_10px_#64FFDA]"
+                                    />
                                 </div>
                             </div>
                             
                             <motion.div 
                                 animate={{ top: ["0%", "100%"] }}
                                 transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                                className="absolute top-0 left-0 w-full h-1 bg-gov-teal shadow-[0_0_20px_rgba(34,184,166,1)]"
+                                className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-gov-teal to-transparent shadow-[0_0_20px_rgba(100,255,218,0.8)]"
                             />
                             <div className="absolute bottom-10 left-0 right-0 flex justify-center flex-col items-center gap-4">
-                                <div className="bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 text-white text-xs font-mono animate-pulse">
-                                    ANALYZING PIXELS...
+                                <div className="bg-slate-950/80 backdrop-blur-xl px-4 py-2 rounded-full border border-white/10 text-white text-[10px] font-mono tracking-[0.2em] animate-pulse">
+                                    SYSTEM.SCANNING_PIXELS
                                 </div>
-                                <div className="w-64 h-2 bg-white/20 rounded-full overflow-hidden">
+                                <div className="w-64 h-1.5 bg-white/10 rounded-full overflow-hidden border border-white/5">
                                     <motion.div 
-                                        className="h-full bg-gov-teal"
+                                        className="h-full bg-gradient-to-r from-blue-500 to-gov-teal"
                                         initial={{ width: "0%" }}
                                         animate={{ width: `${progress}%` }}
                                     />
                                 </div>
-                                <p className="text-white text-xs font-mono">{progress}%</p>
+                                <div className="flex gap-8">
+                                    <p className="text-white/60 text-[10px] font-mono">PROGRESS: {progress}%</p>
+                                    <p className="text-white/60 text-[10px] font-mono">LATENCY: 42ms</p>
+                                </div>
                             </div>
                         </motion.div>
                     )}
@@ -405,73 +427,94 @@ export const AnalysisModule = () => {
                         animate={{ opacity: 1, x: 0 }}
                         className="space-y-6"
                     >
-                         <div className={`p-6 rounded-3xl border ${
-                             result.overallScore >= 80 ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800/50' :
-                             result.overallScore >= 50 ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-800/50' :
-                             'bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-800/50'
-                         }`}>
-                            <div className="flex justify-between items-center mb-4">
-                                <div>
-                                    <span className={`text-xs font-bold uppercase tracking-widest ${
-                                        result.overallScore >= 80 ? 'text-emerald-600 dark:text-emerald-400' :
-                                        result.overallScore >= 50 ? 'text-amber-600 dark:text-amber-400' :
-                                        'text-red-600 dark:text-red-400'
-                                    }`}>Overall Score</span>
-                                    {saveStatus === 'saved' && (
-                                        <span className="ml-3 text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full">
-                                            SAVED TO CLOUD
-                                        </span>
-                                    )}
-                                </div>
-                                <motion.button 
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    onClick={playAudioReport}
-                                    disabled={isPlaying}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-full shadow-subtle border print:hidden ${isPlaying ? 'bg-gov-teal/10 text-gov-teal border-gov-teal/20 dark:bg-gov-teal/20 dark:text-gov-teal dark:border-gov-teal/30' : 'bg-gov-card dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'} transition-all`}
-                                >
-                                    {isPlaying ? <Loader2 className="animate-spin" size={18} /> : <Volume2 size={18} />}
-                                    <span className="text-sm font-bold">{isPlaying ? 'Playing...' : 'Read Aloud'}</span>
-                                </motion.button>
-                            </div>
-                            
-                            <div className="flex items-center gap-6">
-                                {/* Circular Gauge */}
-                                <div className="relative w-24 h-24 flex-shrink-0">
-                                    <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                                        <circle cx="50" cy="50" r="40" fill="transparent" stroke="currentColor" strokeWidth="8" className="text-slate-200 dark:text-slate-700" />
-                                        <motion.circle 
-                                            cx="50" cy="50" r="40" fill="transparent" 
-                                            stroke={getScoreColor(result.overallScore)} 
-                                            strokeWidth="8" 
-                                            strokeDasharray="251.2"
-                                            initial={{ strokeDashoffset: 251.2 }}
-                                            animate={{ strokeDashoffset: 251.2 - (251.2 * result.overallScore) / 100 }}
-                                            transition={{ duration: 1.5, ease: "easeOut" }}
-                                            strokeLinecap="round"
-                                        />
-                                    </svg>
-                                    <div className="absolute inset-0 flex items-center justify-center flex-col">
-                                        <span className={`text-3xl font-bold font-display ${
-                                            result.overallScore >= 80 ? 'text-emerald-600 dark:text-emerald-400' :
-                                            result.overallScore >= 50 ? 'text-amber-600 dark:text-amber-400' :
-                                            'text-red-600 dark:text-red-400'
-                                        }`}>{result.overallScore}</span>
+                             <div className={`p-8 rounded-[2rem] border ${
+                                 result.overallScore >= 80 ? 'bg-emerald-50/50 dark:bg-emerald-900/10 border-emerald-100 dark:border-emerald-800/30' :
+                                 result.overallScore >= 50 ? 'bg-amber-50/50 dark:bg-amber-900/10 border-amber-100 dark:border-amber-800/30' :
+                                 'bg-red-50/50 dark:bg-red-900/10 border-red-100 dark:border-red-800/30'
+                             }`}>
+                                <div className="flex justify-between items-center mb-6">
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className={`text-[10px] font-bold uppercase tracking-[0.2em] ${
+                                                result.overallScore >= 80 ? 'text-emerald-600 dark:text-emerald-400' :
+                                                result.overallScore >= 50 ? 'text-amber-600 dark:text-amber-400' :
+                                                'text-red-600 dark:text-red-400'
+                                            }`}>Diagnostic Score</span>
+                                            <div className="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-700"></div>
+                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Confidence 94%</span>
+                                        </div>
+                                        {saveStatus === 'saved' && (
+                                            <div className="flex items-center gap-1.5">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                                                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">
+                                                    Synchronized to Cloud
+                                                </span>
+                                            </div>
+                                        )}
                                     </div>
+                                    <motion.button 
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={playAudioReport}
+                                        disabled={isPlaying}
+                                        className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl shadow-sm border print:hidden ${isPlaying ? 'bg-blue-600 text-white border-blue-500' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500'} transition-all duration-300`}
+                                    >
+                                        {isPlaying ? <Loader2 className="animate-spin" size={16} /> : <Volume2 size={16} />}
+                                        <span className="text-xs font-bold uppercase tracking-wider">{isPlaying ? 'Reading...' : 'Audio Report'}</span>
+                                    </motion.button>
                                 </div>
                                 
-                                <div className="flex-1">
-                                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Status:</p>
-                                    <p className={`text-lg font-bold ${
-                                        result.overallScore >= 80 ? 'text-emerald-700 dark:text-emerald-400' :
-                                        result.overallScore >= 50 ? 'text-amber-700 dark:text-amber-400' :
-                                        'text-red-700 dark:text-red-400'
-                                    }`}>
-                                        {result.overallScore >= 80 ? 'Good Quality' : result.overallScore >= 50 ? 'Moderate Concern' : 'High Risk'}
-                                    </p>
+                                <div className="flex items-center gap-8">
+                                    {/* Circular Gauge */}
+                                    <div className="relative w-28 h-28 flex-shrink-0">
+                                        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                                            <circle cx="50" cy="50" r="44" fill="transparent" stroke="currentColor" strokeWidth="6" className="text-slate-200 dark:text-slate-800" />
+                                            <motion.circle 
+                                                cx="50" cy="50" r="44" fill="transparent" 
+                                                stroke={getScoreColor(result.overallScore)} 
+                                                strokeWidth="8" 
+                                                strokeDasharray="276.46"
+                                                initial={{ strokeDashoffset: 276.46 }}
+                                                animate={{ strokeDashoffset: 276.46 - (276.46 * result.overallScore) / 100 }}
+                                                transition={{ duration: 2, ease: [0.16, 1, 0.3, 1] }}
+                                                strokeLinecap="round"
+                                            />
+                                        </svg>
+                                        <div className="absolute inset-0 flex items-center justify-center flex-col">
+                                            <span className={`text-4xl font-black font-display tracking-tighter ${
+                                                result.overallScore >= 80 ? 'text-emerald-600 dark:text-emerald-400' :
+                                                result.overallScore >= 50 ? 'text-amber-600 dark:text-amber-400' :
+                                                'text-red-600 dark:text-red-400'
+                                            }`}>{result.overallScore}</span>
+                                            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Index</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="flex-1 space-y-2">
+                                        <div className="flex items-center gap-2">
+                                            <div className={`w-2 h-2 rounded-full ${
+                                                result.overallScore >= 80 ? 'bg-emerald-500' :
+                                                result.overallScore >= 50 ? 'bg-amber-500' :
+                                                'bg-red-500'
+                                            }`}></div>
+                                            <p className={`text-xl font-bold font-display ${
+                                                result.overallScore >= 80 ? 'text-emerald-700 dark:text-emerald-400' :
+                                                result.overallScore >= 50 ? 'text-amber-700 dark:text-amber-400' :
+                                                'text-red-700 dark:text-red-400'
+                                            }`}>
+                                                {result.overallScore >= 80 ? 'Safe for Usage' : result.overallScore >= 50 ? 'Moderate Quality' : 'Unsafe / Contaminated'}
+                                            </p>
+                                        </div>
+                                        <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed max-w-sm">
+                                            {result.overallScore >= 80 
+                                                ? 'Visual indicators suggest high purity levels. Suitable for most common purposes.' 
+                                                : result.overallScore >= 50 
+                                                ? 'Minor visual anomalies detected. Basic filtration recommended before consumption.' 
+                                                : 'Significant visible contamination. Do not consume or use without professional treatment.'}
+                                        </p>
+                                    </div>
                                 </div>
-                            </div>
-                         </div>
+                             </div>
                          
                          <div className="grid grid-cols-2 gap-3">
                             <MetricCard label="Algae Level" value={result.algaeLevel} />

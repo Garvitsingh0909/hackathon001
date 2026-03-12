@@ -8,7 +8,7 @@ export const DisclaimerBanner = () => {
       <span>
         <strong className="text-blue-700 dark:text-blue-400">Data Simulation Active:</strong>
         {" "}For demonstration purposes, some data points are simulated. 
-        AI-based analysis is a preliminary screening tool.
+        Visual analysis is a preliminary screening tool.
       </span>
     </div>
   );

@@ -1,6 +1,6 @@
 {
-  "name": "JalDrishti AI",
-  "description": "AI-Powered Real-time Eutrophication Detection System for Tamsa River Basin using Gemini 2.5 and 3.0 models.",
+  "name": "JalDrishti",
+  "description": "Real-time Eutrophication Detection System for Tamsa River Basin using Gemini models.",
   "requestFramePermissions": [
     "camera",
     "microphone",

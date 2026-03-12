@@ -18,7 +18,7 @@ export const Logo = ({ className = "", darkMode }: { className?: string, darkMod
         </svg>
       </div>
       <span className={`text-xl font-bold font-display tracking-tight ${darkMode ? 'text-white' : 'text-slate-900'}`}>
-        Jal<span className="text-blue-500">Drishti</span> <span className="text-emerald-500">AI</span>
+        Jal<span className="text-blue-500">Drishti</span>
       </span>
     </div>
   );

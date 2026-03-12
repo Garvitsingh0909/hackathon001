@@ -12,6 +12,7 @@ import { WaterTools } from './components/WaterTools';
 import { WaterFAQ } from './components/WaterFAQ';
 import { Footer } from './components/Footer';
 import { StarterGuide } from './components/StarterGuide';
+import { QuickActions } from './components/QuickActions';
 import { Activity, Camera, Map as MapIcon, Home, Mic, LayoutDashboard, Calculator, HelpCircle, MapPin, X, ChevronRight } from 'lucide-react';
 import { TRANSLATIONS } from './constants';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -34,6 +35,9 @@ function AppContent() {
     if (!hasSeenOnboarding) {
       setShowOnboarding(true);
     }
+    
+    // Open starter guide on mount as requested
+    setIsStarterGuideOpen(true);
     
     const handleOpenGuide = () => setIsStarterGuideOpen(true);
     document.addEventListener('open-starter-guide', handleOpenGuide);
@@ -121,6 +125,7 @@ function AppContent() {
 
       {/* Starter Guide Modal */}
       <StarterGuide isOpen={isStarterGuideOpen} onClose={() => setIsStarterGuideOpen(false)} language={language} />
+      <QuickActions onAction={(tab) => setActiveTab(tab)} />
 
       {/* Onboarding Overlay */}
       <AnimatePresence>
@@ -172,7 +177,7 @@ function AppContent() {
                 {onboardingStep === 2 && (
                   <div className="space-y-4">
                     <div className="h-16 w-16 bg-blue-50 dark:bg-blue-900/50 rounded-2xl flex items-center justify-center text-3xl mb-6">👋</div>
-                    <h2 className="text-2xl font-bold text-gov-navy dark:text-white font-display">Welcome to JalDrishti AI</h2>
+                    <h2 className="text-2xl font-bold text-gov-navy dark:text-white font-display">Welcome to JalDrishti</h2>
                     <p className="text-slate-600 dark:text-slate-400">Your personal water quality assistant. We help you analyze, understand, and improve the water you drink every day.</p>
                   </div>
                 )}
@@ -245,6 +250,46 @@ function AppContent() {
       </div>
 
       <Footer />
+
+      {/* Global Water Pulse Bar */}
+      <div className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-40 w-[90%] max-w-2xl pointer-events-none">
+        <motion.div 
+          initial={{ y: 100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 2, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="bg-slate-950/80 backdrop-blur-xl border border-white/10 rounded-2xl p-3 shadow-2xl pointer-events-auto flex items-center justify-between gap-6"
+        >
+          <div className="flex items-center gap-3 px-2">
+            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+            <div className="flex flex-col">
+              <span className="text-[8px] font-bold text-white/40 uppercase tracking-[0.2em]">Global Pulse</span>
+              <span className="text-[10px] font-bold text-white tracking-wider">LIVE WATER METRICS</span>
+            </div>
+          </div>
+
+          <div className="h-8 w-[1px] bg-white/10"></div>
+
+          <div className="flex items-center gap-8 overflow-hidden">
+            <div className="flex flex-col">
+              <span className="text-[8px] font-bold text-white/40 uppercase tracking-widest">Avg pH</span>
+              <span className="text-xs font-mono text-emerald-400">7.2</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[8px] font-bold text-white/40 uppercase tracking-widest">TDS (Avg)</span>
+              <span className="text-xs font-mono text-blue-400">240</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[8px] font-bold text-white/40 uppercase tracking-widest">Reports</span>
+              <span className="text-xs font-mono text-amber-400">1.2k</span>
+            </div>
+          </div>
+
+          <div className="hidden sm:flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-xl border border-white/5">
+            <span className="text-[8px] font-bold text-white/60 uppercase tracking-widest">Status</span>
+            <span className="text-[10px] font-bold text-emerald-400">STABLE</span>
+          </div>
+        </motion.div>
+      </div>
     </motion.div>
   );
 }

@@ -14,7 +14,7 @@ export const Footer = () => {
                     <div className="hidden md:block w-px h-4 bg-slate-300 dark:bg-slate-600"></div>
                     <div className="flex items-center gap-2 text-[#546E7A] dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">
                         <Bot size={16} />
-                        <span>Gemini AI Powered</span>
+                        <span>Powered by Gemini</span>
                     </div>
                     <div className="hidden md:block w-px h-4 bg-slate-300 dark:bg-slate-600"></div>
                     <div className="flex items-center gap-2 text-[#546E7A] dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">
@@ -34,8 +34,8 @@ export const Footer = () => {
                 <div className="max-w-7xl mx-auto px-4 py-12 flex flex-col md:flex-row justify-between items-center gap-8">
                     <div className="text-center md:text-left">
                         <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
-                            <img src="/logo.svg" alt="JalDrishti AI" className="h-8 w-8 object-contain" />
-                            <h3 className="text-white font-bold text-lg tracking-tight font-display">JalDrishti<span className="text-gov-teal">.AI</span></h3>
+                            <img src="/logo.svg" alt="JalDrishti" className="h-8 w-8 object-contain" />
+                            <h3 className="text-white font-bold text-lg tracking-tight font-display">JalDrishti<span className="text-gov-teal">.Live</span></h3>
                         </div>
                         <p className="text-sm text-slate-400 max-w-sm">Empowering Every Citizen's Voice in Water Governance</p>
                     </div>
@@ -52,18 +52,18 @@ export const Footer = () => {
                             <Info size={12} /> Data Simulation Active
                         </div>
                         <p className="text-xs text-slate-300 font-semibold leading-relaxed">
-                            JalDrishti AI is currently in active development.
+                            JalDrishti is currently in active development.
                         </p>
                         <p className="text-[11px] text-slate-400 leading-relaxed">
                             To demonstrate platform capabilities, some data points are simulated. 
-                            AI-based visual analysis is a preliminary screening tool and should be verified with laboratory testing for critical safety decisions. 
+                            Visual analysis is a preliminary screening tool and should be verified with laboratory testing for critical safety decisions. 
                         </p>
                     </div>
                 </div>
 
                 <div className="pt-8 px-4">
                     <div className="max-w-7xl mx-auto text-center">
-                        <p className="text-[10px] text-slate-500 uppercase tracking-widest">&copy; 2026 JalDrishti AI. All rights reserved.</p>
+                        <p className="text-[10px] text-slate-500 uppercase tracking-widest">&copy; 2026 JalDrishti. All rights reserved.</p>
                     </div>
                 </div>
             </footer>

@@ -70,73 +70,127 @@ export const WaterMap = ({ language }: { language: 'en' | 'hi' }) => {
     <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-5xl mx-auto pt-6"
+        className="max-w-6xl mx-auto pt-6"
     >
       <DisclaimerBanner />
-      <div className="bg-gov-card dark:bg-slate-900 rounded-[2rem] shadow-subtle dark:shadow-black/50 border border-slate-200 dark:border-slate-800 overflow-hidden transition-colors h-[600px] relative">
-        <MapContainer center={[20.5937, 78.9629]} zoom={5} style={{ height: '100%', width: '100%' }}>
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          
-          {/* State Markers */}
-          {INDIA_STATES.map((state) => (
-            <Marker 
-                key={state.id} 
-                position={state.coordinates}
-                eventHandlers={{
-                    click: () => handleStateClick(state),
-                }}
-            >
-              <Popup>
-                <div className="p-2 min-w-[200px]">
-                    <div className="flex justify-between items-center mb-2">
-                        <h3 className="font-bold text-lg text-gov-navy">{state.name}</h3>
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                            state.quality === 'Good' ? 'bg-emerald-100 text-emerald-700' :
-                            state.quality === 'Moderate' ? 'bg-blue-100 text-blue-700' :
-                            state.quality === 'Warning' ? 'bg-amber-100 text-amber-700' :
-                            'bg-red-100 text-red-700'
-                        }`}>{state.quality}</span>
-                    </div>
-                    <p className="text-xs text-slate-600 leading-relaxed mb-3">{state.details}</p>
-                    <button 
-                        onClick={() => handleStateClick(state)}
-                        className="w-full py-2 bg-gov-navy text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition-colors"
-                    >
-                        <Volume2 size={14} /> Listen to Report
-                    </button>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
+      <div className="flex flex-col lg:flex-row gap-6 h-[700px]">
+        {/* Map Section */}
+        <div className="flex-grow bg-gov-card dark:bg-slate-900 rounded-[2.5rem] shadow-subtle dark:shadow-black/50 border border-slate-200 dark:border-slate-800 overflow-hidden transition-colors relative">
+          <MapContainer center={[20.5937, 78.9629]} zoom={5} style={{ height: '100%', width: '100%' }}>
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            
+            {/* State Markers */}
+            {INDIA_STATES.map((state) => (
+              <Marker 
+                  key={state.id} 
+                  position={state.coordinates}
+                  eventHandlers={{
+                      click: () => handleStateClick(state),
+                  }}
+              >
+                <Popup>
+                  <div className="p-2 min-w-[200px]">
+                      <div className="flex justify-between items-center mb-2">
+                          <h3 className="font-bold text-lg text-gov-navy">{state.name}</h3>
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                              state.quality === 'Good' ? 'bg-emerald-100 text-emerald-700' :
+                              state.quality === 'Moderate' ? 'bg-blue-100 text-blue-700' :
+                              state.quality === 'Warning' ? 'bg-amber-100 text-amber-700' :
+                              'bg-red-100 text-red-700'
+                          }`}>{state.quality}</span>
+                      </div>
+                      <p className="text-xs text-slate-600 leading-relaxed mb-3">{state.details}</p>
+                      <button 
+                          onClick={() => handleStateClick(state)}
+                          className="w-full py-2 bg-gov-navy text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition-colors"
+                      >
+                          <Volume2 size={14} /> Listen to Report
+                      </button>
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
 
-          {/* River Segment Markers (Local) */}
-          {segments.map((segment) => (
-            <Marker key={segment.id} position={[segment.coordinates.lat, segment.coordinates.lng]}>
-              <Popup>
-                <div className="p-2">
-                    <h3 className="font-bold text-lg">{segment.name}</h3>
-                    <p className="text-sm">Status: {segment.status}</p>
-                    <p className="text-sm">DO: {segment.paramDo} mg/L</p>
-                    <p className="text-sm">pH: {segment.paramPh}</p>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
-        </MapContainer>
+            {/* River Segment Markers (Local) */}
+            {segments.map((segment) => (
+              <Marker key={segment.id} position={[segment.coordinates.lat, segment.coordinates.lng]}>
+                <Popup>
+                  <div className="p-2">
+                      <h3 className="font-bold text-lg">{segment.name}</h3>
+                      <p className="text-sm">Status: {segment.status}</p>
+                      <p className="text-sm">DO: {segment.paramDo} mg/L</p>
+                      <p className="text-sm">pH: {segment.paramPh}</p>
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
+          </MapContainer>
 
-        {isSpeaking && (
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[1000] bg-gov-navy text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 animate-bounce">
-                <div className="flex gap-1">
-                    <div className="w-1 h-4 bg-gov-teal animate-[music-bar_1s_infinite_0.1s]"></div>
-                    <div className="w-1 h-4 bg-gov-teal animate-[music-bar_1s_infinite_0.3s]"></div>
-                    <div className="w-1 h-4 bg-gov-teal animate-[music-bar_1s_infinite_0.5s]"></div>
-                </div>
-                <span className="text-xs font-bold tracking-widest uppercase">AI Voice Active</span>
+          {isSpeaking && (
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[1000] bg-gov-navy text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 animate-bounce">
+                  <div className="flex gap-1">
+                      <div className="w-1 h-4 bg-gov-teal animate-[music-bar_1s_infinite_0.1s]"></div>
+                      <div className="w-1 h-4 bg-gov-teal animate-[music-bar_1s_infinite_0.3s]"></div>
+                      <div className="w-1 h-4 bg-gov-teal animate-[music-bar_1s_infinite_0.5s]"></div>
+                  </div>
+                  <span className="text-xs font-bold tracking-widest uppercase">Voice Active</span>
+              </div>
+          )}
+        </div>
+
+        {/* Live Feed Sidebar */}
+        <div className="w-full lg:w-80 flex flex-col gap-4 h-full">
+          <div className="bg-gov-card dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 p-6 flex-grow overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-bold text-slate-900 dark:text-white font-display">Live Reports</h3>
+              <div className="flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Live</span>
+              </div>
             </div>
-        )}
+
+            <div className="space-y-4 overflow-y-auto pr-2 custom-scrollbar">
+              {INDIA_STATES.slice(0, 5).map((state, i) => (
+                <motion.div 
+                  key={state.id}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-500 transition-all cursor-pointer group"
+                  onClick={() => handleStateClick(state)}
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors">{state.name}</span>
+                    <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-md uppercase ${
+                      state.quality === 'Good' ? 'bg-emerald-100 text-emerald-700' :
+                      state.quality === 'Moderate' ? 'bg-blue-100 text-blue-700' :
+                      'bg-red-100 text-red-700'
+                    }`}>{state.quality}</span>
+                  </div>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                    {state.details}
+                  </p>
+                  <div className="mt-3 flex items-center justify-between">
+                    <span className="text-[8px] font-mono text-slate-400 uppercase">2m ago</span>
+                    <Volume2 size={12} className="text-slate-300 group-hover:text-blue-500 transition-colors" />
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-blue-600 rounded-[2rem] p-6 text-white relative overflow-hidden group">
+            <div className="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
+            <h4 className="font-bold text-sm mb-1 relative z-10">Regional Alerts</h4>
+            <p className="text-[10px] text-blue-100 opacity-80 relative z-10">Bihar: Arsenic levels rising in 3 districts. Stay updated.</p>
+            <button className="mt-4 w-full py-2 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-xl text-[10px] font-bold uppercase tracking-widest transition-colors relative z-10">
+              View Details
+            </button>
+          </div>
+        </div>
       </div>
     </motion.div>
   );
