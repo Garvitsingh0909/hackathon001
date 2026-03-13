@@ -35,6 +35,19 @@
         "status": { "type": "string", "enum": ["Pending", "In Review", "Resolved", "Action Taken"] }
       },
       "required": ["userId", "overallScore", "timestamp"]
+    },
+    "Feedback": {
+      "title": "Feedback",
+      "description": "User feedback submission",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "message": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["message", "timestamp"]
     }
   },
   "firestore": {
@@ -45,6 +58,10 @@
     "/reports/{reportId}": {
       "schema": "WaterReport",
       "description": "Water quality reports"
+    },
+    "/feedback/{feedbackId}": {
+      "schema": "Feedback",
+      "description": "User feedback"
     }
   }
 }

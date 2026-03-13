@@ -1,11 +1,8 @@
 import express from 'express';
 import { getPrisma } from '../server/prisma.js';
-import chatRouter from './chat/route.js';
 
 const app = express();
 app.use(express.json());
-
-app.use('/api/chat', chatRouter);
 
 // Mock Data
 const MOCK_SEGMENTS = [

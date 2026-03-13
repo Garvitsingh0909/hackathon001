@@ -311,13 +311,13 @@ export const AnalysisModule = () => {
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
-                className={`group flex flex-col items-center justify-center w-full h-80 border-2 ${isDragging ? 'border-gov-teal bg-gov-teal/10' : 'border-slate-200 dark:border-slate-700 bg-gov-bg dark:bg-slate-800/50'} border-dashed rounded-3xl cursor-pointer hover:bg-gov-teal/5 dark:hover:bg-gov-teal/20 hover:border-gov-teal dark:hover:border-gov-teal transition-all duration-300 relative overflow-hidden`}
+                className={`group flex flex-col items-center justify-center w-full h-80 border ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50'} border-dashed rounded-2xl cursor-pointer hover:bg-blue-50 dark:hover:bg-slate-800 hover:border-blue-500 dark:hover:border-blue-500 transition-all duration-300 relative overflow-hidden`}
             >
               <div className="absolute inset-0 bg-grid-slate-200/50 dark:bg-grid-slate-700/50 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))] dark:[mask-image:linear-gradient(0deg,black,rgba(0,0,0,0.6))] -z-10"></div>
               <div className="flex flex-col items-center justify-center pt-5 pb-6 relative z-10">
                 <motion.div 
-                    animate={{ y: [0, -5, 0] }}
-                    transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                    animate={{ y: [0, -10, 0] }}
+                    transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
                     className={`p-5 rounded-full shadow-subtle mb-4 group-hover:shadow-subtle-hover transition-all duration-300 ring-4 ${isDragging ? 'bg-gov-teal text-white ring-gov-teal/30' : 'bg-gov-card dark:bg-slate-800 text-gov-teal dark:text-gov-teal ring-gov-teal/10 dark:ring-gov-teal/30'}`}
                 >
                     <Upload className="w-8 h-8" />

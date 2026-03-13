@@ -225,18 +225,18 @@ export const WaterIntel = () => {
             </div>
 
             {loading && activeSection !== 'risk' ? (
-                <div className="flex flex-col items-center justify-center py-32 text-slate-400 dark:text-slate-500 bg-gov-card dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-subtle transition-colors">
-                    <Loader2 className="animate-spin mb-4 text-gov-teal" size={48} />
+                <div className="flex flex-col items-center justify-center py-32 text-slate-400 dark:text-slate-500 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm transition-colors">
+                    <Loader2 className="animate-spin mb-4 text-blue-500" size={48} />
                     <p className="font-medium animate-pulse">Gathering intelligence from Tamsa Basin...</p>
                 </div>
             ) : (
-                <div className="bg-gov-card dark:bg-slate-900 rounded-[2.5rem] p-8 md:p-12 shadow-subtle border border-slate-200 dark:border-slate-800 min-h-[500px] transition-colors">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl p-8 md:p-12 shadow-sm border border-slate-200/60 dark:border-slate-800 min-h-[500px] transition-colors">
                     {activeSection === 'news' && news && (
                         <motion.div variants={container} initial="hidden" animate="show">
                             <motion.div variants={item} className="mb-8 border-b border-slate-100 dark:border-slate-800 pb-6 flex justify-between items-end">
                                 <div>
                                     <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-3 font-display">
-                                        <div className="p-2 bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded-xl"><Search size={24} /></div>
+                                        <div className="p-2 bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded-lg"><Search size={24} /></div>
                                         Grounded Search
                                     </h2>
                                     <p className="text-slate-500 dark:text-slate-400 ml-14">Real-time environmental updates for Tamsa River</p>
@@ -252,7 +252,7 @@ export const WaterIntel = () => {
                             <motion.div variants={item} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                                 {/* Featured Article */}
                                 <div className="lg:col-span-2 space-y-6">
-                                    <div className="relative rounded-[2rem] overflow-hidden aspect-video group">
+                                    <div className="relative rounded-2xl overflow-hidden aspect-video group">
                                         <img 
                                             src="https://images.unsplash.com/photo-1433086966358-54859d0ed716?auto=format&fit=crop&w=1200&q=80" 
                                             alt="Featured Mountain River" 
@@ -379,6 +379,8 @@ export const WaterIntel = () => {
                                                 key={idx}
                                                 variants={item}
                                                 whileHover={{ y: -5 }}
+                                                animate={{ y: [0, -5, 0] }}
+                                                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
                                                 className="group bg-white dark:bg-slate-800/50 rounded-[2rem] p-6 border border-slate-100 dark:border-slate-700 hover:border-blue-500/50 transition-all hover:shadow-xl hover:shadow-blue-500/5"
                                             >
                                                 <div className="flex justify-between items-start mb-6">

@@ -194,25 +194,25 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, language }) =
       </div>
 
       {/* 2. DASHBOARD GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           
           {/* Insight - Spans 2 cols */}
-          <div className="md:col-span-2 lg:col-span-2 bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-white/5 flex flex-col md:flex-row gap-6">
+          <div className="md:col-span-2 lg:col-span-2 bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200/60 dark:border-white/5 flex flex-col md:flex-row gap-6">
               <div className="flex-1 flex flex-col justify-between">
                 <div>
                     <div className="flex items-center gap-2 mb-3">
-                        <Activity size={18} className="text-blue-600" />
-                        <h3 className="font-bold text-slate-800 dark:text-white text-sm">System Analysis</h3>
+                        <Activity size={16} className="text-blue-500" />
+                        <h3 className="font-bold text-slate-800 dark:text-white text-xs uppercase tracking-wider">System Analysis</h3>
                     </div>
                     <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mb-4">
                         {loading ? "Loading data..." : systemSummary}
                     </p>
                 </div>
-                <button onClick={() => onChangeTab('analyze')} className="text-xs font-bold text-gov-teal hover:underline flex items-center gap-1">
+                <button onClick={() => onChangeTab('analyze')} className="text-xs font-bold text-blue-600 hover:underline flex items-center gap-1">
                     {t.dashboard.viewReport} <ArrowRight size={14} />
                 </button>
               </div>
-              <div className="w-full md:w-48 h-32 md:h-auto rounded-xl overflow-hidden shrink-0">
+              <div className="w-full md:w-48 h-32 md:h-auto rounded-lg overflow-hidden shrink-0">
                   <img 
                     src="https://images.unsplash.com/photo-1576085898323-218337e3e43c?auto=format&fit=crop&w=400&q=80" 
                     alt="Water Analysis" 
@@ -225,12 +225,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, language }) =
           {/* Quick Action: Report */}
           <div 
             onClick={() => onChangeTab('analyze')}
-            className="md:col-span-1 lg:col-span-1 bg-gov-teal rounded-2xl p-5 shadow-sm text-white cursor-pointer hover:bg-teal-600 transition-colors flex flex-col justify-between min-h-[160px]"
+            className="md:col-span-1 lg:col-span-1 bg-slate-900 rounded-xl p-6 shadow-sm text-white cursor-pointer hover:bg-slate-800 transition-colors flex flex-col justify-between min-h-[160px]"
           >
-              <Camera size={24} />
+              <Camera size={20} className="text-blue-400" />
               <div>
-                  <h3 className="font-bold text-lg mb-1">{t.dashboard.submitReport}</h3>
-                  <p className="text-white/80 text-xs">{t.dashboard.uploadPhoto}</p>
+                  <h3 className="font-bold text-base mb-1">{t.dashboard.submitReport}</h3>
+                  <p className="text-slate-400 text-xs">{t.dashboard.uploadPhoto}</p>
               </div>
           </div>
 
@@ -253,9 +253,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, language }) =
           )}
 
           {/* Main Chart - Spans 2 cols */}
-          <div className="md:col-span-2 lg:col-span-2 bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-white/5 flex flex-col">
+          <div className="md:col-span-2 lg:col-span-2 bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200/60 dark:border-white/5 flex flex-col">
                 <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-bold text-slate-800 dark:text-white text-sm">{t.dashboard.chartTitle}</h3>
+                    <h3 className="font-bold text-slate-800 dark:text-white text-xs uppercase tracking-wider">{t.dashboard.chartTitle}</h3>
                     <span className="text-[10px] font-bold text-slate-400 uppercase">Index Trend</span>
                 </div>
                 <div className="flex-1 w-full min-h-[180px]">
@@ -277,10 +277,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, language }) =
                         <Area 
                             type="monotone" 
                             dataKey="value" 
-                            stroke="#0A3D6B" 
+                            stroke="#3b82f6" 
                             strokeWidth={2} 
-                            fill="#0A3D6B" 
-                            fillOpacity={0.1}
+                            fill="#3b82f6" 
+                            fillOpacity={0.05}
                         />
                     </AreaChart>
                     </ResponsiveContainer>
@@ -288,10 +288,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, language }) =
           </div>
 
           {/* Recent Activity - Spans 2 cols */}
-          <div className="md:col-span-2 lg:col-span-2 bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-white/5 flex flex-col">
+          <div className="md:col-span-2 lg:col-span-2 bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200/60 dark:border-white/5 flex flex-col">
               <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-bold text-slate-800 dark:text-white text-sm">{t.dashboard.recentReports}</h3>
-                  <button className="text-[10px] font-bold text-gov-teal hover:underline uppercase">View All</button>
+                  <h3 className="font-bold text-slate-800 dark:text-white text-xs uppercase tracking-wider">{t.dashboard.recentReports}</h3>
+                  <button className="text-[10px] font-bold text-blue-600 hover:underline uppercase">View All</button>
               </div>
               
               <div className="space-y-2 flex-1">
@@ -299,9 +299,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, language }) =
                     [1,2].map(i => <SkeletonReport key={i} />)
                 ) : (
                     reports.slice(0, 2).map((report) => (
-                        <div key={report.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all cursor-pointer">
+                        <div key={report.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all cursor-pointer">
                             <div className="flex items-center gap-3">
-                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold ${report.overallScore < 50 ? 'bg-red-500' : report.overallScore < 75 ? 'bg-amber-500' : 'bg-emerald-500'}`}>
+                                <div className={`w-8 h-8 rounded-md flex items-center justify-center text-white text-xs font-bold ${report.overallScore < 50 ? 'bg-red-500' : report.overallScore < 75 ? 'bg-amber-500' : 'bg-emerald-500'}`}>
                                     {report.overallScore}
                                 </div>
                                 <div>

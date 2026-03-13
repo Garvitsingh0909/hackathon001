@@ -68,6 +68,11 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    match /feedback/{feedbackId} {
+      allow create: if isAuthenticated() && request.resource.data.message is string && request.resource.data.message.size() > 0 && request.resource.data.message.size() < 2000;
+      allow read: if isAdmin();
+    }
+
     match /{path=**} {
       allow read, write: if false;
     }
