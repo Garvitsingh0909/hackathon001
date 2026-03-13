@@ -1,6 +1,57 @@
 import { WaterQualityReport, RiverSegment } from '../types';
-import { db } from '../src/firebase';
+import { db, auth } from '../src/firebase';
 import { collection, getDocs, addDoc, query, orderBy, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
+
+enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId: string | undefined;
+    email: string | null | undefined;
+    emailVerified: boolean | undefined;
+    isAnonymous: boolean | undefined;
+    tenantId: string | null | undefined;
+    providerInfo: {
+      providerId: string;
+      displayName: string | null;
+      email: string | null;
+      photoUrl: string | null;
+    }[];
+  }
+}
+
+function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth.currentUser?.uid,
+      email: auth.currentUser?.email,
+      emailVerified: auth.currentUser?.emailVerified,
+      isAnonymous: auth.currentUser?.isAnonymous,
+      tenantId: auth.currentUser?.tenantId,
+      providerInfo: auth.currentUser?.providerData.map(provider => ({
+        providerId: provider.providerId,
+        displayName: provider.displayName,
+        email: provider.email,
+        photoUrl: provider.photoURL
+      })) || []
+    },
+    operationType,
+    path
+  }
+  console.error('Firestore Error: ', JSON.stringify(errInfo));
+  throw new Error(JSON.stringify(errInfo));
+}
 
 export const api = {
     getSegments: async (): Promise<RiverSegment[]> => {
@@ -14,13 +65,21 @@ export const api = {
     },
 
     getReports: async (): Promise<WaterQualityReport[]> => {
-        const q = query(collection(db, 'reports'), orderBy('createdAt', 'desc'));
-        const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...(doc.data() as Omit<WaterQualityReport, 'id'>),
-            createdAt: doc.data().createdAt?.toDate().toISOString()
-        })) as WaterQualityReport[];
+        if (!auth.currentUser) {
+            return [];
+        }
+        try {
+            const q = query(collection(db, 'reports'), orderBy('createdAt', 'desc'));
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...(doc.data() as Omit<WaterQualityReport, 'id'>),
+                createdAt: doc.data().createdAt?.toDate().toISOString()
+            })) as WaterQualityReport[];
+        } catch (error) {
+            handleFirestoreError(error, OperationType.LIST, 'reports');
+            return [];
+        }
     },
 
     getWaterTrends: async (): Promise<{name: string, value: number}[]> => {
@@ -32,27 +91,59 @@ export const api = {
     },
 
     submitReport: async (report: Omit<WaterQualityReport, 'id' | 'timestamp' | 'status'>): Promise<WaterQualityReport> => {
-        const reportData = {
-            ...report,
-            createdAt: serverTimestamp(),
-            status: 'Pending'
-        };
-        const docRef = await addDoc(collection(db, 'reports'), reportData);
-        return {
-            ...report,
-            id: docRef.id,
-            timestamp: new Date().toISOString(),
-            status: 'Pending'
-        } as WaterQualityReport;
+        if (!auth.currentUser) {
+            throw new Error('Must be logged in to submit a report');
+        }
+        try {
+            const reportData = {
+                ...report,
+                createdAt: serverTimestamp(),
+                status: 'Pending'
+            };
+            const docRef = await addDoc(collection(db, 'reports'), reportData);
+            return {
+                ...report,
+                id: docRef.id,
+                timestamp: new Date().toISOString(),
+                status: 'Pending'
+            } as WaterQualityReport;
+        } catch (error) {
+            handleFirestoreError(error, OperationType.CREATE, 'reports');
+            throw error;
+        }
     },
 
     getUsers: async (): Promise<any[]> => {
-        const snapshot = await getDocs(collection(db, 'users'));
-        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        if (!auth.currentUser) {
+            return [];
+        }
+        try {
+            const snapshot = await getDocs(collection(db, 'users'));
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        } catch (error) {
+            handleFirestoreError(error, OperationType.LIST, 'users');
+            return [];
+        }
     },
 
     updateUserRole: async (userId: string, role: 'user' | 'admin'): Promise<void> => {
-        const userRef = doc(db, 'users', userId);
-        await updateDoc(userRef, { role });
+        try {
+            const userRef = doc(db, 'users', userId);
+            await updateDoc(userRef, { role });
+        } catch (error) {
+            handleFirestoreError(error, OperationType.UPDATE, `users/${userId}`);
+            throw error;
+        }
+    },
+
+    getWeather: async (lat: number, lng: number): Promise<any> => {
+        try {
+            const response = await fetch(`/api/weather?lat=${lat}&lng=${lng}`);
+            if (!response.ok) throw new Error('Weather fetch failed');
+            return await response.json();
+        } catch (error) {
+            console.error('getWeather error:', error);
+            return null;
+        }
     }
 };

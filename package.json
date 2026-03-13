@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "vite build",
+    "build": "prisma generate && vite build",
     "lint": "tsc",
     "preview": "vite preview"
   },
@@ -32,6 +32,7 @@
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/node": "^22.14.0",
+    "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.0.0",
     "autoprefixer": "^10.4.24",
     "postcss": "^8.5.6",

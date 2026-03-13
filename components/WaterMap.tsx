@@ -7,7 +7,7 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { api } from '../services/api';
 import { RiverSegment } from '../types';
-import { playBrowserTTS } from '../lib/claude';
+import { playBrowserTTS } from '../lib/gemini';
 
 // Fix for default Leaflet icons
 // @ts-ignore

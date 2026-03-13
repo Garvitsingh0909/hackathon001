@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Camera, Upload, AlertCircle, CheckCircle, Volume2, Loader2, Play, Search, X, BarChart3, TrendingUp, Droplets, RotateCcw, ChevronDown, ChevronUp, Info, Printer, Share2 } from 'lucide-react';
-import { analyzeWaterImage, playBrowserTTS } from '../lib/claude';
+import { Camera, Upload, AlertCircle, CheckCircle, Volume2, Loader2, Play, Search, X, BarChart3, TrendingUp, Droplets, RotateCcw, ChevronDown, ChevronUp, Info, Printer, Share2, Activity } from 'lucide-react';
+import { analyzeWaterImage, playBrowserTTS } from '../lib/gemini';
 import { api } from '../services/api';
 import { WaterQualityReport } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -158,7 +158,7 @@ export const AnalysisModule = () => {
         const finalReport: WaterQualityReport = {
             ...analysisResult,
             id: Date.now().toString(),
-            userId: user.uid,
+            userId: user?.uid || 'anonymous',
             locationName: "Sample Location",
             coordinates: { lat: 25.942, lng: 83.554 },
             timestamp: new Date().toISOString(),
@@ -600,8 +600,8 @@ export const AnalysisModule = () => {
                              </div>
                          
                          <div className="grid grid-cols-2 gap-3">
-                            <MetricCard label="Algae Level" value={result.algaeLevel} />
-                            <MetricCard label="Turbidity" value={result.turbidity} />
+                            <MetricCard label="Algae Level" value={result.algaeLevel} icon={Activity} color="text-emerald-500" />
+                            <MetricCard label="Turbidity" value={result.turbidity} icon={Droplets} color="text-blue-500" />
                          </div>
 
                          {/* Unsafe Result Alert */}

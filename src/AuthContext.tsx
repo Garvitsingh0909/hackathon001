@@ -26,32 +26,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        console.log("AuthContext: Initializing onAuthStateChanged");
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-            if (firebaseUser) {
-                const userRef = doc(db, 'users', firebaseUser.uid);
-                const userSnap = await getDoc(userRef);
+            console.log("AuthContext: Auth state changed", firebaseUser?.uid);
+            setLoading(true);
+            try {
+                if (firebaseUser) {
+                    const userRef = doc(db, 'users', firebaseUser.uid);
+                    console.log("AuthContext: Fetching user profile for", firebaseUser.uid);
+                    const userSnap = await getDoc(userRef);
 
-                if (userSnap.exists()) {
-                    setUser(userSnap.data() as UserProfile);
+                    if (userSnap.exists()) {
+                        console.log("AuthContext: User profile found");
+                        const data = userSnap.data();
+                        setUser({
+                            ...data,
+                            createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt || new Date().toISOString()
+                        } as UserProfile);
+                    } else {
+                        console.log("AuthContext: No user profile found, creating one...");
+                        const newUser: UserProfile = {
+                            uid: firebaseUser.uid,
+                            email: firebaseUser.email || '',
+                            displayName: firebaseUser.displayName || '',
+                            photoURL: firebaseUser.photoURL || '',
+                            role: 'user',
+                            createdAt: new Date().toISOString()
+                        };
+                        await setDoc(userRef, {
+                            ...newUser,
+                            createdAt: serverTimestamp()
+                        });
+                        console.log("AuthContext: User profile created");
+                        setUser(newUser);
+                    }
                 } else {
-                    const newUser: UserProfile = {
-                        uid: firebaseUser.uid,
-                        email: firebaseUser.email || '',
-                        displayName: firebaseUser.displayName || '',
-                        photoURL: firebaseUser.photoURL || '',
-                        role: 'user',
-                        createdAt: new Date().toISOString()
-                    };
-                    await setDoc(userRef, {
-                        ...newUser,
-                        createdAt: serverTimestamp()
-                    });
-                    setUser(newUser);
+                    console.log("AuthContext: No firebase user");
+                    setUser(null);
                 }
-            } else {
+            } catch (error) {
+                console.error("AuthContext: Error in auth state change:", error);
                 setUser(null);
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
         });
 
         return () => unsubscribe();

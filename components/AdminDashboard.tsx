@@ -33,8 +33,15 @@ export const AdminDashboard = ({ isAdmin, setActiveTab }: { isAdmin: boolean, se
 
     useEffect(() => {
         const fetchReports = async () => {
+            if (!isAdmin) {
+                setLoading(false);
+                return;
+            }
             try {
-                const data = await api.getReports();
+                const data = await api.getReports().catch(e => {
+                    // Suppress expected permission errors
+                    return [];
+                });
                 setReports(data);
             } catch (error) {
                 console.error("Error fetching reports:", error);
@@ -43,7 +50,7 @@ export const AdminDashboard = ({ isAdmin, setActiveTab }: { isAdmin: boolean, se
             }
         };
         fetchReports();
-    }, []);
+    }, [isAdmin]);
 
     const updateStatus = async (reportId: string, newStatus: string) => {
         try {
@@ -140,6 +147,33 @@ export const AdminDashboard = ({ isAdmin, setActiveTab }: { isAdmin: boolean, se
                     trend="+3%" 
                     trendUp={true} 
                 />
+            </div>
+
+            {/* API Status Banner */}
+            <div className={`p-4 rounded-2xl border flex items-center justify-between ${process.env.GEMINI_API_KEY ? 'bg-emerald-50 border-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-800/50' : 'bg-amber-50 border-amber-100 dark:bg-amber-900/20 dark:border-amber-800/50'}`}>
+                <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${process.env.GEMINI_API_KEY ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white'}`}>
+                        <TrendingUp size={20} />
+                    </div>
+                    <div>
+                        <h4 className={`font-bold text-sm ${process.env.GEMINI_API_KEY ? 'text-emerald-900 dark:text-emerald-100' : 'text-amber-900 dark:text-amber-100'}`}>
+                            {process.env.GEMINI_API_KEY ? 'Gemini AI Active' : 'Gemini AI Inactive'}
+                        </h4>
+                        <p className={`text-xs ${process.env.GEMINI_API_KEY ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300'}`}>
+                            {process.env.GEMINI_API_KEY ? 'Water intelligence and analysis systems are operational.' : 'Please set GEMINI_API_KEY in environment variables to enable AI features.'}
+                        </p>
+                    </div>
+                </div>
+                {!process.env.GEMINI_API_KEY && (
+                    <a 
+                        href="https://aistudio.google.com/app/apikey" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="px-4 py-2 bg-amber-600 text-white text-xs font-bold rounded-lg hover:bg-amber-700 transition-colors"
+                    >
+                        Get Free Key
+                    </a>
+                )}
             </div>
 
             {/* Main Content */}

@@ -1,23 +1,10 @@
-import { Router } from 'express';
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI } from "@google/genai";
 
-const router = Router();
-
-let aiClient: GoogleGenAI | null = null;
-function getAiClient() {
-  if (!aiClient) {
-    aiClient = new GoogleGenAI({
-      apiKey: process.env.GEMINI_API_KEY || 'dummy_key',
-    });
-  }
-  return aiClient;
-}
-
-router.post('/', async (req, res) => {
-  const { messages, language } = req.body;
-  const ai = getAiClient();
-
-  const systemPrompt = `You are JalDrishti, a water governance assistant for India.
+export const geminiService = {
+  chat: async (message: string, language: 'en' | 'hi') => {
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+    
+    const systemInstruction = `You are JalDrishti, a water governance assistant for India.
 
 KNOWLEDGE BASE — use this real data in every relevant response:
 
@@ -81,36 +68,18 @@ Always end responses with ONE clear next action.
 Keep responses under 150 words unless the user asks for detail.
 Respond in ${language === "hi" ? "Hindi (Devanagari script)" : "English"}.`;
 
-  try {
-    const geminiMessages = messages.map((m: any) => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.content }]
-    }));
-
-    const stream = await ai.models.generateContentStream({
-      model: 'gemini-3-flash-preview',
-      contents: geminiMessages,
-      config: {
-        systemInstruction: systemPrompt,
-        maxOutputTokens: 1024,
-      }
-    });
-
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-
-    for await (const chunk of stream) {
-      if (chunk.text) {
-        res.write(`data: ${JSON.stringify({ text: chunk.text })}\n\n`);
-      }
+    try {
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: message,
+        config: {
+          systemInstruction: systemInstruction,
+        },
+      });
+      return response.text;
+    } catch (error) {
+      console.error("Gemini API Error:", error);
+      return "I'm sorry, I'm having trouble connecting to the water intelligence system right now.";
     }
-    res.write('data: [DONE]\n\n');
-    res.end();
-  } catch (error) {
-    console.error('Gemini API Error:', error);
-    res.status(500).json({ error: 'Failed to fetch response from Gemini' });
   }
-});
-
-export default router;
+};

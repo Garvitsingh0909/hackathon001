@@ -34,7 +34,6 @@ export const Footer = () => {
                 <div className="max-w-7xl mx-auto px-4 py-12 flex flex-col md:flex-row justify-between items-center gap-8">
                     <div className="text-center md:text-left">
                         <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
-                            <img src="/logo.svg" alt="JalDrishti" className="h-8 w-8 object-contain" />
                             <h3 className="text-white font-bold text-lg tracking-tight font-display">JalDrishti<span className="text-gov-teal">.Live</span></h3>
                         </div>
                         <p className="text-sm text-slate-400 max-w-sm">Empowering Every Citizen's Voice in Water Governance</p>

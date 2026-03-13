@@ -13,7 +13,8 @@ export default {
     extend: {
       fontFamily: {
         sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-        display: ['"Sora"', 'sans-serif'],
+        display: ['"JetBrains Mono"', 'monospace'],
+        mono: ['"JetBrains Mono"', 'monospace'],
       },
       colors: {
         'gov-navy': '#0A3D6B',

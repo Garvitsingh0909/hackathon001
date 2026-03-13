@@ -27,9 +27,9 @@ async function callGeminiWithRetry<T>(fn: (ai: any) => Promise<T>): Promise<T> {
     throw new Error("Gemini API call failed after retries");
 }
 
-// Client-side Claude API wrapper
-export const chatWithClaude = async (messages: any[], language: string, onChunk: (text: string) => void) => {
-  log.info('Starting chat with Claude', { messageCount: messages.length, language });
+// Client-side Gemini API wrapper
+export const chatWithGemini = async (messages: any[], language: string, onChunk: (text: string) => void) => {
+  log.info('Starting chat with Gemini', { messageCount: messages.length, language });
   try {
     const response = await fetch('/api/chat', {
       method: 'POST',

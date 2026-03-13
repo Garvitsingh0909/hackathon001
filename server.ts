@@ -7,6 +7,9 @@ async function startServer() {
   const PORT = 3000;
 
   // API routes FIRST
+  app.get("/api/health", (req, res) => {
+    res.json({ status: "ok" });
+  });
   app.use(apiRouter);
 
   // Vite middleware for development

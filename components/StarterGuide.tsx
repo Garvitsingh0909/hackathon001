@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Volume2, X, Play, Square, Loader2 } from 'lucide-react';
-import { playBrowserTTS } from '../lib/claude';
+import { playBrowserTTS } from '../lib/gemini';
 
 interface StarterGuideProps {
     isOpen: boolean;

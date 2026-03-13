@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Activity, Wind, Droplet, ArrowRight, Camera, AlertCircle, CheckCircle2, Clock, Mic, ChevronRight, Volume2 } from 'lucide-react';
+import { Activity, Wind, Droplet, ArrowRight, Camera, AlertCircle, CheckCircle2, Clock, Mic, ChevronRight, Volume2, MapPin } from 'lucide-react';
 import { api } from '../services/api';
-import { getQuickStat } from '../lib/claude';
+import { getQuickStat } from '../lib/gemini';
 import { WaterQualityReport } from '../types';
 import { TRANSLATIONS } from '../constants';
 import { motion } from 'framer-motion';
 import { DisclaimerBanner } from './ui/DisclaimerBanner';
 import { MockPill } from './ui/MockPill';
+import { useAuth } from '../src/AuthContext';
 
 interface DashboardProps {
     onChangeTab: (tab: string) => void;
@@ -15,8 +16,10 @@ interface DashboardProps {
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, language }) => {
+    const { user } = useAuth();
     const [reports, setReports] = useState<WaterQualityReport[]>([]);
     const [chartData, setChartData] = useState<{name: string, value: number}[]>([]);
+    const [weather, setWeather] = useState<any>(null);
     const [systemSummary, setSystemSummary] = useState("Initializing regional data streams...");
     const [loading, setLoading] = useState(true);
     
@@ -26,13 +29,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, language }) =
         const loadData = async () => {
             try {
                 // 1. Fetch critical data first
-                const [reportData, trendData] = await Promise.all([
-                    api.getReports(),
-                    api.getWaterTrends()
+                const [reportData, trendData, weatherData] = await Promise.all([
+                    user ? api.getReports().catch(e => {
+                        // Suppress expected permission errors when unauthenticated
+                        return [];
+                    }) : Promise.resolve([]),
+                    api.getWaterTrends(),
+                    api.getWeather(25.9427, 83.5539) // Default Mau, UP coordinates
                 ]);
                 
                 setReports(reportData);
                 setChartData(trendData);
+                setWeather(weatherData);
                 setLoading(false); // Stop loading immediately after core data
 
                 // 2. Fetch system summary in background
@@ -51,7 +59,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, language }) =
             }
         };
         loadData();
-    }, []);
+    }, [user]);
 
     const getStatusColor = (score: number) => {
         if (score < 50) return 'border-l-4 border-l-red-500';
@@ -79,18 +87,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, language }) =
       {/* 1. HERO SECTION (Refined & Hooking) */}
       <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 text-white min-h-[480px] flex items-center shadow-2xl group">
           {/* High-quality background image with overlay */}
-          <div className="absolute inset-0 z-0 overflow-hidden">
-            <motion.img 
-              initial={{ scale: 1.1 }}
-              animate={{ scale: 1 }}
-              transition={{ duration: 10, repeat: Infinity, repeatType: "reverse" }}
-              src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=2000&q=80" 
-              alt="Clean Water Nature" 
-              className="w-full h-full object-cover opacity-40"
+          <div className="absolute inset-0 z-0 overflow-hidden bg-slate-950">
+            <img 
+              src="https://images.unsplash.com/photo-1454496522488-7a8e488e8606?auto=format&fit=crop&w=1920&q=80" 
+              alt="Mountain landscape"
+              className="w-full h-full object-cover opacity-60 scale-105"
               referrerPolicy="no-referrer"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-900/90 to-transparent"></div>
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/50 to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-900/80 to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 to-transparent"></div>
           </div>
 
           <div className="relative z-10 w-full px-8 md:px-16 py-12">
@@ -109,7 +114,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, language }) =
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.2 }}
-                  className="text-6xl md:text-8xl font-bold leading-[0.95] font-display tracking-tight"
+                  className="text-4xl md:text-6xl font-bold leading-[0.95] font-display tracking-tight"
                 >
                     {t.hero.titleStart} <br/>
                     <span className="bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">{t.hero.titleEnd}</span>
@@ -144,6 +149,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, language }) =
                         {t.hero.btnSecondary}
                     </button>
                 </motion.div>
+
+                {/* Login Prompt for better UX */}
+                {!user && (
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 1 }}
+                        className="pt-4 flex items-center gap-3 text-white/60 text-sm"
+                    >
+                        <AlertCircle size={16} className="text-blue-400" />
+                        <span>Sign in to unlock personalized water quality alerts and AI insights.</span>
+                    </motion.div>
+                )}
             </div>
           </div>
           
@@ -179,19 +197,29 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, language }) =
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           
           {/* Insight - Spans 2 cols */}
-          <div className="md:col-span-2 lg:col-span-2 bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-white/5 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                    <Activity size={18} className="text-blue-600" />
-                    <h3 className="font-bold text-slate-800 dark:text-white text-sm">System Analysis</h3>
+          <div className="md:col-span-2 lg:col-span-2 bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-white/5 flex flex-col md:flex-row gap-6">
+              <div className="flex-1 flex flex-col justify-between">
+                <div>
+                    <div className="flex items-center gap-2 mb-3">
+                        <Activity size={18} className="text-blue-600" />
+                        <h3 className="font-bold text-slate-800 dark:text-white text-sm">System Analysis</h3>
+                    </div>
+                    <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mb-4">
+                        {loading ? "Loading data..." : systemSummary}
+                    </p>
                 </div>
-                <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mb-4">
-                    {loading ? "Loading data..." : systemSummary}
-                </p>
+                <button onClick={() => onChangeTab('analyze')} className="text-xs font-bold text-gov-teal hover:underline flex items-center gap-1">
+                    {t.dashboard.viewReport} <ArrowRight size={14} />
+                </button>
               </div>
-              <button onClick={() => onChangeTab('analyze')} className="text-xs font-bold text-gov-teal hover:underline flex items-center gap-1">
-                  {t.dashboard.viewReport} <ArrowRight size={14} />
-              </button>
+              <div className="w-full md:w-48 h-32 md:h-auto rounded-xl overflow-hidden shrink-0">
+                  <img 
+                    src="https://images.unsplash.com/photo-1576085898323-218337e3e43c?auto=format&fit=crop&w=400&q=80" 
+                    alt="Water Analysis" 
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+              </div>
           </div>
 
           {/* Quick Action: Report */}
@@ -210,6 +238,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, language }) =
           <div className="md:col-span-1 lg:col-span-1">
             <StatCard label="Water Index" value="92" trend="Excellent" icon={Droplet} color="emerald" />
           </div>
+
+          {/* Weather Card - Integrated from Open-Meteo */}
+          {weather && (
+            <div className="md:col-span-1 lg:col-span-1">
+              <StatCard 
+                label="Air Temp" 
+                value={`${Math.round(weather.current.temperature_2m)}°C`} 
+                trend={weather.current.precipitation > 0 ? "Raining" : "Clear"} 
+                icon={Wind} 
+                color="blue" 
+              />
+            </div>
+          )}
 
           {/* Main Chart - Spans 2 cols */}
           <div className="md:col-span-2 lg:col-span-2 bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-white/5 flex flex-col">
@@ -294,6 +335,8 @@ const StatCard = ({ label, value, trend, icon: Icon, color }: any) => {
     return (
         <motion.div 
             whileHover={{ y: -5, transition: { duration: 0.2 } }}
+            animate={{ y: [0, -5, 0] }}
+            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
             className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-white/5 shadow-sm hover:shadow-xl transition-all flex flex-col justify-between h-full group"
         >
             <div className="flex justify-between items-start mb-6">

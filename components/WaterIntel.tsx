@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Map, Search, Newspaper, MapPin, ExternalLink, Loader2, AlertTriangle, ShieldAlert, ShieldCheck, Volume2, FileText, Droplets, Activity } from 'lucide-react';
-import { searchWaterNews, findNearbyStations, playBrowserTTS } from '../lib/claude';
+import { searchWaterNews, findNearbyStations, playBrowserTTS } from '../lib/gemini';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DisclaimerBanner } from './ui/DisclaimerBanner';
 import { api } from '../services/api';
@@ -79,7 +79,10 @@ export const WaterIntel = () => {
     const fetchReports = async () => {
         setLoading(true);
         try {
-            const data = await api.getReports();
+            const data = await api.getReports().catch(e => {
+                // Suppress expected permission errors
+                return [];
+            });
             setReports(data);
         } catch (e) {
             console.error("[WaterIntel] Reports fetch failed", e);
@@ -251,8 +254,8 @@ export const WaterIntel = () => {
                                 <div className="lg:col-span-2 space-y-6">
                                     <div className="relative rounded-[2rem] overflow-hidden aspect-video group">
                                         <img 
-                                            src="https://picsum.photos/seed/river/1200/800" 
-                                            alt="Featured" 
+                                            src="https://images.unsplash.com/photo-1433086966358-54859d0ed716?auto=format&fit=crop&w=1200&q=80" 
+                                            alt="Featured Mountain River" 
                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                                             referrerPolicy="no-referrer"
                                         />

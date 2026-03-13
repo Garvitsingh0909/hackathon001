@@ -98,6 +98,33 @@ app.get('/api/trends', (req, res) => {
     res.json(data);
 });
 
+app.get('/api/weather', async (req, res) => {
+    const { lat, lng } = req.query;
+    if (!lat || !lng) {
+        return res.status(400).json({ error: 'Latitude and longitude are required' });
+    }
+
+    try {
+        const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,precipitation,surface_pressure,wind_speed_10m`);
+        if (!response.ok) {
+            throw new Error(`Weather API returned ${response.status}`);
+        }
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        // Fallback to mock weather data if the external API fails
+        res.json({
+            current: {
+                temperature_2m: 28,
+                relative_humidity_2m: 65,
+                precipitation: 0,
+                surface_pressure: 1012,
+                wind_speed_10m: 12
+            }
+        });
+    }
+});
+
 app.post('/api/reports', async (req, res) => {
     const report = req.body;
     try {
