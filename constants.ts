@@ -7,7 +7,8 @@ export const TRANSLATIONS = {
             admin: 'Admin Map',
             map: 'India Map',
             tools: 'Tools',
-            faq: 'FAQ'
+            faq: 'FAQ',
+            feedback: 'Feedback'
         },
         hero: {
             label: 'Government Initiative',
@@ -50,7 +51,8 @@ export const TRANSLATIONS = {
             admin: 'प्रशासन मानचित्र',
             map: 'भारत का नक्शा',
             tools: 'उपकरण',
-            faq: 'सामान्य प्रश्न'
+            faq: 'सामान्य प्रश्न',
+            feedback: 'सुझाव'
         },
         hero: {
             label: 'सरकारी पहल',

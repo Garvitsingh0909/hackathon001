@@ -34,16 +34,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 if (firebaseUser) {
                     const userRef = doc(db, 'users', firebaseUser.uid);
                     console.log("AuthContext: Fetching user profile for", firebaseUser.uid);
-                    const userSnap = await getDoc(userRef);
+                    
+                    let userSnap;
+                    let retries = 0;
+                    const maxRetries = 3;
+                    
+                    while (retries < maxRetries) {
+                        try {
+                            userSnap = await getDoc(userRef);
+                            break;
+                        } catch (error) {
+                            retries++;
+                            console.warn(`AuthContext: Failed to fetch user profile, retry ${retries}/${maxRetries}`);
+                            if (retries >= maxRetries) throw error;
+                            await new Promise(resolve => setTimeout(resolve, 1000 * retries));
+                        }
+                    }
 
-                    if (userSnap.exists()) {
+                    if (userSnap && userSnap.exists()) {
                         console.log("AuthContext: User profile found");
                         const data = userSnap.data();
                         setUser({
                             ...data,
                             createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt || new Date().toISOString()
                         } as UserProfile);
-                    } else {
+                    } else if (userSnap) {
                         console.log("AuthContext: No user profile found, creating one...");
                         const newUser: UserProfile = {
                             uid: firebaseUser.uid,
@@ -78,8 +93,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const login = async () => {
         try {
             await signInWithPopup(auth, googleProvider);
-        } catch (error) {
-            console.error("Login failed:", error);
+        } catch (error: any) {
+            if (error.code === 'auth/cancelled-popup-request' || error.code === 'auth/popup-closed-by-user') {
+                console.warn("Login popup was closed by user.");
+            } else {
+                console.error("Login failed:", error);
+            }
         }
     };
 

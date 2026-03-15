@@ -2,12 +2,9 @@ import React, { useState } from 'react';
 import { Shield, Bot, Accessibility, Globe, Info, MessageSquare } from 'lucide-react';
 import { FeedbackModal } from './FeedbackModal';
 
-export const Footer = () => {
-    const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
-
+export const Footer = ({ onOpenFeedback }: { onOpenFeedback: () => void }) => {
     return (
         <div className="mt-12">
-            <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
             {/* Trust Section */}
             <div className="bg-[#F0F4F8] dark:bg-slate-800/50 py-4 border-y border-slate-200 dark:border-slate-700">
                 <div className="max-w-7xl mx-auto px-4 flex flex-wrap justify-center items-center gap-y-4 gap-x-8 md:gap-x-12">
@@ -44,7 +41,7 @@ export const Footer = () => {
                     </div>
                     <div className="flex flex-col items-center md:items-end gap-4">
                         <button 
-                            onClick={() => setIsFeedbackOpen(true)}
+                            onClick={onOpenFeedback}
                             className="flex items-center gap-2 text-sm text-gov-teal hover:text-white transition-colors"
                         >
                             <MessageSquare size={16} />

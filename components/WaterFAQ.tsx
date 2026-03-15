@@ -93,13 +93,24 @@ export const WaterFAQ = () => {
               </div>
             ) : (
               filteredFaqs.map((faq, idx) => (
-                <div key={idx} className="border border-slate-700 rounded-xl overflow-hidden bg-slate-900 hover:border-slate-600 transition-all">
+                <motion.div 
+                  key={idx} 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.05 }}
+                  className="border border-slate-200 dark:border-slate-700 rounded-[1.5rem] overflow-hidden bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-600 transition-all shadow-subtle hover:shadow-subtle-hover"
+                >
                   <button 
                     onClick={() => setExpanded(expanded === idx ? null : idx)}
-                    className="w-full px-4 py-3 flex justify-between items-center text-left hover:bg-slate-800 transition-colors"
+                    className="w-full px-6 py-4 flex justify-between items-center text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                   >
-                    <span className="font-medium text-sm text-slate-200 pr-4">{faq.q}</span>
-                    {expanded === idx ? <ChevronUp size={16} className="text-blue-400 shrink-0" /> : <ChevronDown size={16} className="text-slate-500 shrink-0" />}
+                    <span className="font-medium text-sm text-slate-900 dark:text-slate-200 pr-4">{faq.q}</span>
+                    <motion.div
+                      animate={{ rotate: expanded === idx ? 180 : 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <ChevronDown size={18} className="text-slate-400 dark:text-slate-500 shrink-0" />
+                    </motion.div>
                   </button>
                   <AnimatePresence>
                     {expanded === idx && (
@@ -107,13 +118,14 @@ export const WaterFAQ = () => {
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        className="px-4 pb-3 text-xs text-slate-400 leading-relaxed border-t border-slate-800 pt-2"
+                        transition={{ duration: 0.2 }}
+                        className="px-6 pb-4 text-sm text-slate-600 dark:text-slate-400 leading-relaxed border-t border-slate-100 dark:border-slate-800 pt-4"
                       >
                         <p>{faq.a}</p>
                       </motion.div>
                     )}
                   </AnimatePresence>
-                </div>
+                </motion.div>
               ))
             )}
           </div>

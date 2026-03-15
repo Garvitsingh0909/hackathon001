@@ -65,7 +65,7 @@ export const AdminMap = () => {
             <div className="flex flex-col md:flex-row gap-6 flex-1 min-h-0">
             {/* Sidebar List */}
             <div className="w-full md:w-80 flex flex-col gap-4">
-                <div className="bg-gov-card dark:bg-slate-900 p-5 rounded-3xl shadow-subtle border border-slate-200 dark:border-slate-800 flex items-center justify-between transition-colors">
+                <div className="bg-gov-card dark:bg-slate-900 p-5 rounded-[2rem] shadow-subtle border border-slate-200 dark:border-slate-800 flex items-center justify-between transition-colors">
                     <div>
                         <h3 className="font-bold text-slate-900 dark:text-white font-display text-lg">River Segments</h3>
                         <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{segments.length} Active Sensors</p>
@@ -89,7 +89,7 @@ export const AdminMap = () => {
                                 variants={item}
                                 key={seg.id}
                                 onClick={() => handleSegmentClick(seg)}
-                                className={`p-5 rounded-2xl border cursor-pointer transition-all duration-300 group ${
+                                className={`p-5 rounded-[1.5rem] border cursor-pointer transition-all duration-300 group ${
                                     selectedSegment?.id === seg.id 
                                     ? 'bg-gov-navy dark:bg-blue-600 border-gov-navy dark:border-blue-500 text-white shadow-subtle-hover scale-[1.02]' 
                                     : 'bg-gov-card dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-blue-200 dark:hover:border-blue-500 hover:shadow-subtle text-slate-800 dark:text-slate-200'
@@ -133,9 +133,9 @@ export const AdminMap = () => {
                         ></iframe>
                         
                         {/* Overlay Controls */}
-                        <div className="absolute top-6 right-6 bg-gov-card/90 dark:bg-slate-800/90 backdrop-blur-xl rounded-2xl p-2 shadow-subtle border border-white/50 dark:border-slate-700/50 flex flex-col gap-2 transition-colors">
-                            <button className="p-3 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl text-slate-600 dark:text-slate-400 transition-colors"><Layers size={20} /></button>
-                            <button className="p-3 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl text-slate-600 dark:text-slate-400 transition-colors"><Map size={20} /></button>
+                        <div className="absolute top-6 right-6 bg-gov-card/90 dark:bg-slate-800/90 backdrop-blur-xl rounded-[1.5rem] p-2 shadow-subtle border border-white/50 dark:border-slate-700/50 flex flex-col gap-2 transition-colors">
+                            <button onClick={() => console.log('Layers clicked')} className="p-3 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl text-slate-600 dark:text-slate-400 transition-colors"><Layers size={20} /></button>
+                            <button onClick={() => console.log('Map clicked')} className="p-3 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl text-slate-600 dark:text-slate-400 transition-colors"><Map size={20} /></button>
                         </div>
 
                         {/* Popup Overlay */}
@@ -166,19 +166,19 @@ export const AdminMap = () => {
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-4 mb-8">
-                                            <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700">
+                                            <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-[1.5rem] border border-slate-100 dark:border-slate-700 shadow-subtle">
                                                 <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">pH Level</div>
                                                 <div className="font-bold text-slate-900 dark:text-white text-xl">{selectedSegment.paramPh}</div>
                                             </div>
-                                            <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700">
+                                            <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-[1.5rem] border border-slate-100 dark:border-slate-700 shadow-subtle">
                                                 <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Dissolved O2</div>
                                                 <div className="font-bold text-slate-900 dark:text-white text-xl">{selectedSegment.paramDo} mg/L</div>
                                             </div>
-                                            <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700">
+                                            <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-[1.5rem] border border-slate-100 dark:border-slate-700 shadow-subtle">
                                                 <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Turbidity</div>
                                                 <div className="font-bold text-slate-900 dark:text-white text-xl">12 NTU</div>
                                             </div>
-                                            <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700">
+                                            <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-[1.5rem] border border-slate-100 dark:border-slate-700 shadow-subtle">
                                                 <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Temperature</div>
                                                 <div className="font-bold text-slate-900 dark:text-white text-xl">24.5°C</div>
                                             </div>
@@ -201,7 +201,7 @@ export const AdminMap = () => {
                             <motion.div 
                                 initial={{ y: 50, opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}
-                                className="absolute bottom-8 left-8 right-8 bg-gov-card/90 dark:bg-slate-900/90 backdrop-blur-xl p-6 rounded-3xl shadow-subtle-hover border border-white/50 dark:border-slate-700/50 flex flex-col md:flex-row justify-between items-center gap-4 transition-colors"
+                                className="absolute bottom-8 left-8 right-8 bg-gov-card/90 dark:bg-slate-900/90 backdrop-blur-xl p-6 rounded-[2rem] shadow-subtle-hover border border-white/50 dark:border-slate-700/50 flex flex-col md:flex-row justify-between items-center gap-4 transition-colors"
                             >
                                 <div>
                                     <h2 className="font-bold text-slate-900 dark:text-white text-xl font-display">{selectedSegment.name}</h2>

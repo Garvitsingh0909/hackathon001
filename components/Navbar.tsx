@@ -15,6 +15,7 @@ interface NavbarProps {
     isAdmin?: boolean;
     onLogin?: () => void;
     onLogout?: () => void;
+    onOpenFeedback: () => void;
 }
 
 const TIPS = [
@@ -25,7 +26,7 @@ const TIPS = [
     "Harvest rainwater to recharge groundwater levels 🌧️"
 ];
 
-export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, language, setLanguage, darkMode, toggleDarkMode, user, isAdmin, onLogin, onLogout }) => {
+export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, language, setLanguage, darkMode, toggleDarkMode, user, isAdmin, onLogin, onLogout, onOpenFeedback }) => {
   const t = TRANSLATIONS[language].nav;
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
@@ -36,6 +37,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, languag
       { id: 'map', label: t.map, icon: MapPin },
       { id: 'tools', label: t.tools, icon: Calculator },
       { id: 'faq', label: t.faq, icon: HelpCircle },
+      { id: 'feedback', label: t.feedback, icon: MessageSquare },
       ...(isAdmin ? [{ id: 'admin', label: t.admin, icon: Map }] : []),
   ];
 
@@ -130,12 +132,18 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, languag
                                           initial={{ opacity: 0, scale: 0.95, y: 10 }}
                                           animate={{ opacity: 1, scale: 1, y: 0 }}
                                           exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                                          className="absolute right-0 mt-3 w-56 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-white/5 p-2 z-50"
+                                          className="absolute right-0 mt-3 w-56 bg-white dark:bg-slate-900 rounded-[1.5rem] shadow-2xl border border-slate-200 dark:border-white/5 p-2 z-50"
                                       >
                                           <div className="px-4 py-3 border-b border-slate-100 dark:border-white/5 mb-2">
                                               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Signed in as</p>
                                               <p className="text-sm font-bold truncate text-slate-900 dark:text-white">{user.displayName}</p>
                                           </div>
+                                          <button 
+                                              onClick={() => { onOpenFeedback(); setShowProfileMenu(false); }}
+                                              className="w-full text-left px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors mb-1"
+                                          >
+                                              Send Feedback
+                                          </button>
                                           <button 
                                               onClick={() => { onLogout?.(); setShowProfileMenu(false); }}
                                               className="w-full text-left px-4 py-2 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-colors"

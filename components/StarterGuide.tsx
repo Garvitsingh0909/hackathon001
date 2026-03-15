@@ -82,7 +82,7 @@ export const StarterGuide: React.FC<StarterGuideProps> = ({ isOpen, onClose, lan
                         initial={{ scale: 0.9, y: 20 }}
                         animate={{ scale: 1, y: 0 }}
                         exit={{ scale: 0.9, y: 20 }}
-                        className="bg-gov-card dark:bg-slate-900 rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 dark:border-slate-800 relative"
+                        className="bg-gov-card dark:bg-slate-900 rounded-[2.5rem] shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 dark:border-slate-800 relative"
                     >
                         <button 
                             onClick={onClose}
@@ -132,10 +132,10 @@ export const StarterGuide: React.FC<StarterGuideProps> = ({ isOpen, onClose, lan
                             <button 
                                 onClick={playGuide}
                                 disabled={isLoading}
-                                className={`w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${
+                                className={`w-full py-4 rounded-[1.5rem] font-bold flex items-center justify-center gap-2 transition-all ${
                                     isPlaying 
                                         ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 border border-red-200 dark:border-red-800/50' 
-                                        : 'bg-gov-navy hover:bg-gov-navy/90 text-white shadow-lg hover:shadow-xl'
+                                        : 'bg-gov-navy hover:bg-gov-navy/90 text-white shadow-md hover:shadow-lg'
                                 }`}
                             >
                                 {isLoading ? (

@@ -225,12 +225,17 @@ export const WaterIntel = () => {
             </div>
 
             {loading && activeSection !== 'risk' ? (
-                <div className="flex flex-col items-center justify-center py-32 text-slate-400 dark:text-slate-500 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm transition-colors">
-                    <Loader2 className="animate-spin mb-4 text-blue-500" size={48} />
-                    <p className="font-medium animate-pulse">Gathering intelligence from Tamsa Basin...</p>
+                <div className="flex flex-col items-center justify-center py-32 text-slate-400 dark:text-slate-500 bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200/60 dark:border-slate-800 shadow-subtle transition-colors">
+                    <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                    >
+                        <Loader2 className="mb-6 text-blue-500" size={48} />
+                    </motion.div>
+                    <p className="font-medium text-lg animate-pulse tracking-wide">Gathering intelligence from Tamsa Basin...</p>
                 </div>
             ) : (
-                <div className="bg-white dark:bg-slate-900 rounded-2xl p-8 md:p-12 shadow-sm border border-slate-200/60 dark:border-slate-800 min-h-[500px] transition-colors">
+                <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 md:p-12 shadow-subtle border border-slate-200/60 dark:border-slate-800 min-h-[500px] transition-colors">
                     {activeSection === 'news' && news && (
                         <motion.div variants={container} initial="hidden" animate="show">
                             <motion.div variants={item} className="mb-8 border-b border-slate-100 dark:border-slate-800 pb-6 flex justify-between items-end">
@@ -280,31 +285,39 @@ export const WaterIntel = () => {
                                     <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-2">
                                         <div className="w-4 h-[1px] bg-slate-300 dark:bg-slate-600"></div> Trending Updates
                                     </h4>
-                                    <div className="space-y-4">
+                                    <div className="space-y-6">
                                         {[1, 2, 3].map((_, i) => (
-                                            <div key={i} className="group cursor-pointer">
-                                                <div className="flex gap-4 items-start">
-                                                    <div className="w-20 h-20 rounded-2xl overflow-hidden flex-shrink-0">
-                                                        <img src={`https://picsum.photos/seed/water${i}/200/200`} alt="News" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                            <motion.div 
+                                                key={i} 
+                                                whileHover={{ x: 4 }}
+                                                className="group cursor-pointer bg-white dark:bg-slate-800/50 p-4 rounded-[1.5rem] border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-subtle-hover transition-all"
+                                            >
+                                                <div className="flex gap-5 items-start">
+                                                    <div className="w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0 shadow-sm group-hover:shadow-md transition-shadow">
+                                                        <img src={`https://picsum.photos/seed/water${i}/200/200`} alt="News" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" referrerPolicy="no-referrer" />
                                                     </div>
-                                                    <div className="space-y-1">
-                                                        <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">Environment</span>
-                                                        <h5 className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors line-clamp-2 leading-snug">New sensor array deployed in Maunath Bhanjan</h5>
-                                                        <p className="text-[10px] text-slate-400">12 Mar 2026</p>
+                                                    <div className="space-y-2 py-1">
+                                                        <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-md">Environment</span>
+                                                        <h5 className="font-bold text-base text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors line-clamp-2 leading-snug">New sensor array deployed in Maunath Bhanjan</h5>
+                                                        <p className="text-xs text-slate-400 font-medium">12 Mar 2026</p>
                                                     </div>
                                                 </div>
-                                            </div>
+                                            </motion.div>
                                         ))}
                                     </div>
 
-                                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-3xl p-6 border border-slate-100 dark:border-slate-700">
-                                        <h4 className="font-bold text-sm text-slate-900 dark:text-white mb-2">Weekly Newsletter</h4>
-                                        <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Get the latest water quality insights delivered to your inbox.</p>
-                                        <div className="flex gap-2">
-                                            <input type="email" placeholder="Email" className="flex-1 px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                                            <button className="p-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors">
-                                                <ArrowRight size={16} />
-                                            </button>
+                                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-[2rem] p-8 border border-slate-100 dark:border-slate-700 shadow-subtle">
+                                        <h4 className="font-bold text-lg text-slate-900 dark:text-white mb-2 font-display">Weekly Newsletter</h4>
+                                        <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">Get the latest water quality insights delivered to your inbox.</p>
+                                        <div className="flex gap-3">
+                                            <input type="email" placeholder="Email address" className="flex-1 px-4 py-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-inner" />
+                                            <motion.button 
+                                                whileHover={{ scale: 1.05 }}
+                                                whileTap={{ scale: 0.95 }}
+                                                className="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors shadow-md"
+                                            >
+                                                <ArrowRight size={20} />
+                                            </motion.button>
                                         </div>
                                     </div>
                                 </div>
@@ -320,25 +333,25 @@ export const WaterIntel = () => {
                                             source.web ? (
                                                 <motion.a 
                                                     variants={item}
-                                                    whileHover={{ scale: 1.02, y: -2 }}
+                                                    whileHover={{ scale: 1.02, y: -4 }}
                                                     key={idx} 
                                                     href={source.web.uri} 
                                                     target="_blank" 
                                                     rel="noreferrer" 
-                                                    className="flex flex-col justify-between p-5 rounded-2xl border border-slate-200 dark:border-slate-700 hover:border-blue-200 dark:hover:border-blue-500 bg-gov-card dark:bg-slate-800 hover:shadow-subtle-hover dark:hover:shadow-black/50 transition-all duration-300 group h-full"
+                                                    className="flex flex-col justify-between p-6 rounded-[2rem] border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-500 bg-white dark:bg-slate-800 shadow-subtle hover:shadow-subtle-hover transition-all duration-300 group h-full"
                                                 >
                                                     <div>
-                                                        <div className="flex items-start justify-between mb-3">
-                                                            <div className="p-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg group-hover:bg-blue-600 dark:group-hover:bg-blue-500 group-hover:text-white transition-colors">
-                                                                <Newspaper size={20} />
+                                                        <div className="flex items-start justify-between mb-4">
+                                                            <div className="p-3 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl group-hover:bg-blue-600 dark:group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                                                                <Newspaper size={24} />
                                                             </div>
-                                                            <ExternalLink size={16} className="text-slate-300 dark:text-slate-600 group-hover:text-blue-400 transition-colors" />
+                                                            <ExternalLink size={20} className="text-slate-300 dark:text-slate-600 group-hover:text-blue-500 transition-colors" />
                                                         </div>
-                                                        <h4 className="font-bold text-slate-900 dark:text-slate-100 text-lg leading-snug mb-2 group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors line-clamp-2">{source.web.title}</h4>
-                                                        <p className="text-xs text-slate-400 dark:text-slate-500 font-mono truncate">{new URL(source.web.uri).hostname}</p>
+                                                        <h4 className="font-bold text-slate-900 dark:text-slate-100 text-xl leading-snug mb-3 group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors line-clamp-2 font-display">{source.web.title}</h4>
+                                                        <p className="text-sm text-slate-500 dark:text-slate-400 font-mono truncate bg-slate-50 dark:bg-slate-900/50 px-3 py-1.5 rounded-lg inline-block">{new URL(source.web.uri).hostname}</p>
                                                     </div>
-                                                    <div className="mt-4 pt-4 border-t border-slate-50 dark:border-slate-700 flex items-center text-sm font-bold text-blue-600 dark:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
-                                                        Read Article <ArrowRight size={16} className="ml-2" />
+                                                    <div className="mt-6 pt-5 border-t border-slate-100 dark:border-slate-700 flex items-center text-sm font-bold text-blue-600 dark:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
+                                                        Read Article <ArrowRight size={18} className="ml-2" />
                                                     </div>
                                                 </motion.a>
                                             ) : null
@@ -381,7 +394,7 @@ export const WaterIntel = () => {
                                                 whileHover={{ y: -5 }}
                                                 animate={{ y: [0, -5, 0] }}
                                                 transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-                                                className="group bg-white dark:bg-slate-800/50 rounded-[2rem] p-6 border border-slate-100 dark:border-slate-700 hover:border-blue-500/50 transition-all hover:shadow-xl hover:shadow-blue-500/5"
+                                                className="group bg-white dark:bg-slate-800/50 rounded-[2rem] p-6 border border-slate-100 dark:border-slate-700 hover:border-blue-500/50 transition-all shadow-subtle hover:shadow-subtle-hover"
                                             >
                                                 <div className="flex justify-between items-start mb-6">
                                                     <div className={`p-3 rounded-2xl ${isMap ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'}`}>
@@ -435,18 +448,53 @@ export const WaterIntel = () => {
                                 </h2>
                                 <p className="text-slate-500 dark:text-slate-400 ml-14">Latest water quality reports from the community</p>
                             </motion.div>
-                            <div className="space-y-4">
-                                {reports.map((report) => (
-                                    <motion.div variants={item} key={report.id} className="p-6 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
-                                        <div className="flex justify-between items-start mb-2">
-                                            <h4 className="font-bold text-lg text-slate-900 dark:text-white">{report.locationName}</h4>
-                                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${report.status === 'Resolved' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>{report.status}</span>
-                                        </div>
-                                        <p className="text-slate-600 dark:text-slate-300 mb-2">{report.details}</p>
-                                        <p className="text-sm text-slate-400 dark:text-slate-500">{new Date(report.timestamp).toLocaleDateString()}</p>
-                                    </motion.div>
-                                ))}
-                            </div>
+                            <div className="space-y-6">
+                                                {loading ? (
+                                                    Array.from({ length: 3 }).map((_, i) => (
+                                                        <div key={i} className="p-8 rounded-[2rem] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-subtle animate-pulse">
+                                                            <div className="flex justify-between items-start mb-4">
+                                                                <div className="flex items-center gap-4">
+                                                                    <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-700"></div>
+                                                                    <div>
+                                                                        <div className="h-5 w-40 bg-slate-200 dark:bg-slate-700 rounded mb-2"></div>
+                                                                        <div className="h-4 w-24 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="h-8 w-24 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+                                                            </div>
+                                                            <div className="mt-6 h-4 w-full bg-slate-200 dark:bg-slate-700 rounded"></div>
+                                                            <div className="mt-3 h-4 w-3/4 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                                                        </div>
+                                                    ))
+                                                ) : reports.length === 0 ? (
+                                                    <div className="flex flex-col items-center justify-center py-16 text-center bg-slate-50 dark:bg-slate-800/50 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-inner">
+                                                        <div className="w-20 h-20 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center text-slate-400 mb-6 shadow-sm">
+                                                            <FileText size={40} />
+                                                        </div>
+                                                        <p className="text-xl font-bold text-slate-900 dark:text-white mb-2 font-display">No reports available</p>
+                                                        <p className="text-slate-500 dark:text-slate-400 max-w-md">There are currently no community reports to display for this region.</p>
+                                                    </div>
+                                                ) : (
+                                                    reports.map((report) => (
+                                                        <motion.div 
+                                                            variants={item} 
+                                                            key={report.id} 
+                                                            whileHover={{ scale: 1.01, y: -2 }}
+                                                            className="p-8 rounded-[2rem] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-subtle hover:shadow-subtle-hover transition-all"
+                                                        >
+                                                            <div className="flex justify-between items-start mb-4">
+                                                                <h4 className="font-bold text-xl text-slate-900 dark:text-white font-display">{report.locationName}</h4>
+                                                                <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${report.status === 'Resolved' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400'}`}>{report.status}</span>
+                                                            </div>
+                                                            <p className="text-slate-600 dark:text-slate-300 mb-4 leading-relaxed text-lg">{report.details}</p>
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-600"></div>
+                                                                <p className="text-sm font-medium text-slate-400 dark:text-slate-500">{new Date(report.timestamp).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                                                            </div>
+                                                        </motion.div>
+                                                    ))
+                                                )}
+                                            </div>
                         </motion.div>
                     )}
 
@@ -459,7 +507,7 @@ export const WaterIntel = () => {
 
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
                                 <div className="space-y-6">
-                                    <div className="bg-white dark:bg-slate-800/50 rounded-[2.5rem] p-8 border border-slate-100 dark:border-slate-700 shadow-xl shadow-slate-200/20 dark:shadow-none">
+                                    <div className="bg-white dark:bg-slate-800/50 rounded-[2.5rem] p-8 border border-slate-100 dark:border-slate-700 shadow-subtle">
                                         <div className="flex items-center gap-4 mb-8">
                                             <div className="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
                                                 <ShieldCheck size={24} />
@@ -482,7 +530,7 @@ export const WaterIntel = () => {
                                                 </span>
                                             </div>
                                             
-                                            <div className="h-4 bg-slate-100 dark:bg-slate-900 rounded-full overflow-hidden p-1">
+                                            <div className="h-4 bg-slate-100 dark:bg-slate-900 rounded-full overflow-hidden p-1 shadow-inner">
                                                 <motion.div 
                                                     initial={{ width: 0 }}
                                                     animate={{ width: !riskResult ? 0 : riskResult.score > 70 ? '90%' : riskResult.score > 40 ? '60%' : '20%' }}
@@ -494,7 +542,7 @@ export const WaterIntel = () => {
                                                 />
                                             </div>
 
-                                            <div className="p-6 bg-slate-50 dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 min-h-[100px] flex items-center">
+                                            <div className="p-6 bg-slate-50 dark:bg-slate-900 rounded-[1.5rem] border border-slate-100 dark:border-slate-800 min-h-[100px] flex items-center shadow-inner">
                                                 <p className="text-sm text-slate-600 dark:text-slate-300 italic leading-relaxed">
                                                     "{riskResult?.details || 'Enter your location below to run a diagnostic safety assessment.'}"
                                                 </p>
@@ -509,12 +557,12 @@ export const WaterIntel = () => {
                                             value={locationInput}
                                             onChange={(e) => setLocationInput(e.target.value)}
                                             onKeyDown={(e) => e.key === 'Enter' && handleCheckRisk()}
-                                            className="flex-1 px-6 py-4 rounded-[2rem] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-lg shadow-slate-200/50 dark:shadow-none"
+                                            className="flex-1 px-6 py-4 rounded-[2rem] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-subtle"
                                         />
                                         <button 
                                             onClick={handleCheckRisk}
                                             disabled={isCheckingRisk || !locationInput.trim()}
-                                            className="px-8 py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-[2rem] font-bold hover:scale-[1.05] active:scale-[0.95] transition-all shadow-xl disabled:opacity-50"
+                                            className="px-8 py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-[2rem] font-bold hover:scale-[1.05] active:scale-[0.95] transition-all shadow-md disabled:opacity-50"
                                         >
                                             {isCheckingRisk ? <Loader2 className="animate-spin" size={24} /> : <Search size={24} />}
                                         </button>
@@ -528,12 +576,16 @@ export const WaterIntel = () => {
                                         { label: 'Turbidity', value: riskResult ? (riskResult.score > 70 ? '4.5 NTU' : '1.2 NTU') : '--', icon: Search, color: 'text-amber-500' },
                                         { label: 'pH Variance', value: riskResult ? '±0.1' : '--', icon: Activity, color: 'text-rose-500' },
                                     ].map((stat, i) => (
-                                        <div key={i} className="bg-white dark:bg-slate-800/50 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-700">
+                                        <motion.div 
+                                            key={i} 
+                                            whileHover={{ y: -4 }}
+                                            className="bg-white dark:bg-slate-800/50 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-700 shadow-subtle hover:shadow-subtle-hover transition-all"
+                                        >
                                             {/* @ts-ignore */}
                                             <stat.icon size={20} className={`${stat.color} mb-4`} />
                                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{stat.label}</p>
                                             <p className="text-xl font-bold text-slate-900 dark:text-white">{stat.value}</p>
-                                        </div>
+                                        </motion.div>
                                     ))}
                                 </div>
                             </div>

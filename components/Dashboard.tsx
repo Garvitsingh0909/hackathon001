@@ -116,8 +116,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, language }) =
                   transition={{ duration: 0.8, delay: 0.2 }}
                   className="text-4xl md:text-6xl font-bold leading-[0.95] font-display tracking-tight"
                 >
-                    {t.hero.titleStart} <br/>
-                    <span className="bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">{t.hero.titleEnd}</span>
+                    {t.hero.titleStart} <span className="bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">{t.hero.titleEnd}</span>
                 </motion.h1>
                 
                 <motion.p 
@@ -137,14 +136,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, language }) =
                 >
                     <button 
                         onClick={() => onChangeTab('analyze')}
-                        className="h-16 px-10 bg-white text-slate-950 rounded-2xl font-bold transition-all flex items-center justify-center gap-3 shadow-2xl hover:scale-[1.02] active:scale-[0.98]"
+                        className="h-16 px-10 bg-white text-slate-950 rounded-2xl font-bold transition-all flex items-center justify-center gap-3 shadow-2xl hover:scale-[1.02] active:scale-[0.98] hover:shadow-subtle-hover"
                     >
                         {t.dashboard.submitReport}
                         <ArrowRight size={22} />
                     </button>
                     <button 
                         onClick={() => onChangeTab('admin')}
-                        className="h-16 px-10 bg-white/5 border border-white/10 text-white rounded-2xl font-bold hover:bg-white/10 transition-all backdrop-blur-md flex items-center justify-center"
+                        className="h-16 px-10 bg-white/5 border border-white/10 text-white rounded-2xl font-bold hover:bg-white/10 transition-all backdrop-blur-md flex items-center justify-center hover:shadow-subtle-hover"
                     >
                         {t.hero.btnSecondary}
                     </button>
@@ -167,13 +166,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, language }) =
           
           {/* Subtle floating element for "fanciness" */}
           <div className="absolute right-16 bottom-16 hidden xl:block">
-            <motion.div 
-              animate={{ y: [0, -20, 0], rotate: [0, 2, 0] }}
-              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-              className="bg-white/5 backdrop-blur-2xl border border-white/10 p-8 rounded-[2rem] shadow-2xl"
-            >
+            <div className="bg-white/5 backdrop-blur-2xl border border-white/10 p-8 rounded-2xl shadow-2xl">
               <div className="flex items-center gap-5 mb-6">
-                <div className="w-14 h-14 rounded-2xl bg-blue-500/20 flex items-center justify-center text-blue-400 shadow-inner">
+                <div className="w-14 h-14 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400 shadow-inner">
                   <Droplet size={28} />
                 </div>
                 <div>
@@ -189,7 +184,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, language }) =
                   className="h-full bg-gradient-to-r from-blue-500 to-emerald-400 rounded-full shadow-[0_0_10px_rgba(52,211,153,0.5)]"
                 ></motion.div>
               </div>
-            </motion.div>
+            </div>
           </div>
       </div>
 
@@ -197,22 +192,26 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, language }) =
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           
           {/* Insight - Spans 2 cols */}
-          <div className="md:col-span-2 lg:col-span-2 bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200/60 dark:border-white/5 flex flex-col md:flex-row gap-6">
+          <motion.div 
+            whileHover={{ y: -4 }}
+            transition={{ duration: 0.2 }}
+            className="md:col-span-2 lg:col-span-2 bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-subtle hover:shadow-subtle-hover border border-slate-200/60 dark:border-white/5 flex flex-col md:flex-row gap-8"
+          >
               <div className="flex-1 flex flex-col justify-between">
                 <div>
-                    <div className="flex items-center gap-2 mb-3">
-                        <Activity size={16} className="text-blue-500" />
-                        <h3 className="font-bold text-slate-800 dark:text-white text-xs uppercase tracking-wider">System Analysis</h3>
+                    <div className="flex items-center gap-2 mb-4">
+                        <Activity size={18} className="text-blue-500" />
+                        <h3 className="font-bold text-slate-800 dark:text-white text-xs uppercase tracking-widest">System Analysis</h3>
                     </div>
-                    <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mb-4">
+                    <p className="text-slate-600 dark:text-slate-300 text-[15px] leading-relaxed mb-6">
                         {loading ? "Loading data..." : systemSummary}
                     </p>
                 </div>
-                <button onClick={() => onChangeTab('analyze')} className="text-xs font-bold text-blue-600 hover:underline flex items-center gap-1">
-                    {t.dashboard.viewReport} <ArrowRight size={14} />
+                <button onClick={() => onChangeTab('analyze')} className="text-sm font-bold text-blue-600 hover:text-blue-700 transition-colors flex items-center gap-2 w-fit">
+                    {t.dashboard.viewReport} <ArrowRight size={16} />
                 </button>
               </div>
-              <div className="w-full md:w-48 h-32 md:h-auto rounded-lg overflow-hidden shrink-0">
+              <div className="w-full md:w-56 h-40 md:h-auto rounded-2xl overflow-hidden shrink-0 shadow-inner">
                   <img 
                     src="https://images.unsplash.com/photo-1576085898323-218337e3e43c?auto=format&fit=crop&w=400&q=80" 
                     alt="Water Analysis" 
@@ -220,19 +219,50 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, language }) =
                     referrerPolicy="no-referrer"
                   />
               </div>
-          </div>
+          </motion.div>
+
+          {/* Gamification Card: Water Warrior */}
+          <motion.div 
+            whileHover={{ y: -4 }}
+            transition={{ duration: 0.2 }}
+            className="md:col-span-1 lg:col-span-1 bg-gradient-to-br from-blue-500 to-emerald-500 rounded-[2rem] p-8 shadow-subtle hover:shadow-subtle-hover text-white flex flex-col justify-between relative overflow-hidden"
+          >
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
+              <div className="relative z-10">
+                  <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-bold text-sm uppercase tracking-widest text-white/90">Your Impact</h3>
+                      <span className="text-2xl">🌱</span>
+                  </div>
+                  <p className="text-3xl font-bold font-display tracking-tight mb-1">Level 4</p>
+                  <p className="text-xs text-white/80 font-medium">Water Warrior</p>
+              </div>
+              <div className="relative z-10 mt-6">
+                  <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider mb-2 text-white/90">
+                      <span>12 Reports</span>
+                      <span>Next: Lvl 5</span>
+                  </div>
+                  <div className="h-2 w-full bg-black/20 rounded-full overflow-hidden">
+                      <div className="h-full bg-white rounded-full w-[60%] shadow-[0_0_10px_rgba(255,255,255,0.5)]"></div>
+                  </div>
+              </div>
+          </motion.div>
 
           {/* Quick Action: Report */}
-          <div 
+          <motion.div 
+            whileHover={{ y: -4, scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ duration: 0.2 }}
             onClick={() => onChangeTab('analyze')}
-            className="md:col-span-1 lg:col-span-1 bg-slate-900 rounded-xl p-6 shadow-sm text-white cursor-pointer hover:bg-slate-800 transition-colors flex flex-col justify-between min-h-[160px]"
+            className="md:col-span-1 lg:col-span-1 bg-slate-900 rounded-[2rem] p-8 shadow-subtle hover:shadow-subtle-hover text-white cursor-pointer hover:bg-slate-800 transition-colors flex flex-col justify-between min-h-[180px] group"
           >
-              <Camera size={20} className="text-blue-400" />
-              <div>
-                  <h3 className="font-bold text-base mb-1">{t.dashboard.submitReport}</h3>
-                  <p className="text-slate-400 text-xs">{t.dashboard.uploadPhoto}</p>
+              <div className="w-12 h-12 rounded-2xl bg-blue-500/20 flex items-center justify-center group-hover:bg-blue-500/30 transition-colors">
+                  <Camera size={24} className="text-blue-400" />
               </div>
-          </div>
+              <div className="mt-4">
+                  <h3 className="font-bold text-lg tracking-tight mb-1">{t.dashboard.submitReport}</h3>
+                  <p className="text-slate-400 text-xs leading-relaxed">{t.dashboard.uploadPhoto}</p>
+              </div>
+          </motion.div>
 
           {/* Stat Card 1 */}
           <div className="md:col-span-1 lg:col-span-1">
@@ -253,12 +283,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, language }) =
           )}
 
           {/* Main Chart - Spans 2 cols */}
-          <div className="md:col-span-2 lg:col-span-2 bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200/60 dark:border-white/5 flex flex-col">
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-bold text-slate-800 dark:text-white text-xs uppercase tracking-wider">{t.dashboard.chartTitle}</h3>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">Index Trend</span>
+          <motion.div 
+            whileHover={{ y: -4 }}
+            transition={{ duration: 0.2 }}
+            className="md:col-span-2 lg:col-span-2 bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-subtle hover:shadow-subtle-hover border border-slate-200/60 dark:border-white/5 flex flex-col"
+          >
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="font-bold text-slate-800 dark:text-white text-xs uppercase tracking-widest">{t.dashboard.chartTitle}</h3>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Index Trend</span>
                 </div>
-                <div className="flex-1 w-full min-h-[180px]">
+                <div className="flex-1 w-full min-h-[200px]">
                     <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={chartData} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" className="dark:stroke-slate-800" />
@@ -267,60 +301,74 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, language }) =
                             axisLine={false} 
                             tickLine={false} 
                             tick={{fontSize: 10, fill: '#94a3b8'}} 
+                            dy={10}
                         />
                         <YAxis 
                             axisLine={false} 
                             tickLine={false} 
                             tick={{fontSize: 10, fill: '#94a3b8'}} 
+                            dx={-10}
                         />
                         <Tooltip content={<CustomTooltip />} />
                         <Area 
                             type="monotone" 
                             dataKey="value" 
                             stroke="#3b82f6" 
-                            strokeWidth={2} 
+                            strokeWidth={3} 
                             fill="#3b82f6" 
-                            fillOpacity={0.05}
+                            fillOpacity={0.08}
                         />
                     </AreaChart>
                     </ResponsiveContainer>
                 </div>
-          </div>
+          </motion.div>
 
           {/* Recent Activity - Spans 2 cols */}
-          <div className="md:col-span-2 lg:col-span-2 bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200/60 dark:border-white/5 flex flex-col">
-              <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-bold text-slate-800 dark:text-white text-xs uppercase tracking-wider">{t.dashboard.recentReports}</h3>
-                  <button className="text-[10px] font-bold text-blue-600 hover:underline uppercase">View All</button>
+          <motion.div 
+            whileHover={{ y: -4 }}
+            transition={{ duration: 0.2 }}
+            className="md:col-span-2 lg:col-span-2 bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-subtle hover:shadow-subtle-hover border border-slate-200/60 dark:border-white/5 flex flex-col"
+          >
+              <div className="flex justify-between items-center mb-6">
+                  <h3 className="font-bold text-slate-800 dark:text-white text-xs uppercase tracking-widest">{t.dashboard.recentReports}</h3>
+                  <button className="text-[10px] font-bold text-blue-600 hover:text-blue-700 transition-colors uppercase tracking-widest">View All</button>
               </div>
               
-              <div className="space-y-2 flex-1">
+              <div className="space-y-3 flex-1">
                 {loading ? (
                     [1,2].map(i => <SkeletonReport key={i} />)
+                ) : reports.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full text-center py-8">
+                        <div className="w-14 h-14 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400 mb-4">
+                            <Activity size={24} />
+                        </div>
+                        <p className="text-sm font-bold text-slate-900 dark:text-white mb-1 tracking-tight">No reports yet</p>
+                        <p className="text-xs text-slate-500 leading-relaxed">Submit a water quality report to see it here.</p>
+                    </div>
                 ) : (
                     reports.slice(0, 2).map((report) => (
-                        <div key={report.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all cursor-pointer">
-                            <div className="flex items-center gap-3">
-                                <div className={`w-8 h-8 rounded-md flex items-center justify-center text-white text-xs font-bold ${report.overallScore < 50 ? 'bg-red-500' : report.overallScore < 75 ? 'bg-amber-500' : 'bg-emerald-500'}`}>
+                        <div key={report.id} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-[1.5rem] border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all cursor-pointer group hover:shadow-subtle-hover">
+                            <div className="flex items-center gap-4">
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-sm ${report.overallScore < 50 ? 'bg-red-500' : report.overallScore < 75 ? 'bg-amber-500' : 'bg-emerald-500'}`}>
                                     {report.overallScore}
                                 </div>
                                 <div>
-                                    <h4 className="font-bold text-slate-900 dark:text-white text-xs">{report.locationName}</h4>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-[9px] text-slate-500 flex items-center gap-1">
-                                            <Clock size={8} />
+                                    <h4 className="font-bold text-slate-900 dark:text-white text-sm tracking-tight">{report.locationName}</h4>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <span className="text-[10px] text-slate-500 flex items-center gap-1 font-medium">
+                                            <Clock size={10} />
                                             {new Date(report.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                                         </span>
-                                        <span className={`text-[9px] font-bold ${report.status === 'Resolved' ? 'text-emerald-500' : 'text-amber-500'}`}>{report.status}</span>
+                                        <span className={`text-[10px] font-bold uppercase tracking-wider ${report.status === 'Resolved' ? 'text-emerald-500' : 'text-amber-500'}`}>{report.status}</span>
                                     </div>
                                 </div>
                             </div>
-                            <ChevronRight size={14} className="text-slate-400" />
+                            <ChevronRight size={16} className="text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 transition-colors" />
                         </div>
                     ))
                 )}
               </div>
-          </div>
+          </motion.div>
 
       </div>
       
@@ -334,42 +382,28 @@ export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, language }) =
 const StatCard = ({ label, value, trend, icon: Icon, color }: any) => {
     return (
         <motion.div 
-            whileHover={{ y: -5, transition: { duration: 0.2 } }}
-            animate={{ y: [0, -5, 0] }}
-            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-            className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-white/5 shadow-sm hover:shadow-xl transition-all flex flex-col justify-between h-full group"
+            whileHover={{ y: -4 }}
+            transition={{ duration: 0.2 }}
+            className="bg-white dark:bg-slate-900 p-8 rounded-[2rem] border border-slate-100 dark:border-slate-800 flex flex-col justify-between h-full group hover:border-slate-300 dark:hover:border-slate-700 transition-colors shadow-subtle hover:shadow-subtle-hover"
         >
-            <div className="flex justify-between items-start mb-6">
-                <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-2xl text-gov-teal group-hover:bg-gov-teal group-hover:text-white transition-colors duration-300">
-                    <Icon size={24} />
-                </div>
-                <div className="flex flex-col items-end">
-                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 border border-emerald-100 dark:border-emerald-800/50 mb-1">
-                        {trend}
-                    </span>
-                    <div className="flex gap-0.5">
-                        {[1, 2, 3].map(i => (
-                            <div key={i} className="w-1 h-3 bg-emerald-500/20 rounded-full overflow-hidden">
-                                <motion.div 
-                                    animate={{ height: ["20%", "100%", "20%"] }}
-                                    transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
-                                    className="w-full bg-emerald-500"
-                                />
-                            </div>
-                        ))}
-                    </div>
+            <div className="flex items-center justify-between mb-6">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{label}</p>
+                <div className="text-slate-400 dark:text-slate-500 group-hover:text-blue-500 transition-colors">
+                    <Icon size={20} />
                 </div>
             </div>
-            <div>
-                <h3 className="text-4xl font-bold text-slate-900 dark:text-white font-display mb-1 tracking-tight">{value}</h3>
-                <p className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em]">{label}</p>
+            <div className="flex items-end justify-between">
+                <h3 className="text-4xl font-light text-slate-900 dark:text-white tracking-tight font-display">{value}</h3>
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-100 dark:border-slate-700">
+                    {trend}
+                </span>
             </div>
         </motion.div>
     );
 };
 
 const SkeletonReport = () => (
-    <div className="group flex items-center justify-between p-4 bg-white/50 dark:bg-slate-800/50 border border-transparent rounded-2xl animate-pulse">
+    <div className="group flex items-center justify-between p-4 bg-white/50 dark:bg-slate-800/50 border border-transparent rounded-[1.5rem] animate-pulse">
         <div className="flex items-center gap-4">
             <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700"></div>
             <div className="space-y-2">
@@ -384,7 +418,7 @@ const SkeletonReport = () => (
 const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
         return (
-            <div className="bg-gov-card/90 dark:bg-slate-800/90 backdrop-blur-md p-4 rounded-2xl shadow-xl border border-white/20 dark:border-slate-700 ring-1 ring-black/5 dark:ring-white/5">
+            <div className="bg-gov-card/90 dark:bg-slate-800/90 backdrop-blur-md p-4 rounded-[1.5rem] shadow-xl border border-white/20 dark:border-slate-700 ring-1 ring-black/5 dark:ring-white/5">
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{label}</p>
                 <p className="text-lg font-bold text-gov-navy dark:text-white font-display">
                     {payload[0].value} <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Index</span>

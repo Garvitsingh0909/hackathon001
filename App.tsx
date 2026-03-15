@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { FeedbackModal } from './components/FeedbackModal';
 import { Tour } from './components/Tour';
 import { Navbar } from './components/Navbar';
 import { Dashboard } from './components/Dashboard';
@@ -10,12 +11,14 @@ import { UserManagement } from './components/admin/UserManagement';
 import { WaterMap } from './components/WaterMap';
 import { WaterTools } from './components/WaterTools';
 import { WaterFAQ } from './components/WaterFAQ';
+import { FeedbackPage } from './components/FeedbackPage';
 import { Footer } from './components/Footer';
 import { StarterGuide } from './components/StarterGuide';
 import { QuickActions } from './components/QuickActions';
 import { Activity, Camera, Map as MapIcon, Home, Mic, LayoutDashboard, Calculator, HelpCircle, MapPin, X, ChevronRight } from 'lucide-react';
 import { TRANSLATIONS } from './constants';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Toaster } from 'react-hot-toast';
 
 import { AuthProvider, useAuth } from './src/AuthContext';
 
@@ -29,6 +32,7 @@ function AppContent() {
   const [userState, setUserState] = useState('');
   const [userSource, setUserSource] = useState('');
   const [isStarterGuideOpen, setIsStarterGuideOpen] = useState(false);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   useEffect(() => {
     const hasSeenOnboarding = localStorage.getItem('jaldrishti_onboarding');
@@ -73,6 +77,7 @@ function AppContent() {
       case 'map': return <WaterMap language={language} />;
       case 'tools': return <WaterTools language={language} />;
       case 'faq': return <WaterFAQ />;
+      case 'feedback': return <FeedbackPage />;
       case 'admin': 
         return isAdmin ? (
           <div className="space-y-8">
@@ -94,6 +99,7 @@ function AppContent() {
       transition={{ duration: 1 }}
       className={`min-h-screen flex flex-col font-sans selection:bg-blue-500/20 ${darkMode ? 'bg-gov-dark-navy text-white' : 'bg-gov-bg text-slate-900'}`}
     >
+      <Toaster position="bottom-right" />
       <Navbar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
@@ -105,7 +111,10 @@ function AppContent() {
         isAdmin={isAdmin}
         onLogin={login}
         onLogout={logout}
+        onOpenFeedback={() => setIsFeedbackOpen(true)}
       />
+      
+      <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
       
       {/* Main Container */}
       <main className="flex-grow pt-24 pb-24 md:pb-12 px-4 sm:px-6 lg:px-8 w-full max-w-screen-2xl mx-auto transition-all duration-200">
@@ -140,7 +149,7 @@ function AppContent() {
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.9, y: 20 }}
-              className="bg-gov-card dark:bg-slate-900 rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 dark:border-slate-800"
+              className="bg-gov-card dark:bg-slate-900 rounded-[2.5rem] shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 dark:border-slate-800"
             >
               <div className="p-6 md:p-8">
                 <div className="flex justify-between items-center mb-6">
@@ -249,7 +258,7 @@ function AppContent() {
         <NavBtn id="mobile-nav-intel" icon={MapIcon} label={t.intel} active={activeTab === 'intel'} onClick={() => setActiveTab('intel')} darkMode={darkMode} />
       </div>
 
-      <Footer />
+      <Footer onOpenFeedback={() => setIsFeedbackOpen(true)} />
 
       {/* Global Water Pulse Bar */}
       <div className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-40 w-[90%] max-w-2xl pointer-events-none">
@@ -257,7 +266,7 @@ function AppContent() {
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 2, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="bg-slate-950/80 backdrop-blur-xl border border-white/10 rounded-2xl p-3 shadow-2xl pointer-events-auto flex items-center justify-between gap-6"
+          className="bg-slate-950/80 backdrop-blur-xl border border-white/10 rounded-[2rem] p-3 shadow-2xl pointer-events-auto flex items-center justify-between gap-6"
         >
           <div className="flex items-center gap-3 px-2">
             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
@@ -306,12 +315,12 @@ const NavBtn = ({ icon: Icon, label, active, onClick, darkMode, id }: any) => (
   <button 
     id={id}
     onClick={onClick}
-    className={`flex flex-col items-center justify-center gap-1.5 w-14 h-14 rounded-2xl transition-all duration-300 relative group ${active ? 'text-white' : (darkMode ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-800')}`}
+    className={`flex flex-col items-center justify-center gap-1.5 w-14 h-14 rounded-[1.5rem] transition-all duration-300 relative group ${active ? 'text-white' : (darkMode ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-800')}`}
   >
     {active && (
       <motion.div 
         layoutId="mobileNavIndicator"
-        className="absolute inset-0 rounded-2xl -z-10 bg-gradient-to-tr from-blue-600 to-gov-teal shadow-[0_0_15px_rgba(34,184,166,0.5)]"
+        className="absolute inset-0 rounded-[1.5rem] -z-10 bg-gradient-to-tr from-blue-600 to-gov-teal shadow-[0_0_15px_rgba(34,184,166,0.5)]"
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
       />
     )}

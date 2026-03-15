@@ -1,18 +1,12 @@
 import React, { useState } from 'react';
-import { X, Send, Loader2 } from 'lucide-react';
+import { Send, Loader2, MessageSquare } from 'lucide-react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from '../src/firebase';
 
-interface FeedbackModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-}
-
-export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose }) => {
+export const FeedbackPage: React.FC = () => {
     const [message, setMessage] = useState('');
     const [loading, setLoading] = useState(false);
-
-    if (!isOpen) return null;
+    const [success, setSuccess] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -27,7 +21,8 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
                 timestamp: serverTimestamp()
             });
             setMessage('');
-            onClose();
+            setSuccess(true);
+            setTimeout(() => setSuccess(false), 3000);
         } catch (error) {
             console.error('Error submitting feedback:', error);
         } finally {
@@ -36,20 +31,25 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md">
-            <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 w-full max-w-lg shadow-2xl border border-slate-300 dark:border-slate-600 transform transition-all scale-100">
-                <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Submit Feedback</h3>
-                    <button onClick={onClose} className="text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors">
-                        <X size={24} />
-                    </button>
+        <div className="max-w-2xl mx-auto p-6 bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-subtle border border-slate-200 dark:border-slate-700">
+            <div className="flex items-center gap-3 mb-6">
+                <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-2xl text-blue-600 dark:text-blue-400">
+                    <MessageSquare size={24} />
                 </div>
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Send Us Your Feedback</h2>
+            </div>
+            
+            {success ? (
+                <div className="p-6 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 rounded-2xl font-bold text-center">
+                    Thank you for your feedback!
+                </div>
+            ) : (
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <textarea
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                         placeholder="Tell us what you think or report an issue..."
-                        className="w-full h-40 p-4 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                        className="w-full h-64 p-4 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                         required
                     />
                     <button
@@ -61,7 +61,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
                         Send Feedback
                     </button>
                 </form>
-            </div>
+            )}
         </div>
     );
 };

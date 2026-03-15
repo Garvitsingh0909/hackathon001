@@ -257,6 +257,7 @@ export const AnalysisModule = () => {
         className="max-w-5xl mx-auto pt-6"
     >
       <DisclaimerBanner />
+      <ActionModal isOpen={isActionModalOpen} onClose={() => setIsActionModalOpen(false)} score={result?.overallScore || 0} />
       <div className="bg-gov-card dark:bg-slate-900 rounded-[2rem] shadow-subtle dark:shadow-black/50 border border-slate-200 dark:border-slate-800 overflow-hidden transition-colors" id="printable-report">
         
         {/* Header */}
@@ -609,18 +610,25 @@ export const AnalysisModule = () => {
                              <motion.div 
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="mt-4 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                                className="mt-4 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 p-6 rounded-[2rem] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-subtle"
                              >
-                                 <div className="flex items-center gap-3">
-                                     <AlertCircle className="text-red-600 dark:text-red-400 flex-shrink-0" size={24} />
+                                 <div className="flex items-center gap-4">
+                                     <div className="p-3 bg-red-200 dark:bg-red-800/50 rounded-2xl flex-shrink-0">
+                                        <AlertCircle className="text-red-700 dark:text-red-400" size={28} />
+                                     </div>
                                      <div>
-                                         <p className="text-red-800 dark:text-red-300 font-bold text-sm">Critical Water Quality Detected</p>
-                                         <p className="text-red-600 dark:text-red-400 text-xs mt-0.5">This water is unsafe for consumption without heavy filtration.</p>
+                                         <p className="text-red-900 dark:text-red-300 font-bold text-base font-display tracking-tight">Critical Water Quality Detected</p>
+                                         <p className="text-red-700 dark:text-red-400 text-sm mt-1 leading-relaxed">This water is unsafe for consumption without heavy filtration.</p>
                                      </div>
                                  </div>
-                                 <button className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl transition-colors whitespace-nowrap shadow-sm">
+                                 <motion.button 
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => setIsActionModalOpen(true)}
+                                    className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-xl transition-colors whitespace-nowrap shadow-md"
+                                 >
                                      What to do now
-                                 </button>
+                                 </motion.button>
                              </motion.div>
                          )}
                     </motion.div>
@@ -663,15 +671,20 @@ export const AnalysisModule = () => {
                         <h4 className="font-bold text-slate-900 dark:text-white flex items-center gap-2 font-display">
                             <Info size={18} className="text-blue-500"/> Frequently Asked Questions
                         </h4>
-                        <div className="space-y-3">
+                        <div className="space-y-4">
                             {FAQ_ITEMS.map((item, idx) => (
-                                <div key={idx} className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden bg-white dark:bg-slate-800">
+                                <div key={idx} className="border border-slate-200 dark:border-slate-700 rounded-[1.5rem] overflow-hidden bg-white dark:bg-slate-800 shadow-subtle hover:shadow-subtle-hover transition-shadow">
                                     <button 
                                         onClick={() => setExpandedFaq(expandedFaq === idx ? null : idx)}
-                                        className="w-full px-5 py-4 flex justify-between items-center text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                                        className="w-full px-6 py-5 flex justify-between items-center text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
                                     >
-                                        <span className="font-medium text-sm text-slate-800 dark:text-slate-200">{item.q}</span>
-                                        {expandedFaq === idx ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
+                                        <span className="font-bold text-sm text-slate-800 dark:text-slate-200">{item.q}</span>
+                                        <motion.div
+                                            animate={{ rotate: expandedFaq === idx ? 180 : 0 }}
+                                            transition={{ duration: 0.2 }}
+                                        >
+                                            <ChevronDown size={18} className="text-slate-400" />
+                                        </motion.div>
                                     </button>
                                     <AnimatePresence>
                                         {expandedFaq === idx && (
@@ -679,7 +692,8 @@ export const AnalysisModule = () => {
                                                 initial={{ height: 0, opacity: 0 }}
                                                 animate={{ height: 'auto', opacity: 1 }}
                                                 exit={{ height: 0, opacity: 0 }}
-                                                className="px-5 pb-4 text-sm text-slate-600 dark:text-slate-400 leading-relaxed"
+                                                transition={{ duration: 0.2 }}
+                                                className="px-6 pb-5 text-sm text-slate-600 dark:text-slate-400 leading-relaxed"
                                             >
                                                 {item.a}
                                             </motion.div>
@@ -700,7 +714,11 @@ export const AnalysisModule = () => {
 };
 
 const MetricCard = ({ label, value, icon: Icon, color }: { label: string, value: string, icon: any, color: string }) => (
-    <div className="bg-white dark:bg-slate-800/50 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-all group">
+    <motion.div 
+        whileHover={{ y: -4 }}
+        transition={{ duration: 0.2 }}
+        className="bg-white dark:bg-slate-800/50 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-700 shadow-subtle hover:shadow-subtle-hover transition-all group"
+    >
         <div className="flex items-center justify-between mb-4">
             <div className={`p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/50 ${color} group-hover:scale-110 transition-transform`}>
                 <Icon size={20} />
@@ -709,5 +727,5 @@ const MetricCard = ({ label, value, icon: Icon, color }: { label: string, value:
         </div>
         <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-[0.15em] mb-1">{label}</p>
         <p className="font-bold text-slate-900 dark:text-slate-200 text-xl font-display">{value}</p>
-    </div>
+    </motion.div>
 );

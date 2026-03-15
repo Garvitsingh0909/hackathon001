@@ -98,7 +98,11 @@ const TdsBlendingTool = ({ language }: { language: 'en' | 'hi' }) => {
   const isIdeal = blendedTds >= 150 && blendedTds <= 300;
 
   return (
-    <div className="bg-slate-900 dark:bg-slate-950 rounded-3xl p-8 border border-slate-800 shadow-xl space-y-6">
+    <motion.div 
+      whileHover={{ y: -4 }}
+      transition={{ duration: 0.2 }}
+      className="bg-slate-900 dark:bg-slate-950 rounded-[2.5rem] p-8 md:p-10 border border-slate-800 shadow-subtle space-y-8"
+    >
       <div className="flex items-center gap-3 mb-6">
         <div className="p-3 bg-blue-900/30 text-blue-400 rounded-2xl border border-blue-800/50"><Droplet size={28} /></div>
         <h3 className="text-2xl font-bold text-white font-display">
@@ -131,7 +135,7 @@ const TdsBlendingTool = ({ language }: { language: 'en' | 'hi' }) => {
           </div>
         </div>
         
-        <div className={`p-6 rounded-2xl border flex flex-col justify-center ${isIdeal ? 'bg-emerald-950/30 border-emerald-800/50' : 'bg-amber-950/30 border-amber-800/50'}`}>
+        <div className={`p-6 rounded-[1.5rem] border flex flex-col justify-center ${isIdeal ? 'bg-emerald-950/30 border-emerald-800/50' : 'bg-amber-950/30 border-amber-800/50'}`}>
           <div className="text-center">
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">
               {language === 'en' ? 'Blended TDS' : 'मिश्रित टीडीएस'}
@@ -150,7 +154,7 @@ const TdsBlendingTool = ({ language }: { language: 'en' | 'hi' }) => {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
@@ -168,7 +172,11 @@ const DailyIntakeTool = ({ language }: { language: 'en' | 'hi' }) => {
   const excessTds = Math.max(0, (tds - 300) * Number(recommendedIntake));
 
   return (
-    <div className="bg-slate-900 dark:bg-slate-950 rounded-3xl p-8 border border-slate-800 shadow-xl space-y-6">
+    <motion.div 
+      whileHover={{ y: -4 }}
+      transition={{ duration: 0.2 }}
+      className="bg-slate-900 dark:bg-slate-950 rounded-[2.5rem] p-8 md:p-10 border border-slate-800 shadow-subtle space-y-8"
+    >
       <div className="flex items-center gap-3 mb-6">
         <div className="p-3 bg-blue-900/30 text-blue-400 rounded-2xl border border-blue-800/50"><Activity size={28} /></div>
         <h3 className="text-2xl font-bold text-white font-display">
@@ -240,7 +248,7 @@ const DailyIntakeTool = ({ language }: { language: 'en' | 'hi' }) => {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
@@ -253,7 +261,11 @@ const FilterRoiTool = ({ language }: { language: 'en' | 'hi' }) => {
   const bottlesSaved = Math.round((monthlySpend / 20) * 12); // Assuming ₹20 per bottle
 
   return (
-    <div className="bg-slate-900 dark:bg-slate-950 rounded-3xl p-8 border border-slate-800 shadow-xl space-y-6">
+    <motion.div 
+      whileHover={{ y: -4 }}
+      transition={{ duration: 0.2 }}
+      className="bg-slate-900 dark:bg-slate-950 rounded-[2.5rem] p-8 md:p-10 border border-slate-800 shadow-subtle space-y-8"
+    >
       <div className="flex items-center gap-3 mb-6">
         <div className="p-3 bg-blue-900/30 text-blue-400 rounded-2xl border border-blue-800/50"><IndianRupee size={28} /></div>
         <h3 className="text-2xl font-bold text-white font-display">
@@ -311,6 +323,6 @@ const FilterRoiTool = ({ language }: { language: 'en' | 'hi' }) => {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };

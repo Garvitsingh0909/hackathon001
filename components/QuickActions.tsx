@@ -43,7 +43,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ onAction }) => {
                                 <span className="bg-white dark:bg-slate-800 px-3 py-1.5 rounded-lg shadow-lg text-sm font-medium text-slate-700 dark:text-slate-200 opacity-0 group-hover:opacity-100 transition-opacity border border-slate-200 dark:border-slate-700">
                                     {action.label}
                                 </span>
-                                <div className={`${action.color} p-3 rounded-2xl text-white shadow-lg hover:scale-110 transition-transform`}>
+                                <div className={`${action.color} p-3 rounded-[1.5rem] text-white shadow-md hover:shadow-lg hover:scale-110 transition-all`}>
                                     <action.icon size={20} />
                                 </div>
                             </motion.button>
@@ -56,7 +56,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ onAction }) => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setIsOpen(!isOpen)}
-                className={`${isOpen ? 'bg-slate-800 dark:bg-slate-700' : 'bg-gov-navy'} p-4 rounded-2xl text-white shadow-2xl z-50 transition-colors`}
+                className={`${isOpen ? 'bg-slate-800 dark:bg-slate-700' : 'bg-gov-navy'} p-4 rounded-[1.5rem] text-white shadow-lg hover:shadow-xl z-50 transition-all`}
             >
                 {isOpen ? <X size={24} /> : <Plus size={24} />}
             </motion.button>

@@ -126,6 +126,17 @@ export const api = {
         }
     },
 
+    getFeedback: async (): Promise<any[]> => {
+        try {
+            const q = query(collection(db, 'feedback'), orderBy('timestamp', 'desc'));
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        } catch (error) {
+            handleFirestoreError(error, OperationType.LIST, 'feedback');
+            return [];
+        }
+    },
+
     updateUserRole: async (userId: string, role: 'user' | 'admin'): Promise<void> => {
         try {
             const userRef = doc(db, 'users', userId);

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Volume2 } from 'lucide-react';
+import { MapPin, Volume2, AlertCircle } from 'lucide-react';
 import { DisclaimerBanner } from './ui/DisclaimerBanner';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -159,7 +159,7 @@ export const WaterMap = ({ language }: { language: 'en' | 'hi' }) => {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.1 }}
-                  className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-500 transition-all cursor-pointer group"
+                  className="p-5 rounded-[1.5rem] bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-500 transition-all cursor-pointer group shadow-sm hover:shadow-subtle-hover"
                   onClick={() => handleStateClick(state)}
                 >
                   <div className="flex justify-between items-start mb-2">
@@ -182,13 +182,22 @@ export const WaterMap = ({ language }: { language: 'en' | 'hi' }) => {
             </div>
           </div>
 
-          <div className="bg-blue-600 rounded-[2rem] p-6 text-white relative overflow-hidden group">
-            <div className="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
-            <h4 className="font-bold text-sm mb-1 relative z-10">Regional Alerts</h4>
-            <p className="text-[10px] text-blue-100 opacity-80 relative z-10">Bihar: Arsenic levels rising in 3 districts. Stay updated.</p>
-            <button className="mt-4 w-full py-2 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-xl text-[10px] font-bold uppercase tracking-widest transition-colors relative z-10">
-              View Details
-            </button>
+          <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-[2rem] p-8 text-white relative overflow-hidden group shadow-subtle">
+            <div className="absolute -right-4 -top-4 w-32 h-32 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700"></div>
+            <div className="relative z-10">
+                <div className="flex items-center gap-2 mb-3">
+                    <AlertCircle size={18} className="text-blue-200" />
+                    <h4 className="font-bold text-sm uppercase tracking-widest text-blue-100">Regional Alerts</h4>
+                </div>
+                <p className="text-sm text-white/90 leading-relaxed font-medium mb-6">Bihar: Arsenic levels rising in 3 districts. Stay updated.</p>
+                <motion.button 
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full py-3 bg-white text-blue-900 hover:bg-blue-50 rounded-xl text-xs font-bold uppercase tracking-widest transition-colors shadow-sm"
+                >
+                  View Details
+                </motion.button>
+            </div>
           </div>
         </div>
       </div>
