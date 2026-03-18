@@ -43,35 +43,6 @@ jaldrishti-ai/
 
 ---
 
-## ⚙️ Setup & Installation
-```bash
-# Clone the repo
-git clone https://github.com/yourusername/jaldrishti-ai.git
-
-# Install dependencies
-cd jaldrishti-ai
-npm install
-
-# Add environment variables
-cp .env.example .env
-# Fill in your Firebase config and function URL
-
-# Run locally
-npm run dev
-```
-
----
-
-## 🔐 Environment Variables
-
-Create a `.env` file in root — **add to `.gitignore` immediately**
-```env
-VITE_FIREBASE_API_KEY=your_key
-VITE_GEMINI_FUNCTION_URL=your_url
-```
-
-> ⚠️ Never expose your Gemini API key in frontend code. Use Firebase Cloud Functions only.
-
 ---
 
 ## 🧪 Demo Values
