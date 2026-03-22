@@ -57,7 +57,9 @@ export const WaterMap = ({ language }: { language: 'en' | 'hi' }) => {
   }, []);
 
   const handleStateClick = (state: StateData) => {
-    const text = `Water quality in ${state.name} is ${state.quality}. ${state.details}`;
+    const text = language === 'hi' 
+      ? `${state.name} में पानी की गुणवत्ता ${state.quality === 'Good' ? 'अच्छी' : state.quality === 'Moderate' ? 'मध्यम' : state.quality === 'Warning' ? 'चेतावनी' : 'गंभीर'} है। ${state.details}`
+      : `Water quality in ${state.name} is ${state.quality}. ${state.details}`;
     playBrowserTTS(
         text,
         () => setIsSpeaking(true),
@@ -100,14 +102,14 @@ export const WaterMap = ({ language }: { language: 'en' | 'hi' }) => {
                               state.quality === 'Moderate' ? 'bg-blue-100 text-blue-700' :
                               state.quality === 'Warning' ? 'bg-amber-100 text-amber-700' :
                               'bg-red-100 text-red-700'
-                          }`}>{state.quality}</span>
+                          }`}>{language === 'hi' ? (state.quality === 'Good' ? 'अच्छा' : state.quality === 'Moderate' ? 'मध्यम' : state.quality === 'Warning' ? 'चेतावनी' : 'गंभीर') : state.quality}</span>
                       </div>
                       <p className="text-xs text-slate-600 leading-relaxed mb-3">{state.details}</p>
                       <button 
                           onClick={() => handleStateClick(state)}
                           className="w-full py-2 bg-gov-navy text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 hover:bg-slate-800 transition-colors"
                       >
-                          <Volume2 size={14} /> Listen to Report
+                          <Volume2 size={14} /> {language === 'en' ? 'Listen to Report' : 'रिपोर्ट सुनें'}
                       </button>
                   </div>
                 </Popup>
@@ -120,7 +122,7 @@ export const WaterMap = ({ language }: { language: 'en' | 'hi' }) => {
                 <Popup>
                   <div className="p-2">
                       <h3 className="font-bold text-lg">{segment.name}</h3>
-                      <p className="text-sm">Status: {segment.status}</p>
+                      <p className="text-sm">{language === 'en' ? 'Status:' : 'स्थिति:'} {segment.status}</p>
                       <p className="text-sm">DO: {segment.paramDo} mg/L</p>
                       <p className="text-sm">pH: {segment.paramPh}</p>
                   </div>
@@ -136,7 +138,7 @@ export const WaterMap = ({ language }: { language: 'en' | 'hi' }) => {
                       <div className="w-1 h-4 bg-gov-teal animate-[music-bar_1s_infinite_0.3s]"></div>
                       <div className="w-1 h-4 bg-gov-teal animate-[music-bar_1s_infinite_0.5s]"></div>
                   </div>
-                  <span className="text-xs font-bold tracking-widest uppercase">Voice Active</span>
+                  <span className="text-xs font-bold tracking-widest uppercase">{language === 'en' ? 'Voice Active' : 'आवाज़ सक्रिय'}</span>
               </div>
           )}
         </div>
@@ -145,10 +147,10 @@ export const WaterMap = ({ language }: { language: 'en' | 'hi' }) => {
         <div className="w-full lg:w-80 flex flex-col gap-4 h-full">
           <div className="bg-gov-card dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 p-6 flex-grow overflow-hidden flex flex-col">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="font-bold text-slate-900 dark:text-white font-display">Live Reports</h3>
+              <h3 className="font-bold text-slate-900 dark:text-white font-display">{language === 'en' ? 'Live Reports' : 'लाइव रिपोर्ट'}</h3>
               <div className="flex items-center gap-1.5">
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Live</span>
+                <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">{language === 'en' ? 'Live' : 'लाइव'}</span>
               </div>
             </div>
 
@@ -168,13 +170,13 @@ export const WaterMap = ({ language }: { language: 'en' | 'hi' }) => {
                       state.quality === 'Good' ? 'bg-emerald-100 text-emerald-700' :
                       state.quality === 'Moderate' ? 'bg-blue-100 text-blue-700' :
                       'bg-red-100 text-red-700'
-                    }`}>{state.quality}</span>
+                    }`}>{language === 'hi' ? (state.quality === 'Good' ? 'अच्छा' : state.quality === 'Moderate' ? 'मध्यम' : state.quality === 'Warning' ? 'चेतावनी' : 'गंभीर') : state.quality}</span>
                   </div>
                   <p className="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
                     {state.details}
                   </p>
                   <div className="mt-3 flex items-center justify-between">
-                    <span className="text-[8px] font-mono text-slate-400 uppercase">2m ago</span>
+                    <span className="text-[8px] font-mono text-slate-400 uppercase">{language === 'en' ? '2m ago' : '2 मिनट पहले'}</span>
                     <Volume2 size={12} className="text-slate-300 group-hover:text-blue-500 transition-colors" />
                   </div>
                 </motion.div>
@@ -187,15 +189,15 @@ export const WaterMap = ({ language }: { language: 'en' | 'hi' }) => {
             <div className="relative z-10">
                 <div className="flex items-center gap-2 mb-3">
                     <AlertCircle size={18} className="text-blue-200" />
-                    <h4 className="font-bold text-sm uppercase tracking-widest text-blue-100">Regional Alerts</h4>
+                    <h4 className="font-bold text-sm uppercase tracking-widest text-blue-100">{language === 'en' ? 'Regional Alerts' : 'क्षेत्रीय अलर्ट'}</h4>
                 </div>
-                <p className="text-sm text-white/90 leading-relaxed font-medium mb-6">Bihar: Arsenic levels rising in 3 districts. Stay updated.</p>
+                <p className="text-sm text-white/90 leading-relaxed font-medium mb-6">{language === 'en' ? 'Bihar: Arsenic levels rising in 3 districts. Stay updated.' : 'बिहार: 3 जिलों में आर्सेनिक का स्तर बढ़ रहा है। अपडेट रहें।'}</p>
                 <motion.button 
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     className="w-full py-3 bg-white text-blue-900 hover:bg-blue-50 rounded-xl text-xs font-bold uppercase tracking-widest transition-colors shadow-sm"
                 >
-                  View Details
+                  {language === 'en' ? 'View Details' : 'विवरण देखें'}
                 </motion.button>
             </div>
           </div>

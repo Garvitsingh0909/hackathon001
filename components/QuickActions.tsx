@@ -1,19 +1,22 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Camera, MapPin, MessageSquare, X, Droplets } from 'lucide-react';
+import { TRANSLATIONS } from '../constants';
 
 interface QuickActionsProps {
     onAction: (tab: string) => void;
+    language: 'en' | 'hi';
 }
 
-export const QuickActions: React.FC<QuickActionsProps> = ({ onAction }) => {
+export const QuickActions: React.FC<QuickActionsProps> = ({ onAction, language }) => {
+    const t = TRANSLATIONS[language].nav;
     const [isOpen, setIsOpen] = useState(false);
 
     const actions = [
-        { id: 'analyze', icon: Camera, label: 'Analyze Water', color: 'bg-blue-500' },
-        { id: 'intel', icon: Droplets, label: 'Risk Check', color: 'bg-emerald-500' },
-        { id: 'map', icon: MapPin, label: 'Nearby Stations', color: 'bg-amber-500' },
-        { id: 'guide', icon: MessageSquare, label: 'Starter Guide', color: 'bg-purple-500' },
+        { id: 'analyze', icon: Camera, label: t.analyze, color: 'bg-blue-500' },
+        { id: 'intel', icon: Droplets, label: t.intel, color: 'bg-emerald-500' },
+        { id: 'map', icon: MapPin, label: t.map, color: 'bg-amber-500' },
+        { id: 'guide', icon: MessageSquare, label: language === 'en' ? 'Starter Guide' : 'स्टार्टर गाइड', color: 'bg-purple-500' },
     ];
 
     const handleAction = (id: string) => {

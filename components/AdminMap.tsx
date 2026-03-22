@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { DisclaimerBanner } from './ui/DisclaimerBanner';
 import { MockPill } from './ui/MockPill';
 
-export const AdminMap = () => {
+export const AdminMap = ({ language }: { language: 'en' | 'hi' }) => {
     const [segments, setSegments] = useState<RiverSegment[]>([]);
     const [selectedSegment, setSelectedSegment] = useState<RiverSegment | null>(null);
     const [loading, setLoading] = useState(true);
@@ -67,8 +67,8 @@ export const AdminMap = () => {
             <div className="w-full md:w-80 flex flex-col gap-4">
                 <div className="bg-gov-card dark:bg-slate-900 p-5 rounded-[2rem] shadow-subtle border border-slate-200 dark:border-slate-800 flex items-center justify-between transition-colors">
                     <div>
-                        <h3 className="font-bold text-slate-900 dark:text-white font-display text-lg">River Segments</h3>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{segments.length} Active Sensors</p>
+                        <h3 className="font-bold text-slate-900 dark:text-white font-display text-lg">{language === 'en' ? 'River Segments' : 'नदी खंड'}</h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{segments.length} {language === 'en' ? 'Active Sensors' : 'सक्रिय सेंसर'}</p>
                     </div>
                     <button onClick={fetchSegments} className="p-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl text-slate-500 dark:text-slate-400 transition-colors">
                         <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
@@ -161,34 +161,34 @@ export const AdminMap = () => {
                                             </div>
                                             <div>
                                                 <h2 className="font-bold text-slate-900 dark:text-white text-2xl font-display">{selectedSegment.name}</h2>
-                                                <p className="text-sm text-slate-500 dark:text-slate-400">Segment ID: {selectedSegment.id}</p>
+                                                <p className="text-sm text-slate-500 dark:text-slate-400">{language === 'en' ? 'Segment ID:' : 'खंड आईडी:'} {selectedSegment.id}</p>
                                             </div>
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-4 mb-8">
                                             <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-[1.5rem] border border-slate-100 dark:border-slate-700 shadow-subtle">
-                                                <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">pH Level</div>
+                                                <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">{language === 'en' ? 'pH Level' : 'पीएच स्तर'}</div>
                                                 <div className="font-bold text-slate-900 dark:text-white text-xl">{selectedSegment.paramPh}</div>
                                             </div>
                                             <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-[1.5rem] border border-slate-100 dark:border-slate-700 shadow-subtle">
-                                                <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Dissolved O2</div>
+                                                <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">{language === 'en' ? 'Dissolved O2' : 'घुलित O2'}</div>
                                                 <div className="font-bold text-slate-900 dark:text-white text-xl">{selectedSegment.paramDo} mg/L</div>
                                             </div>
                                             <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-[1.5rem] border border-slate-100 dark:border-slate-700 shadow-subtle">
-                                                <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Turbidity</div>
+                                                <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">{language === 'en' ? 'Turbidity' : 'मैलापन'}</div>
                                                 <div className="font-bold text-slate-900 dark:text-white text-xl">12 NTU</div>
                                             </div>
                                             <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-[1.5rem] border border-slate-100 dark:border-slate-700 shadow-subtle">
-                                                <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">Temperature</div>
+                                                <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">{language === 'en' ? 'Temperature' : 'तापमान'}</div>
                                                 <div className="font-bold text-slate-900 dark:text-white text-xl">24.5°C</div>
                                             </div>
                                         </div>
 
                                         <div className="flex items-center justify-between text-xs text-slate-400 dark:text-slate-500 pt-4 border-t border-slate-100 dark:border-slate-800">
-                                            <span>Last updated: {selectedSegment.lastUpdate}</span>
+                                            <span>{language === 'en' ? 'Last updated:' : 'अंतिम अद्यतन:'} {selectedSegment.lastUpdate}</span>
                                             <div className="flex items-center gap-1">
                                                 <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                                                Live Sensor
+                                                {language === 'en' ? 'Live Sensor' : 'लाइव सेंसर'}
                                             </div>
                                         </div>
                                     </div>
@@ -207,14 +207,14 @@ export const AdminMap = () => {
                                     <h2 className="font-bold text-slate-900 dark:text-white text-xl font-display">{selectedSegment.name}</h2>
                                     <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mt-1">
                                         <Map size={14} />
-                                        <span>Lat: {selectedSegment.coordinates.lat}, Lng: {selectedSegment.coordinates.lng}</span>
+                                        <span>{language === 'en' ? 'Lat:' : 'अक्षांश:'} {selectedSegment.coordinates.lat}, {language === 'en' ? 'Lng:' : 'देशांतर:'} {selectedSegment.coordinates.lng}</span>
                                     </div>
                                 </div>
                                 <button 
                                     onClick={() => setShowPopup(true)}
                                     className="px-6 py-2 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/20"
                                 >
-                                    View Detailed Report
+                                    {language === 'en' ? 'View Detailed Report' : 'विस्तृत रिपोर्ट देखें'}
                                 </button>
                             </motion.div>
                         )}
@@ -222,7 +222,7 @@ export const AdminMap = () => {
                 ) : (
                     <div className="flex-1 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-800/50 transition-colors">
                         <Map size={48} className="mb-4 text-slate-300 dark:text-slate-600" />
-                        <p className="font-medium">Select a segment to view live data</p>
+                        <p className="font-medium">{language === 'en' ? 'Select a segment to view live data' : 'लाइव डेटा देखने के लिए एक खंड चुनें'}</p>
                     </div>
                 )}
                 </AnimatePresence>

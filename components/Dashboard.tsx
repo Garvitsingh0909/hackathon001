@@ -1,430 +1,447 @@
-import React, { useEffect, useState } from 'react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Activity, Wind, Droplet, ArrowRight, Camera, AlertCircle, CheckCircle2, Clock, Mic, ChevronRight, Volume2, MapPin } from 'lucide-react';
-import { api } from '../services/api';
-import { getQuickStat } from '../lib/gemini';
-import { WaterQualityReport } from '../types';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+    Droplets, 
+    Wind, 
+    Thermometer, 
+    AlertTriangle, 
+    Activity, 
+    TrendingUp, 
+    MapPin, 
+    Calendar, 
+    ChevronRight, 
+    Search, 
+    Bell, 
+    User, 
+    ArrowUpRight, 
+    ArrowDownRight, 
+    Layers, 
+    ShieldCheck, 
+    Info, 
+    Play,
+    Zap,
+    Waves,
+    CloudRain,
+    Sun,
+    Cloud
+} from 'lucide-react';
+import { 
+    AreaChart, 
+    Area, 
+    XAxis, 
+    YAxis, 
+    CartesianGrid, 
+    Tooltip, 
+    ResponsiveContainer, 
+    LineChart, 
+    Line,
+    BarChart,
+    Bar
+} from 'recharts';
+import { toast } from 'react-hot-toast';
 import { TRANSLATIONS } from '../constants';
-import { motion } from 'framer-motion';
+import { getReports, getWeather } from '../services/api';
 import { DisclaimerBanner } from './ui/DisclaimerBanner';
-import { MockPill } from './ui/MockPill';
-import { useAuth } from '../src/AuthContext';
 
-interface DashboardProps {
-    onChangeTab: (tab: string) => void;
-    language: 'en' | 'hi';
-}
+const data = [
+    { name: '00:00', ph: 7.2, tds: 240, turbidity: 1.2 },
+    { name: '04:00', ph: 7.1, tds: 245, turbidity: 1.5 },
+    { name: '08:00', ph: 7.3, tds: 235, turbidity: 1.1 },
+    { name: '12:00', ph: 7.4, tds: 230, turbidity: 1.0 },
+    { name: '16:00', ph: 7.2, tds: 242, turbidity: 1.3 },
+    { name: '20:00', ph: 7.1, tds: 248, turbidity: 1.6 },
+    { name: '24:00', ph: 7.2, tds: 240, turbidity: 1.2 },
+];
 
-export const Dashboard: React.FC<DashboardProps> = ({ onChangeTab, language }) => {
-    const { user } = useAuth();
-    const [reports, setReports] = useState<WaterQualityReport[]>([]);
-    const [chartData, setChartData] = useState<{name: string, value: number}[]>([]);
+const StatCard = ({ label, value, unit, icon: Icon, trend, color }: any) => (
+    <motion.div 
+        whileHover={{ y: -2, scale: 1.01 }}
+        className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden group"
+    >
+        <div className={`absolute top-0 right-0 w-16 h-16 bg-${color}-500/5 rounded-full blur-xl -mr-8 -mt-8 transition-transform group-hover:scale-150`}></div>
+        <div className="relative z-10 flex items-start justify-between">
+            <div className="space-y-2">
+                <div className={`p-2 bg-${color}-50 dark:bg-${color}-900/20 text-${color}-600 dark:text-${color}-400 rounded-lg w-fit`}>
+                    <Icon size={16} />
+                </div>
+                <div>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{label}</p>
+                    <div className="flex items-baseline gap-1 mt-0.5">
+                        <h3 className="text-xl font-black text-slate-900 dark:text-white font-display">{value}</h3>
+                        <span className="text-[10px] font-bold text-slate-400">{unit}</span>
+                    </div>
+                </div>
+            </div>
+            {trend && (
+                <div className={`flex items-center gap-0.5 text-[9px] font-bold ${trend.startsWith('+') ? 'text-emerald-500' : 'text-red-500'}`}>
+                    {trend.startsWith('+') ? <ArrowUpRight size={10} /> : <ArrowDownRight size={10} />}
+                    {trend}
+                </div>
+            )}
+        </div>
+    </motion.div>
+);
+
+export const Dashboard = ({ language, setActiveTab }: { language: 'en' | 'hi', setActiveTab: (tab: string) => void }) => {
+    const t = TRANSLATIONS[language].dashboard;
+    const h = TRANSLATIONS[language].hero;
+    const [reports, setReports] = useState<any[]>([]);
     const [weather, setWeather] = useState<any>(null);
-    const [systemSummary, setSystemSummary] = useState("Initializing regional data streams...");
     const [loading, setLoading] = useState(true);
-    
-    const t = TRANSLATIONS[language];
+    const [videoError, setVideoError] = useState(false);
 
     useEffect(() => {
         const loadData = async () => {
             try {
-                // 1. Fetch critical data first
-                const [reportData, trendData, weatherData] = await Promise.all([
-                    user ? api.getReports().catch(e => {
-                        // Suppress expected permission errors when unauthenticated
-                        return [];
-                    }) : Promise.resolve([]),
-                    api.getWaterTrends(),
-                    api.getWeather(25.9427, 83.5539) // Default Mau, UP coordinates
+                const [reportsData, weatherData] = await Promise.all([
+                    getReports(),
+                    getWeather(25.9427, 83.5539)
                 ]);
-                
-                setReports(reportData);
-                setChartData(trendData);
+                setReports(reportsData.slice(0, 3));
                 setWeather(weatherData);
-                setLoading(false); // Stop loading immediately after core data
-
-                // 2. Fetch system summary in background
-                if (reportData.length > 0) {
-                    const latest = reportData[0];
-                    const context = `Latest report from ${latest.locationName} shows ${latest.overallScore}/100 score. Algae: ${latest.algaeLevel}. Status: ${latest.status}.`;
-                    
-                    // Non-blocking system call
-                    getQuickStat(context).then(summary => {
-                        if (summary) setSystemSummary(summary);
-                    }).catch(err => console.error("Summary failed", err));
-                }
-            } catch (e) {
-                console.error(e);
+            } catch (error) {
+                console.error("Dashboard load failed", error);
+            } finally {
                 setLoading(false);
             }
         };
         loadData();
-    }, [user]);
+    }, []);
 
-    const getStatusColor = (score: number) => {
-        if (score < 50) return 'border-l-4 border-l-red-500';
-        if (score < 75) return 'border-l-4 border-l-amber-500';
-        return 'border-l-4 border-l-emerald-500';
+    const handleComingSoon = (feature: string) => {
+        toast.success(`${feature} ${language === 'en' ? 'coming soon!' : 'जल्द आ रहा है!'}`);
     };
 
-    const container = {
-        hidden: { opacity: 0 },
-        show: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.1
-            }
-        }
-    };
+    return (
+        <div className="space-y-12 pb-20">
+            <DisclaimerBanner />
 
-    const item = {
-        hidden: { opacity: 0, y: 20 },
-        show: { opacity: 1, y: 0 }
-    };
-
-  return (
-    <div className="space-y-10 pt-4">
-      {/* 1. HERO SECTION (Refined & Hooking) */}
-      <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 text-white min-h-[480px] flex items-center shadow-2xl group">
-          {/* High-quality background image with overlay */}
-          <div className="absolute inset-0 z-0 overflow-hidden bg-slate-950">
-            <img 
-              src="https://images.unsplash.com/photo-1454496522488-7a8e488e8606?auto=format&fit=crop&w=1920&q=80" 
-              alt="Mountain landscape"
-              className="w-full h-full object-cover opacity-60 scale-105"
-              referrerPolicy="no-referrer"
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-900/80 to-transparent"></div>
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 to-transparent"></div>
-          </div>
-
-          <div className="relative z-10 w-full px-8 md:px-16 py-12">
-            <div className="max-w-3xl space-y-8">
-                <motion.div 
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6 }}
-                  className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl"
-                >
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/70">{t.hero.label}</span>
-                </motion.div>
+            {/* HERO SECTION - Reverted & Refined */}
+            <section className="relative h-[500px] rounded-[2.5rem] overflow-hidden shadow-xl group">
+                {/* Background Image (Always present as base/fallback) */}
+                <div className="absolute inset-0 bg-slate-900">
+                    <img 
+                        src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1920&q=80" 
+                        alt="Nature Background" 
+                        className="w-full h-full object-cover opacity-60"
+                        referrerPolicy="no-referrer"
+                    />
+                </div>
                 
-                <motion.h1 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: 0.2 }}
-                  className="text-4xl md:text-6xl font-bold leading-[0.95] font-display tracking-tight"
-                >
-                    {t.hero.titleStart} <span className="bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">{t.hero.titleEnd}</span>
-                </motion.h1>
-                
-                <motion.p 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 1, delay: 0.4 }}
-                  className="text-slate-400 text-xl md:text-2xl max-w-xl font-light leading-relaxed"
-                >
-                    {t.hero.desc}
-                </motion.p>
-
-                <motion.div 
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.6 }}
-                  className="flex flex-col sm:flex-row gap-5 pt-4"
-                >
-                    <button 
-                        onClick={() => onChangeTab('analyze')}
-                        className="h-16 px-10 bg-white text-slate-950 rounded-2xl font-bold transition-all flex items-center justify-center gap-3 shadow-2xl hover:scale-[1.02] active:scale-[0.98] hover:shadow-subtle-hover"
+                {/* Video Layer */}
+                {!videoError && (
+                    <video 
+                        autoPlay 
+                        loop 
+                        muted 
+                        playsInline
+                        onError={() => setVideoError(true)}
+                        className="absolute inset-0 w-full h-full object-cover opacity-40 transition-opacity duration-1000"
                     >
-                        {t.dashboard.submitReport}
-                        <ArrowRight size={22} />
-                    </button>
-                    <button 
-                        onClick={() => onChangeTab('admin')}
-                        className="h-16 px-10 bg-white/5 border border-white/10 text-white rounded-2xl font-bold hover:bg-white/10 transition-all backdrop-blur-md flex items-center justify-center hover:shadow-subtle-hover"
-                    >
-                        {t.hero.btnSecondary}
-                    </button>
-                </motion.div>
-
-                {/* Login Prompt for better UX */}
-                {!user && (
-                    <motion.div 
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 1 }}
-                        className="pt-4 flex items-center gap-3 text-white/60 text-sm"
-                    >
-                        <AlertCircle size={16} className="text-blue-400" />
-                        <span>Sign in to unlock personalized water quality alerts and AI insights.</span>
-                    </motion.div>
+                        <source src="https://assets.mixkit.co/videos/preview/mixkit-clear-water-stream-in-the-forest-4261-large.mp4" type="video/mp4" />
+                    </video>
                 )}
-            </div>
-          </div>
-          
-          {/* Subtle floating element for "fanciness" */}
-          <div className="absolute right-16 bottom-16 hidden xl:block">
-            <div className="bg-white/5 backdrop-blur-2xl border border-white/10 p-8 rounded-2xl shadow-2xl">
-              <div className="flex items-center gap-5 mb-6">
-                <div className="w-14 h-14 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400 shadow-inner">
-                  <Droplet size={28} />
+
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent"></div>
+                
+                <div className="relative z-10 h-full flex flex-col justify-center px-8 md:px-16 space-y-4 max-w-3xl">
+                    <motion.div 
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="inline-flex items-center gap-2 px-2.5 py-1 bg-white/10 backdrop-blur-xl border border-white/20 rounded-full text-white text-[9px] font-bold uppercase tracking-widest w-fit"
+                    >
+                        <div className="w-1 h-1 bg-emerald-500 rounded-full animate-pulse"></div>
+                        {h.label}
+                    </motion.div>
+                    
+                    <div className="space-y-3">
+                        <motion.h1 
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.1, duration: 0.8 }}
+                            className="text-3xl md:text-5xl font-black text-white leading-[1.1] font-display tracking-tight"
+                        >
+                            {h.titleStart} <br />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">
+                                {h.titleEnd}
+                            </span>
+                        </motion.h1>
+                        <motion.p 
+                            initial={{ opacity: 0, y: 15 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
+                            className="text-slate-300 text-sm md:text-base max-w-lg leading-relaxed font-medium"
+                        >
+                            {h.desc}
+                        </motion.p>
+                    </div>
+
+                    <motion.div 
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="flex flex-wrap gap-3"
+                    >
+                        <button 
+                            onClick={() => setActiveTab('analyze')}
+                            className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-blue-600/20 flex items-center gap-2 group text-xs"
+                        >
+                            {h.btnPrimary}
+                            <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                        </button>
+                        <button 
+                            onClick={() => setActiveTab('faq')}
+                            className="px-6 py-3 bg-white/10 backdrop-blur-xl hover:bg-white/20 text-white border border-white/20 rounded-xl font-bold transition-all flex items-center gap-2 text-xs"
+                        >
+                            <Play size={14} fill="white" />
+                            {h.btnSecondary}
+                        </button>
+                    </motion.div>
                 </div>
-                <div>
-                  <div className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] mb-1">Live Basin Index</div>
-                  <div className="text-3xl font-bold text-white font-mono">92.4</div>
-                </div>
-              </div>
-              <div className="h-2 w-56 bg-white/5 rounded-full overflow-hidden p-[1px]">
+
+                {/* Floating Basin Index - Re-styled */}
                 <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: "92%" }}
-                  transition={{ duration: 2, delay: 1 }}
-                  className="h-full bg-gradient-to-r from-blue-500 to-emerald-400 rounded-full shadow-[0_0_10px_rgba(52,211,153,0.5)]"
-                ></motion.div>
-              </div>
-            </div>
-          </div>
-      </div>
-
-      {/* 2. DASHBOARD GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          
-          {/* Insight - Spans 2 cols */}
-          <motion.div 
-            whileHover={{ y: -4 }}
-            transition={{ duration: 0.2 }}
-            className="md:col-span-2 lg:col-span-2 bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-subtle hover:shadow-subtle-hover border border-slate-200/60 dark:border-white/5 flex flex-col md:flex-row gap-8"
-          >
-              <div className="flex-1 flex flex-col justify-between">
-                <div>
-                    <div className="flex items-center gap-2 mb-4">
-                        <Activity size={18} className="text-blue-500" />
-                        <h3 className="font-bold text-slate-800 dark:text-white text-xs uppercase tracking-widest">System Analysis</h3>
-                    </div>
-                    <p className="text-slate-600 dark:text-slate-300 text-[15px] leading-relaxed mb-6">
-                        {loading ? "Loading data..." : systemSummary}
-                    </p>
-                </div>
-                <button onClick={() => onChangeTab('analyze')} className="text-sm font-bold text-blue-600 hover:text-blue-700 transition-colors flex items-center gap-2 w-fit">
-                    {t.dashboard.viewReport} <ArrowRight size={16} />
-                </button>
-              </div>
-              <div className="w-full md:w-56 h-40 md:h-auto rounded-2xl overflow-hidden shrink-0 shadow-inner">
-                  <img 
-                    src="https://images.unsplash.com/photo-1576085898323-218337e3e43c?auto=format&fit=crop&w=400&q=80" 
-                    alt="Water Analysis" 
-                    className="w-full h-full object-cover"
-                    referrerPolicy="no-referrer"
-                  />
-              </div>
-          </motion.div>
-
-          {/* Gamification Card: Water Warrior */}
-          <motion.div 
-            whileHover={{ y: -4 }}
-            transition={{ duration: 0.2 }}
-            className="md:col-span-1 lg:col-span-1 bg-gradient-to-br from-blue-500 to-emerald-500 rounded-[2rem] p-8 shadow-subtle hover:shadow-subtle-hover text-white flex flex-col justify-between relative overflow-hidden"
-          >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
-              <div className="relative z-10">
-                  <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-bold text-sm uppercase tracking-widest text-white/90">Your Impact</h3>
-                      <span className="text-2xl">🌱</span>
-                  </div>
-                  <p className="text-3xl font-bold font-display tracking-tight mb-1">Level 4</p>
-                  <p className="text-xs text-white/80 font-medium">Water Warrior</p>
-              </div>
-              <div className="relative z-10 mt-6">
-                  <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider mb-2 text-white/90">
-                      <span>12 Reports</span>
-                      <span>Next: Lvl 5</span>
-                  </div>
-                  <div className="h-2 w-full bg-black/20 rounded-full overflow-hidden">
-                      <div className="h-full bg-white rounded-full w-[60%] shadow-[0_0_10px_rgba(255,255,255,0.5)]"></div>
-                  </div>
-              </div>
-          </motion.div>
-
-          {/* Quick Action: Report */}
-          <motion.div 
-            whileHover={{ y: -4, scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            transition={{ duration: 0.2 }}
-            onClick={() => onChangeTab('analyze')}
-            className="md:col-span-1 lg:col-span-1 bg-slate-900 rounded-[2rem] p-8 shadow-subtle hover:shadow-subtle-hover text-white cursor-pointer hover:bg-slate-800 transition-colors flex flex-col justify-between min-h-[180px] group"
-          >
-              <div className="w-12 h-12 rounded-2xl bg-blue-500/20 flex items-center justify-center group-hover:bg-blue-500/30 transition-colors">
-                  <Camera size={24} className="text-blue-400" />
-              </div>
-              <div className="mt-4">
-                  <h3 className="font-bold text-lg tracking-tight mb-1">{t.dashboard.submitReport}</h3>
-                  <p className="text-slate-400 text-xs leading-relaxed">{t.dashboard.uploadPhoto}</p>
-              </div>
-          </motion.div>
-
-          {/* Stat Card 1 */}
-          <div className="md:col-span-1 lg:col-span-1">
-            <StatCard label="Water Index" value="92" trend="Excellent" icon={Droplet} color="emerald" />
-          </div>
-
-          {/* Weather Card - Integrated from Open-Meteo */}
-          {weather && (
-            <div className="md:col-span-1 lg:col-span-1">
-              <StatCard 
-                label="Air Temp" 
-                value={`${Math.round(weather.current.temperature_2m)}°C`} 
-                trend={weather.current.precipitation > 0 ? "Raining" : "Clear"} 
-                icon={Wind} 
-                color="blue" 
-              />
-            </div>
-          )}
-
-          {/* Main Chart - Spans 2 cols */}
-          <motion.div 
-            whileHover={{ y: -4 }}
-            transition={{ duration: 0.2 }}
-            className="md:col-span-2 lg:col-span-2 bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-subtle hover:shadow-subtle-hover border border-slate-200/60 dark:border-white/5 flex flex-col"
-          >
-                <div className="flex justify-between items-center mb-6">
-                    <h3 className="font-bold text-slate-800 dark:text-white text-xs uppercase tracking-widest">{t.dashboard.chartTitle}</h3>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Index Trend</span>
-                </div>
-                <div className="flex-1 w-full min-h-[200px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" className="dark:stroke-slate-800" />
-                        <XAxis 
-                            dataKey="name" 
-                            axisLine={false} 
-                            tickLine={false} 
-                            tick={{fontSize: 10, fill: '#94a3b8'}} 
-                            dy={10}
-                        />
-                        <YAxis 
-                            axisLine={false} 
-                            tickLine={false} 
-                            tick={{fontSize: 10, fill: '#94a3b8'}} 
-                            dx={-10}
-                        />
-                        <Tooltip content={<CustomTooltip />} />
-                        <Area 
-                            type="monotone" 
-                            dataKey="value" 
-                            stroke="#3b82f6" 
-                            strokeWidth={3} 
-                            fill="#3b82f6" 
-                            fillOpacity={0.08}
-                        />
-                    </AreaChart>
-                    </ResponsiveContainer>
-                </div>
-          </motion.div>
-
-          {/* Recent Activity - Spans 2 cols */}
-          <motion.div 
-            whileHover={{ y: -4 }}
-            transition={{ duration: 0.2 }}
-            className="md:col-span-2 lg:col-span-2 bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-subtle hover:shadow-subtle-hover border border-slate-200/60 dark:border-white/5 flex flex-col"
-          >
-              <div className="flex justify-between items-center mb-6">
-                  <h3 className="font-bold text-slate-800 dark:text-white text-xs uppercase tracking-widest">{t.dashboard.recentReports}</h3>
-                  <button className="text-[10px] font-bold text-blue-600 hover:text-blue-700 transition-colors uppercase tracking-widest">View All</button>
-              </div>
-              
-              <div className="space-y-3 flex-1">
-                {loading ? (
-                    [1,2].map(i => <SkeletonReport key={i} />)
-                ) : reports.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full text-center py-8">
-                        <div className="w-14 h-14 rounded-2xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400 mb-4">
-                            <Activity size={24} />
+                    initial={{ opacity: 0, x: 30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.6, type: "spring" }}
+                    className="absolute bottom-10 right-10 p-6 bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[2rem] shadow-2xl hidden xl:block group-hover:scale-105 transition-transform duration-500"
+                >
+                    <div className="flex items-center gap-4">
+                        <div className="relative w-16 h-16">
+                            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                                <circle cx="50" cy="50" r="45" fill="transparent" stroke="rgba(255,255,255,0.05)" strokeWidth="6" />
+                                <motion.circle 
+                                    cx="50" cy="50" r="45" fill="transparent" stroke="#3b82f6" strokeWidth="8" 
+                                    strokeDasharray="282.7"
+                                    initial={{ strokeDashoffset: 282.7 }}
+                                    animate={{ strokeDashoffset: 282.7 - (282.7 * 84) / 100 }}
+                                    transition={{ duration: 2.5, delay: 1 }}
+                                    strokeLinecap="round"
+                                />
+                            </svg>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                <span className="text-xl font-black text-white font-display">84</span>
+                                <span className="text-[6px] font-bold text-slate-500 uppercase tracking-widest">Index</span>
+                            </div>
                         </div>
-                        <p className="text-sm font-bold text-slate-900 dark:text-white mb-1 tracking-tight">No reports yet</p>
-                        <p className="text-xs text-slate-500 leading-relaxed">Submit a water quality report to see it here.</p>
+                        <div className="space-y-0.5">
+                            <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Basin Health</p>
+                            <p className="text-lg font-black text-white font-display">Excellent</p>
+                            <div className="flex items-center gap-1.5 text-emerald-400 text-[8px] font-bold uppercase tracking-widest">
+                                <TrendingUp size={10} /> +4.2%
+                            </div>
+                        </div>
                     </div>
-                ) : (
-                    reports.slice(0, 2).map((report) => (
-                        <div key={report.id} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-[1.5rem] border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all cursor-pointer group hover:shadow-subtle-hover">
-                            <div className="flex items-center gap-4">
-                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-sm ${report.overallScore < 50 ? 'bg-red-500' : report.overallScore < 75 ? 'bg-amber-500' : 'bg-emerald-500'}`}>
-                                    {report.overallScore}
+                </motion.div>
+            </section>
+
+            {/* STATS GRID */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <StatCard label="Average pH" value="7.2" unit="pH" icon={Droplets} trend="+0.2" color="blue" />
+                <StatCard label="Total TDS" value="242" unit="mg/L" icon={Activity} trend="-12" color="emerald" />
+                <StatCard label="Turbidity" value="1.3" unit="NTU" icon={Waves} trend="+0.1" color="amber" />
+                <StatCard label="Water Temp" value="24.5" unit="°C" icon={Thermometer} trend="+1.5" color="red" />
+            </div>
+
+            {/* MAIN DASHBOARD CONTENT */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                {/* Charts Section */}
+                <div className="lg:col-span-8 space-y-8">
+                    <div className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                            <div>
+                                <h3 className="text-lg font-black text-slate-900 dark:text-white font-display tracking-tight">Water Quality Trends</h3>
+                                <p className="text-slate-500 text-[10px] font-medium uppercase tracking-wider">Real-time monitoring of Tamsa River parameters.</p>
+                            </div>
+                            <div className="flex gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+                                <button className="px-3 py-1 bg-white dark:bg-slate-700 text-slate-900 dark:text-white rounded-md text-[9px] font-bold shadow-sm">24H</button>
+                                <button className="px-3 py-1 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 text-[9px] font-bold">7D</button>
+                                <button className="px-3 py-1 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 text-[9px] font-bold">30D</button>
+                            </div>
+                        </div>
+                        
+                        <div className="h-[280px] w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={data}>
+                                    <defs>
+                                        <linearGradient id="colorPh" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1}/>
+                                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#94a3b8'}} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#94a3b8'}} />
+                                    <Tooltip 
+                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', fontSize: '10px' }}
+                                    />
+                                    <Area type="monotone" dataKey="ph" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorPh)" />
+                                    <Area type="monotone" dataKey="turbidity" stroke="#f59e0b" strokeWidth={2} fillOpacity={0} />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+
+                    {/* System Summary */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="bg-slate-900 p-6 rounded-[2rem] text-white relative overflow-hidden shadow-lg">
+                            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-600/20 rounded-full blur-3xl -mr-12 -mt-12"></div>
+                            <div className="relative z-10 space-y-3">
+                                <div className="p-2 bg-blue-600/20 text-blue-400 rounded-lg w-fit border border-blue-500/30">
+                                    <ShieldCheck size={16} />
                                 </div>
-                                <div>
-                                    <h4 className="font-bold text-slate-900 dark:text-white text-sm tracking-tight">{report.locationName}</h4>
-                                    <div className="flex items-center gap-2 mt-1">
-                                        <span className="text-[10px] text-slate-500 flex items-center gap-1 font-medium">
-                                            <Clock size={10} />
-                                            {new Date(report.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                                        </span>
-                                        <span className={`text-[10px] font-bold uppercase tracking-wider ${report.status === 'Resolved' ? 'text-emerald-500' : 'text-amber-500'}`}>{report.status}</span>
-                                    </div>
+                                <h4 className="text-lg font-black font-display tracking-tight">System Integrity</h4>
+                                <p className="text-slate-400 text-[10px] leading-relaxed">All 14 monitoring stations are currently reporting active data. No critical anomalies detected in the last 24 hours.</p>
+                                <button 
+                                    onClick={() => handleComingSoon(language === 'en' ? 'System Logs' : 'सिस्टम लॉग')}
+                                    className="text-blue-400 text-[9px] font-bold flex items-center gap-1.5 hover:text-blue-300 transition-colors uppercase tracking-widest"
+                                >
+                                    View System Logs <ChevronRight size={12} />
+                                </button>
+                            </div>
+                        </div>
+                        <div className="bg-blue-600 p-6 rounded-[2rem] text-white relative overflow-hidden shadow-lg">
+                            <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-3xl -mr-12 -mt-12"></div>
+                            <div className="relative z-10 space-y-3">
+                                <div className="p-2 bg-white/10 text-white rounded-lg w-fit border border-white/20">
+                                    <Bell size={16} />
+                                </div>
+                                <h4 className="text-lg font-black font-display tracking-tight">{language === 'en' ? 'Community Impact' : 'सामुदायिक प्रभाव'}</h4>
+                                <p className="text-blue-100 text-[10px] leading-relaxed">{language === 'en' ? 'Over 1,200 citizens have contributed reports this month, leading to 4 successful restoration initiatives.' : 'इस महीने 1,200 से अधिक नागरिकों ने रिपोर्ट दी है, जिससे 4 सफल बहाली पहल हुई हैं।'}</p>
+                                <button 
+                                    onClick={() => setActiveTab('analyze')}
+                                    className="text-white text-[9px] font-bold flex items-center gap-1.5 hover:text-blue-100 transition-colors uppercase tracking-widest"
+                                >
+                                    {language === 'en' ? 'Join The Voice' : 'आवाज उठाएं'} <ChevronRight size={12} />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Sidebar Section */}
+                <div className="lg:col-span-4 space-y-8">
+                    {/* Weather Widget */}
+                    <div className="bg-white dark:bg-slate-900 p-5 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-3xl -mr-12 -mt-12"></div>
+                        <div className="relative z-10 space-y-5">
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest">Local Weather</p>
+                                    <h4 className="text-base font-bold text-slate-900 dark:text-white font-display">Mau, UP</h4>
+                                </div>
+                                <div className="text-amber-500">
+                                    <Sun size={20} className="animate-spin-slow" />
                                 </div>
                             </div>
-                            <ChevronRight size={16} className="text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 transition-colors" />
+                            
+                            <div className="flex items-end justify-between">
+                                <div className="flex items-baseline gap-0.5">
+                                    <span className="text-3xl font-black text-slate-900 dark:text-white font-display">32</span>
+                                    <span className="text-base font-bold text-slate-400">°C</span>
+                                </div>
+                                <div className="text-right space-y-0.5">
+                                    <p className="text-[9px] font-bold text-slate-900 dark:text-white">Sunny Day</p>
+                                    <p className="text-[7px] text-slate-400 font-bold uppercase tracking-widest">H: 34° L: 26°</p>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-3 gap-3 pt-4 border-t border-slate-50 dark:border-slate-800">
+                                <div className="text-center space-y-1">
+                                    <Wind size={14} className="mx-auto text-slate-400" />
+                                    <p className="text-[9px] font-bold text-slate-900 dark:text-white">12km/h</p>
+                                    <p className="text-[7px] text-slate-400 font-bold uppercase tracking-widest">Wind</p>
+                                </div>
+                                <div className="text-center space-y-1">
+                                    <Droplets size={14} className="mx-auto text-slate-400" />
+                                    <p className="text-[9px] font-bold text-slate-900 dark:text-white">45%</p>
+                                    <p className="text-[7px] text-slate-400 font-bold uppercase tracking-widest">Humid</p>
+                                </div>
+                                <div className="text-center space-y-1">
+                                    <CloudRain size={14} className="mx-auto text-slate-400" />
+                                    <p className="text-[9px] font-bold text-slate-900 dark:text-white">5%</p>
+                                    <p className="text-[7px] text-slate-400 font-bold uppercase tracking-widest">Rain</p>
+                                </div>
+                            </div>
                         </div>
-                    ))
-                )}
-              </div>
-          </motion.div>
+                    </div>
 
-      </div>
-      
-      <div className="pt-8 opacity-50">
-        <DisclaimerBanner />
-      </div>
-    </div>
-  );
-};
+                    {/* Recent Reports */}
+                    <div className="bg-white dark:bg-slate-900 p-5 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-sm">
+                        <div className="flex items-center justify-between mb-5">
+                            <h4 className="text-sm font-bold text-slate-900 dark:text-white font-display">{language === 'en' ? 'Recent Reports' : 'हालिया रिपोर्ट'}</h4>
+                            <button 
+                                onClick={() => setActiveTab('intel')}
+                                className="text-[7px] font-bold text-blue-600 uppercase tracking-widest hover:text-blue-700 transition-colors"
+                            >
+                                {language === 'en' ? 'View All' : 'सभी देखें'}
+                            </button>
+                        </div>
+                        <div className="space-y-4">
+                            {loading ? (
+                                [1, 2, 3].map(i => <div key={i} className="h-14 bg-slate-50 dark:bg-slate-800 rounded-xl animate-pulse"></div>)
+                            ) : reports.map((report: any, i: number) => (
+                                <motion.div 
+                                    key={i}
+                                    initial={{ opacity: 0, x: 15 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: i * 0.1 }}
+                                    className="flex items-start gap-3 group cursor-pointer"
+                                >
+                                    <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0 border border-slate-100 dark:border-slate-800">
+                                        {report.imageUrl ? (
+                                            <img 
+                                                src={report.imageUrl} 
+                                                alt="Report" 
+                                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                                                referrerPolicy="no-referrer"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-slate-300">
+                                                <MapPin size={14} />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="space-y-0.5 flex-1">
+                                        <div className="flex items-center justify-between">
+                                            <p className="text-[9px] font-bold text-slate-900 dark:text-white line-clamp-1">{report.location}</p>
+                                            <span className="text-[6px] font-bold text-slate-400 uppercase tracking-widest">2h ago</span>
+                                        </div>
+                                        <p className="text-[8px] text-slate-500 line-clamp-2 leading-relaxed">{report.description}</p>
+                                        <div className={`mt-1 px-1.5 py-0.5 rounded text-[6px] font-bold uppercase tracking-widest w-fit ${
+                                            report.status === 'pending' ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'
+                                        }`}>
+                                            {report.status}
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </div>
 
-const StatCard = ({ label, value, trend, icon: Icon, color }: any) => {
-    return (
-        <motion.div 
-            whileHover={{ y: -4 }}
-            transition={{ duration: 0.2 }}
-            className="bg-white dark:bg-slate-900 p-8 rounded-[2rem] border border-slate-100 dark:border-slate-800 flex flex-col justify-between h-full group hover:border-slate-300 dark:hover:border-slate-700 transition-colors shadow-subtle hover:shadow-subtle-hover"
-        >
-            <div className="flex items-center justify-between mb-6">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{label}</p>
-                <div className="text-slate-400 dark:text-slate-500 group-hover:text-blue-500 transition-colors">
-                    <Icon size={20} />
+                    {/* Quick Actions */}
+                    <div className="grid grid-cols-2 gap-3">
+                        <button 
+                            onClick={() => handleComingSoon(language === 'en' ? 'Map Layers' : 'मानचित्र परतें')}
+                            className="p-4 bg-slate-900 rounded-[1.5rem] text-white flex flex-col items-center gap-2 hover:bg-slate-800 transition-all shadow-lg group"
+                        >
+                            <div className="p-2 bg-white/10 rounded-lg group-hover:scale-110 transition-transform">
+                                <Layers size={16} />
+                            </div>
+                            <span className="text-[7px] font-bold uppercase tracking-widest">Layers</span>
+                        </button>
+                        <button 
+                            onClick={() => handleComingSoon(language === 'en' ? 'Search' : 'खोजें')}
+                            className="p-4 bg-white dark:bg-slate-900 rounded-[1.5rem] text-slate-900 dark:text-white flex flex-col items-center gap-2 border border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm group"
+                        >
+                            <div className="p-2 bg-blue-50 dark:bg-blue-900/40 text-blue-600 rounded-lg group-hover:scale-110 transition-transform">
+                                <Search size={16} />
+                            </div>
+                            <span className="text-[7px] font-bold uppercase tracking-widest">Search</span>
+                        </button>
+                    </div>
                 </div>
             </div>
-            <div className="flex items-end justify-between">
-                <h3 className="text-4xl font-light text-slate-900 dark:text-white tracking-tight font-display">{value}</h3>
-                <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-100 dark:border-slate-700">
-                    {trend}
-                </span>
-            </div>
-        </motion.div>
-    );
-};
-
-const SkeletonReport = () => (
-    <div className="group flex items-center justify-between p-4 bg-white/50 dark:bg-slate-800/50 border border-transparent rounded-[1.5rem] animate-pulse">
-        <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700"></div>
-            <div className="space-y-2">
-                <div className="h-4 w-32 bg-slate-200 dark:bg-slate-700 rounded"></div>
-                <div className="h-3 w-20 bg-slate-200 dark:bg-slate-700 rounded"></div>
-            </div>
         </div>
-        <div className="h-4 w-4 bg-slate-200 dark:bg-slate-700 rounded"></div>
-    </div>
-);
-
-const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-        return (
-            <div className="bg-gov-card/90 dark:bg-slate-800/90 backdrop-blur-md p-4 rounded-[1.5rem] shadow-xl border border-white/20 dark:border-slate-700 ring-1 ring-black/5 dark:ring-white/5">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{label}</p>
-                <p className="text-lg font-bold text-gov-navy dark:text-white font-display">
-                    {payload[0].value} <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Index</span>
-                </p>
-            </div>
-        );
-    }
-    return null;
+    );
 };

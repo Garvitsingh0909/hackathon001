@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 import { Users, Shield, User } from 'lucide-react';
 
-export const UserManagement = () => {
+export const UserManagement = ({ language }: { language: 'en' | 'hi' }) => {
     const [users, setUsers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -51,7 +51,12 @@ export const UserManagement = () => {
                         <tr key={user.id}>
                             <td className="py-4">
                                 <div className="flex items-center gap-3">
-                                    <img src={user.photoURL} alt={user.displayName} className="w-10 h-10 rounded-full" />
+                                    <img 
+                                        src={user.photoURL} 
+                                        alt={user.displayName} 
+                                        className="w-10 h-10 rounded-full" 
+                                        referrerPolicy="no-referrer"
+                                    />
                                     <div>
                                         <p className="font-bold text-sm">{user.displayName}</p>
                                         <p className="text-xs text-slate-500">{user.email}</p>

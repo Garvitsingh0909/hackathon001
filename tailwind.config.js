@@ -12,8 +12,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-        display: ['"JetBrains Mono"', 'monospace'],
+        sans: ['"Google Sans"', '"Outfit"', '"Plus Jakarta Sans"', 'sans-serif'],
+        display: ['"Google Sans"', '"Outfit"', '"JetBrains Mono"', 'monospace'],
         mono: ['"JetBrains Mono"', 'monospace'],
       },
       colors: {

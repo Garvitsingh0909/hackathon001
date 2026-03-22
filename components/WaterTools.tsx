@@ -1,328 +1,257 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Calculator, Droplet, Activity, IndianRupee, ArrowRight, CheckCircle, AlertTriangle } from 'lucide-react';
-import { DisclaimerBanner } from './ui/DisclaimerBanner';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Calculator, Clock, Droplets, Info, CheckCircle, AlertTriangle, Thermometer, GlassWater } from 'lucide-react';
 
 export const WaterTools = ({ language }: { language: 'en' | 'hi' }) => {
-  const [sidebarLang, setSidebarLang] = useState<'en' | 'hi'>(language);
+    const [activeTool, setActiveTool] = useState<'tds' | 'boil' | 'usage'>('tds');
 
-  const explanations = {
-    en: {
-      title: "How to use these tools",
-      tds: "TDS Blender: Mixes RO and Tap water to achieve ideal mineral levels (150-300 mg/L).",
-      intake: "Daily Intake: Calculates recommended water intake based on weight, age, and activity level.",
-      roi: "Filter ROI: Compares the cost of bottled water vs. a filter to show long-term savings."
-    },
-    hi: {
-      title: "इन उपकरणों का उपयोग कैसे करें",
-      tds: "टीडीएस ब्लेंडर: आदर्श खनिज स्तर (150-300 मिलीग्राम/लीटर) प्राप्त करने के लिए आरओ और नल के पानी को मिलाता है।",
-      intake: "दैनिक सेवन: वजन, उम्र और गतिविधि स्तर के आधार पर अनुशंसित पानी के सेवन की गणना करता है।",
-      roi: "फिल्टर आरओआई: दीर्घकालिक बचत दिखाने के लिए बोतलबंद पानी बनाम फिल्टर की लागत की तुलना करता है।"
-    }
-  };
+    const tools = [
+        { id: 'tds', label: language === 'en' ? 'TDS Checker' : 'टीडीएस चेकर', icon: Calculator },
+        { id: 'boil', label: language === 'en' ? 'Boiling Timer' : 'उबालने का समय', icon: Clock },
+        { id: 'usage', label: language === 'en' ? 'Usage Tracker' : 'उपयोग ट्रैकर', icon: Droplets },
+    ];
 
-  const content = explanations[sidebarLang];
+    return (
+        <div className="space-y-6 pb-8">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h2 className="text-2xl font-bold font-display tracking-tight text-slate-900 dark:text-white">
+                        {language === 'en' ? 'Water Utilities' : 'जल उपयोगिताएँ'}
+                    </h2>
+                    <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm">
+                        {language === 'en' ? 'Simple tools to help you manage your daily water needs.' : 'आपकी दैनिक पानी की जरूरतों को प्रबंधित करने में मदद करने के लिए सरल उपकरण।'}
+                    </p>
+                </div>
 
-  return (
-    <div className="max-w-7xl mx-auto pt-6 grid grid-cols-1 lg:grid-cols-4 gap-8">
-      {/* Sidebar */}
-      <div className="lg:col-span-1 space-y-6">
-        <div className="bg-gov-card dark:bg-slate-900 rounded-[2rem] shadow-subtle dark:shadow-black/50 border border-slate-200 dark:border-slate-800 p-6 sticky top-24">
-          <h3 className="text-xl font-bold text-slate-900 dark:text-white font-display mb-4">{content.title}</h3>
-          
-          <div className="flex gap-2 mb-6">
-            <button onClick={() => setSidebarLang('en')} className={`px-3 py-1 rounded-full text-xs font-bold ${sidebarLang === 'en' ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-700'}`}>EN</button>
-            <button onClick={() => setSidebarLang('hi')} className={`px-3 py-1 rounded-full text-xs font-bold ${sidebarLang === 'hi' ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-700'}`}>HI</button>
-          </div>
-
-          <div className="space-y-4 text-sm text-slate-600 dark:text-slate-400">
-            <p><strong>TDS Blender:</strong> {content.tds}</p>
-            <p><strong>Daily Intake:</strong> {content.intake}</p>
-            <p><strong>Filter ROI:</strong> {content.roi}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Tools */}
-      <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="lg:col-span-3 space-y-8"
-      >
-        <DisclaimerBanner />
-        <div className="bg-gov-card dark:bg-slate-900 rounded-[2rem] shadow-subtle dark:shadow-black/50 border border-slate-200 dark:border-slate-800 overflow-hidden transition-colors">
-          
-          {/* Header */}
-          <div className="p-8 md:p-10 border-b border-slate-200 dark:border-slate-800 bg-gov-bg dark:bg-slate-800/30">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="p-3 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400 rounded-2xl">
-                  <Calculator size={28} />
-              </div>
-              <div>
-                  <h2 className="text-3xl font-bold text-slate-900 dark:text-white font-display">
-                    {language === 'en' ? 'Handy Water Tools' : 'उपयोगी जल उपकरण'}
-                  </h2>
-                  <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">
-                    {language === 'en' ? 'Quick calculators to help you make better choices about your water.' : 'आपके पानी के बारे में बेहतर विकल्प चुनने में मदद करने के लिए त्वरित कैलकुलेटर।'}
-                  </p>
-              </div>
+                <div className="flex gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                    {tools.map((tool) => (
+                        <button
+                            key={tool.id}
+                            onClick={() => setActiveTool(tool.id as any)}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                                activeTool === tool.id 
+                                ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm' 
+                                : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                            }`}
+                        >
+                            <tool.icon size={14} />
+                            {tool.label}
+                        </button>
+                    ))}
+                </div>
             </div>
-          </div>
 
-          <div className="p-8 md:p-10 space-y-12">
-            {/* Tool A: TDS Blending */}
-            <TdsBlendingTool language={language} />
-            
-            <hr className="border-slate-200 dark:border-slate-800" />
-            
-            {/* Tool B: Daily Intake */}
-            <DailyIntakeTool language={language} />
-            
-            <hr className="border-slate-200 dark:border-slate-800" />
-            
-            {/* Tool C: Filter ROI */}
-            <FilterRoiTool language={language} />
-          </div>
+            <AnimatePresence mode="wait">
+                <motion.div
+                    key={activeTool}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                >
+                    {activeTool === 'tds' && <TDSChecker language={language} />}
+                    {activeTool === 'boil' && <BoilingTimer language={language} />}
+                    {activeTool === 'usage' && <UsageTracker language={language} />}
+                </motion.div>
+            </AnimatePresence>
         </div>
-      </motion.div>
-    </div>
-  );
+    );
 };
 
-const TdsBlendingTool = ({ language }: { language: 'en' | 'hi' }) => {
-  const [source1, setSource1] = useState(50); // RO
-  const [source2, setSource2] = useState(800); // Tap
-  const [ratio, setRatio] = useState(70); // % of Source 1
+const TDSChecker = ({ language }: { language: 'en' | 'hi' }) => {
+    const [tds, setTds] = useState<string>('');
+    
+    const getTdsStatus = (val: number) => {
+        if (val < 50) return { label: language === 'en' ? 'Low Minerals' : 'कम खनिज', color: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-900/20', icon: AlertTriangle };
+        if (val <= 300) return { label: language === 'en' ? 'Excellent' : 'उत्कृष्ट', color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/20', icon: CheckCircle };
+        if (val <= 600) return { label: language === 'en' ? 'Good' : 'अच्छा', color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20', icon: Info };
+        if (val <= 900) return { label: language === 'en' ? 'Fair' : 'ठीक', color: 'text-orange-500', bg: 'bg-orange-50 dark:bg-orange-900/20', icon: Info };
+        return { label: language === 'en' ? 'Poor' : 'खराब', color: 'text-red-500', bg: 'bg-red-50 dark:bg-red-900/20', icon: AlertTriangle };
+    };
 
-  const blendedTds = Math.round((source1 * (ratio / 100)) + (source2 * ((100 - ratio) / 100)));
-  const isIdeal = blendedTds >= 150 && blendedTds <= 300;
+    const status = tds ? getTdsStatus(Number(tds)) : null;
 
-  return (
-    <motion.div 
-      whileHover={{ y: -4 }}
-      transition={{ duration: 0.2 }}
-      className="bg-slate-900 dark:bg-slate-950 rounded-[2.5rem] p-8 md:p-10 border border-slate-800 shadow-subtle space-y-8"
-    >
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-3 bg-blue-900/30 text-blue-400 rounded-2xl border border-blue-800/50"><Droplet size={28} /></div>
-        <h3 className="text-2xl font-bold text-white font-display">
-          {language === 'en' ? 'Mix It Up: TDS Blender' : 'इसे मिलाएं: टीडीएस ब्लेंडर'}
-        </h3>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="space-y-6">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                {language === 'en' ? 'RO TDS' : 'आरओ टीडीएस'}
-              </label>
-              <input type="number" value={source1} onChange={e => setSource1(Number(e.target.value))} className="w-full px-4 py-3 rounded-xl border border-slate-700 bg-slate-950 text-white font-mono" />
+    return (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-subtle">
+                <h3 className="text-lg font-bold mb-5 flex items-center gap-2">
+                    <Calculator className="text-blue-500" size={20} />
+                    {language === 'en' ? 'TDS Level Analyzer' : 'टीडीएस स्तर विश्लेषक'}
+                </h3>
+                <div className="space-y-5">
+                    <div>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2 tracking-widest">{language === 'en' ? 'Enter TDS Value (ppm)' : 'टीडीएस मान दर्ज करें (ppm)'}</label>
+                        <input 
+                            type="number" 
+                            value={tds}
+                            onChange={(e) => setTds(e.target.value)}
+                            placeholder="e.g. 150"
+                            className="w-full p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-xl font-bold focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                        />
+                    </div>
+
+                    {status && (
+                        <motion.div 
+                            initial={{ opacity: 0, scale: 0.98 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className={`p-4 rounded-xl border ${status.bg} border-current/10 flex items-center gap-4`}
+                        >
+                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${status.color} bg-white dark:bg-slate-900 shadow-sm`}>
+                                <status.icon size={20} />
+                            </div>
+                            <div>
+                                <p className={`text-[10px] font-bold uppercase tracking-wider ${status.color}`}>{language === 'en' ? 'Status' : 'स्थिति'}</p>
+                                <p className="text-lg font-bold text-slate-900 dark:text-white">{status.label}</p>
+                            </div>
+                        </motion.div>
+                    )}
+                </div>
             </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                {language === 'en' ? 'Tap TDS' : 'नल टीडीएस'}
-              </label>
-              <input type="number" value={source2} onChange={e => setSource2(Number(e.target.value))} className="w-full px-4 py-3 rounded-xl border border-slate-700 bg-slate-950 text-white font-mono" />
+
+            <div className="bg-slate-50 dark:bg-slate-800/30 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800">
+                <h4 className="text-[10px] font-bold text-slate-400 uppercase mb-4 tracking-widest">{language === 'en' ? 'TDS Guidelines' : 'टीडीएस दिशानिर्देश'}</h4>
+                <div className="space-y-3">
+                    {[
+                        { range: '50 - 300', label: language === 'en' ? 'Ideal for drinking' : 'पीने के लिए आदर्श', color: 'bg-emerald-500' },
+                        { range: '300 - 600', label: language === 'en' ? 'Good for drinking' : 'पीने के लिए अच्छा', color: 'bg-blue-500' },
+                        { range: '600 - 900', label: language === 'en' ? 'Fair' : 'ठीक', color: 'bg-orange-500' },
+                        { range: '900+', label: language === 'en' ? 'Unacceptable' : 'अस्वीकार्य', color: 'bg-red-500' },
+                    ].map((item, i) => (
+                        <div key={i} className="flex items-center justify-between p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800">
+                            <div className="flex items-center gap-3">
+                                <div className={`w-1.5 h-1.5 rounded-full ${item.color}`} />
+                                <span className="font-bold text-xs">{item.range}</span>
+                            </div>
+                            <span className="text-[10px] text-slate-500">{item.label}</span>
+                        </div>
+                    ))}
+                </div>
             </div>
-          </div>
-          
-          <div>
-            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">
-              {language === 'en' ? `Mix Ratio: ${ratio}% RO` : `मिश्रण अनुपात: ${ratio}% आरओ`}
-            </label>
-            <input type="range" min="10" max="90" value={ratio} onChange={e => setRatio(Number(e.target.value))} className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500" />
-          </div>
         </div>
-        
-        <div className={`p-6 rounded-[1.5rem] border flex flex-col justify-center ${isIdeal ? 'bg-emerald-950/30 border-emerald-800/50' : 'bg-amber-950/30 border-amber-800/50'}`}>
-          <div className="text-center">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">
-              {language === 'en' ? 'Blended TDS' : 'मिश्रित टीडीएस'}
-            </p>
-            <div className={`text-5xl font-bold font-mono mb-4 ${isIdeal ? 'text-emerald-400' : 'text-amber-400'}`}>
-              ~{blendedTds} <span className="text-2xl font-sans">mg/L</span>
-            </div>
-            
-            <div className="flex items-center justify-center gap-2 font-bold text-sm">
-              {isIdeal ? (
-                <><CheckCircle className="text-emerald-500" size={16} /> <span className="text-emerald-400">{language === 'en' ? 'Looks Great!' : 'बहुत बढ़िया!'}</span></>
-              ) : (
-                <><AlertTriangle className="text-amber-500" size={16} /> <span className="text-amber-400">{language === 'en' ? 'Not Ideal (Aim for 150-300)' : 'आदर्श नहीं (150-300 का लक्ष्य रखें)'}</span></>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  );
+    );
 };
 
-const DailyIntakeTool = ({ language }: { language: 'en' | 'hi' }) => {
-  const [weight, setWeight] = useState(70);
-  const [age, setAge] = useState(30);
-  const [activity, setActivity] = useState('Active');
-  const [tds, setTds] = useState(800);
+const BoilingTimer = ({ language }: { language: 'en' | 'hi' }) => {
+    const [timeLeft, setTimeLeft] = useState(0);
+    const [isActive, setIsActive] = useState(false);
 
-  // Simple formula: Weight * 0.033 + (Activity == Active ? 0.5 : Athlete ? 1.0 : 0)
-  const baseIntake = weight * 0.033;
-  const activityBonus = activity === 'Active' ? 0.5 : activity === 'Athlete' ? 1.0 : 0;
-  const recommendedIntake = (baseIntake + activityBonus).toFixed(1);
-  
-  const excessTds = Math.max(0, (tds - 300) * Number(recommendedIntake));
+    React.useEffect(() => {
+        let interval: any = null;
+        if (isActive && timeLeft > 0) {
+            interval = setInterval(() => {
+                setTimeLeft((time) => time - 1);
+            }, 1000);
+        } else if (timeLeft === 0) {
+            setIsActive(false);
+            clearInterval(interval);
+        }
+        return () => clearInterval(interval);
+    }, [isActive, timeLeft]);
 
-  return (
-    <motion.div 
-      whileHover={{ y: -4 }}
-      transition={{ duration: 0.2 }}
-      className="bg-slate-900 dark:bg-slate-950 rounded-[2.5rem] p-8 md:p-10 border border-slate-800 shadow-subtle space-y-8"
-    >
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-3 bg-blue-900/30 text-blue-400 rounded-2xl border border-blue-800/50"><Activity size={28} /></div>
-        <h3 className="text-2xl font-bold text-white font-display">
-          {language === 'en' ? 'How Much Should You Drink?' : 'आपको कितना पीना चाहिए?'}
-        </h3>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                {language === 'en' ? 'Weight (kg)' : 'वजन (किग्रा)'}
-              </label>
-              <input type="number" value={weight} onChange={e => setWeight(Number(e.target.value))} className="w-full px-4 py-3 rounded-xl border border-slate-700 bg-slate-950 text-white font-mono" />
+    const startTimer = () => {
+        setTimeLeft(60); // 1 minute
+        setIsActive(true);
+    };
+
+    return (
+        <div className="max-w-md mx-auto bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-subtle text-center">
+            <div className="w-16 h-16 bg-amber-50 dark:bg-amber-900/20 rounded-2xl flex items-center justify-center text-amber-500 mx-auto mb-6">
+                <Thermometer size={32} />
             </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                {language === 'en' ? 'Age' : 'उम्र'}
-              </label>
-              <input type="number" value={age} onChange={e => setAge(Number(e.target.value))} className="w-full px-4 py-3 rounded-xl border border-slate-700 bg-slate-950 text-white font-mono" />
+            <h3 className="text-xl font-bold mb-2">{language === 'en' ? 'Safe Boiling Timer' : 'सुरक्षित उबालने का टाइमर'}</h3>
+            <p className="text-slate-500 dark:text-slate-400 mb-8 text-sm">
+                {language === 'en' ? 'Boiling water for 1 minute kills most pathogens.' : '1 मिनट तक पानी उबालने से अधिकांश रोगजनक मर जाते हैं।'}
+            </p>
+
+            <div className="relative w-40 h-40 mx-auto mb-8">
+                <svg className="w-full h-full transform -rotate-90">
+                    <circle
+                        cx="80"
+                        cy="80"
+                        r="74"
+                        stroke="currentColor"
+                        strokeWidth="6"
+                        fill="transparent"
+                        className="text-slate-100 dark:text-slate-800"
+                    />
+                    <motion.circle
+                        cx="80"
+                        cy="80"
+                        r="74"
+                        stroke="currentColor"
+                        strokeWidth="6"
+                        fill="transparent"
+                        strokeDasharray={465}
+                        strokeDashoffset={465 - (465 * timeLeft) / 60}
+                        className="text-amber-500"
+                        transition={{ duration: 1, ease: "linear" }}
+                    />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-4xl font-mono font-bold">{timeLeft}s</span>
+                </div>
             </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                {language === 'en' ? 'Activity Level' : 'गतिविधि स्तर'}
-              </label>
-              <select value={activity} onChange={e => setActivity(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-slate-700 bg-slate-950 text-white font-mono">
-                <option value="Sedentary">{language === 'en' ? 'Chill' : 'शांत'}</option>
-                <option value="Active">{language === 'en' ? 'Active' : 'सक्रिय'}</option>
-                <option value="Athlete">{language === 'en' ? 'Super Active' : 'सुपर सक्रिय'}</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-                {language === 'en' ? "Water's TDS" : 'पानी का टीडीएस'}
-              </label>
-              <input type="number" value={tds} onChange={e => setTds(Number(e.target.value))} className="w-full px-4 py-3 rounded-xl border border-slate-700 bg-slate-950 text-white font-mono" />
-            </div>
-          </div>
+
+            <button 
+                onClick={startTimer}
+                disabled={isActive}
+                className={`w-full py-4 rounded-xl font-bold text-base transition-all ${isActive ? 'bg-slate-100 text-slate-400' : 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:scale-[1.02] shadow-lg'}`}
+            >
+                {isActive ? (language === 'en' ? 'Boiling...' : 'उबल रहा है...') : (language === 'en' ? 'Start 1 Min Timer' : '1 मिनट का टाइमर शुरू करें')}
+            </button>
         </div>
-        
-        <div className="p-6 rounded-2xl border bg-slate-950 border-slate-800 flex flex-col justify-center space-y-4">
-          <div className="flex justify-between items-center pb-4 border-b border-slate-800">
-            <span className="font-bold text-slate-400 text-sm">
-              {language === 'en' ? 'Recommended:' : 'अनुशंसित:'}
-            </span>
-            <span className="text-xl font-bold text-blue-400 font-mono">
-              {recommendedIntake} {language === 'en' ? 'L/day' : 'लीटर/दिन'}
-            </span>
-          </div>
-          
-          <div className="pb-4 border-b border-slate-800">
-            <span className="font-bold text-slate-400 text-xs uppercase tracking-wider block mb-2">
-              {language === 'en' ? "Water Analysis" : 'पानी का विश्लेषण'}
-            </span>
-            {excessTds > 0 ? (
-              <p className="text-red-400 text-sm font-medium">
-                {language === 'en' 
-                  ? `High TDS (${tds}). Extra ${Math.round(excessTds)}mg dissolved solids daily.` 
-                  : `उच्च टीडीएस (${tds})। अतिरिक्त ${Math.round(excessTds)}mg घुली हुई चीजें प्रतिदिन।`}
-              </p>
-            ) : (
-              <p className="text-emerald-400 text-sm font-medium">
-                {language === 'en' ? "Water TDS is optimal." : 'पानी का टीडीएस इष्टतम है।'}
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  );
+    );
 };
 
-const FilterRoiTool = ({ language }: { language: 'en' | 'hi' }) => {
-  const [monthlySpend, setMonthlySpend] = useState(1500);
-  const [filterCost, setFilterCost] = useState(12000);
+const UsageTracker = ({ language }: { language: 'en' | 'hi' }) => {
+    const [glasses, setGlasses] = useState(0);
+    const target = 8;
 
-  const breakEvenMonths = Math.ceil(filterCost / monthlySpend);
-  const fiveYearSavings = (monthlySpend * 60) - filterCost;
-  const bottlesSaved = Math.round((monthlySpend / 20) * 12); // Assuming ₹20 per bottle
+    return (
+        <div className="max-w-lg mx-auto bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-subtle">
+            <div className="flex items-center justify-between mb-8">
+                <div>
+                    <h3 className="text-xl font-bold">{language === 'en' ? 'Water Intake' : 'पानी का सेवन'}</h3>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm">{language === 'en' ? 'Track your daily hydration' : 'अपने दैनिक हाइड्रेशन को ट्रैक करें'}</p>
+                </div>
+                <div className="text-right">
+                    <span className="text-3xl font-bold text-blue-600">{glasses}</span>
+                    <span className="text-slate-400 font-bold"> / {target}</span>
+                </div>
+            </div>
 
-  return (
-    <motion.div 
-      whileHover={{ y: -4 }}
-      transition={{ duration: 0.2 }}
-      className="bg-slate-900 dark:bg-slate-950 rounded-[2.5rem] p-8 md:p-10 border border-slate-800 shadow-subtle space-y-8"
-    >
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-3 bg-blue-900/30 text-blue-400 rounded-2xl border border-blue-800/50"><IndianRupee size={28} /></div>
-        <h3 className="text-2xl font-bold text-white font-display">
-          {language === 'en' ? 'Is a Water Filter Worth It?' : 'क्या वाटर फिल्टर इसके लायक है?'}
-        </h3>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="space-y-4">
-          <div>
-            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-              {language === 'en' ? 'Monthly Bottled Spend (₹)' : 'मासिक बोतलबंद खर्च (₹)'}
-            </label>
-            <input type="number" value={monthlySpend} onChange={e => setMonthlySpend(Number(e.target.value))} className="w-full px-4 py-3 rounded-xl border border-slate-700 bg-slate-950 text-white font-mono" />
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-              {language === 'en' ? 'New Filter Cost (₹)' : 'नया फिल्टर लागत (₹)'}
-            </label>
-            <input type="number" value={filterCost} onChange={e => setFilterCost(Number(e.target.value))} className="w-full px-4 py-3 rounded-xl border border-slate-700 bg-slate-950 text-white font-mono" />
-          </div>
-          
-          <div className="pt-4">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-              {language === 'en' ? "5-Year Cost Comparison" : '5-वर्षीय लागत तुलना'}
-            </p>
-            <div className="h-6 w-full bg-slate-800 rounded-full overflow-hidden flex">
-              <div className="h-full bg-red-900/50 flex items-center px-2 text-[10px] font-bold text-red-200" style={{ width: '100%' }}>
-                {language === 'en' ? 'Bottled:' : 'बोतलबंद:'} ₹{monthlySpend * 60}
-              </div>
+            <div className="grid grid-cols-4 sm:grid-cols-8 gap-3 mb-8">
+                {Array.from({ length: target }).map((_, i) => (
+                    <motion.button
+                        key={i}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => setGlasses(i + 1)}
+                        className={`aspect-[2/3] rounded-lg flex items-center justify-center transition-all border-2 ${
+                            i < glasses 
+                            ? 'bg-blue-500 border-blue-600 text-white shadow-md shadow-blue-500/10' 
+                            : 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-300'
+                        }`}
+                    >
+                        <GlassWater size={20} />
+                    </motion.button>
+                ))}
             </div>
-            <div className="h-6 w-full bg-slate-800 rounded-full overflow-hidden flex mt-2">
-              <div className="h-full bg-emerald-900/50 flex items-center px-2 text-[10px] font-bold text-emerald-200" style={{ width: `${(filterCost / (monthlySpend * 60)) * 100}%`, minWidth: 'fit-content' }}>
-                {language === 'en' ? 'Filter:' : 'फिल्टर:'} ₹{filterCost}
-              </div>
+
+            <div className="flex gap-3">
+                <button 
+                    onClick={() => setGlasses(0)}
+                    className="flex-1 py-3 rounded-xl font-bold text-xs text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all uppercase tracking-widest"
+                >
+                    {language === 'en' ? 'Reset' : 'रीसेट'}
+                </button>
+                <button 
+                    onClick={() => setGlasses(prev => Math.min(target, prev + 1))}
+                    className="flex-[2] py-3 bg-blue-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest shadow-md hover:bg-blue-700 transition-all"
+                >
+                    {language === 'en' ? '+ Add Glass' : '+ गिलास जोड़ें'}
+                </button>
             </div>
-          </div>
         </div>
-        
-        <div className="p-6 rounded-2xl border bg-emerald-950/30 border-emerald-800/50 flex flex-col justify-center space-y-6">
-          <div className="text-center">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 mb-1">
-              {language === 'en' ? 'Break-even in' : 'इतने समय में वसूल'}
-            </p>
-            <p className="text-3xl font-bold font-mono text-emerald-300">
-              {breakEvenMonths} <span className="text-sm font-sans">{language === 'en' ? 'Months' : 'महीने'}</span>
-            </p>
-          </div>
-          
-          <div className="text-center">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 mb-1">
-              {language === 'en' ? "5-Year Savings" : '5-वर्षीय बचत'}
-            </p>
-            <p className="text-3xl font-bold font-mono text-emerald-300">₹{fiveYearSavings.toLocaleString()}</p>
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  );
+    );
 };

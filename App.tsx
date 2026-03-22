@@ -9,8 +9,8 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { AdminMap } from './components/AdminMap';
 import { UserManagement } from './components/admin/UserManagement';
 import { WaterMap } from './components/WaterMap';
-import { WaterTools } from './components/WaterTools';
 import { WaterFAQ } from './components/WaterFAQ';
+import { WaterTools } from './components/WaterTools';
 import { FeedbackPage } from './components/FeedbackPage';
 import { Footer } from './components/Footer';
 import { StarterGuide } from './components/StarterGuide';
@@ -71,24 +71,24 @@ function AppContent() {
   const renderContent = () => {
     switch (activeTab) {
       case 'home': 
-        return <Dashboard onChangeTab={setActiveTab} language={language} />;
-      case 'analyze': return <AnalysisModule />;
-      case 'intel': return <WaterIntel />;
-      case 'map': return <WaterMap language={language} />;
+        return <Dashboard language={language} setActiveTab={setActiveTab} />;
+      case 'analyze': return <AnalysisModule language={language} />;
+      case 'intel': return <WaterIntel language={language} />;
       case 'tools': return <WaterTools language={language} />;
-      case 'faq': return <WaterFAQ />;
-      case 'feedback': return <FeedbackPage />;
+      case 'map': return <WaterMap language={language} />;
+      case 'faq': return <WaterFAQ language={language} />;
+      case 'feedback': return <FeedbackPage language={language} />;
       case 'admin': 
         return isAdmin ? (
           <div className="space-y-8">
-            <AdminDashboard isAdmin={isAdmin} setActiveTab={setActiveTab} />
-            <AdminMap />
+            <AdminDashboard />
+            <AdminMap language={language} />
           </div>
-        ) : <Dashboard onChangeTab={setActiveTab} language={language} />;
+        ) : <Dashboard language={language} setActiveTab={setActiveTab} />;
       case 'admin-users':
-        return isAdmin ? <UserManagement /> : <Dashboard onChangeTab={setActiveTab} language={language} />;
+        return isAdmin ? <UserManagement language={language} /> : <Dashboard language={language} setActiveTab={setActiveTab} />;
       default: 
-        return <Dashboard onChangeTab={setActiveTab} language={language} />;
+        return <Dashboard language={language} setActiveTab={setActiveTab} />;
     }
   };
 
@@ -114,7 +114,8 @@ function AppContent() {
         onOpenFeedback={() => setIsFeedbackOpen(true)}
       />
       
-      <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
+      <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} language={language} />
+      <Tour language={language} />
       
       {/* Main Container */}
       <main className="flex-grow pt-24 pb-24 md:pb-12 px-4 sm:px-6 lg:px-8 w-full max-w-screen-2xl mx-auto transition-all duration-200">
@@ -134,7 +135,7 @@ function AppContent() {
 
       {/* Starter Guide Modal */}
       <StarterGuide isOpen={isStarterGuideOpen} onClose={() => setIsStarterGuideOpen(false)} language={language} />
-      <QuickActions onAction={(tab) => setActiveTab(tab)} />
+      <QuickActions onAction={(tab) => setActiveTab(tab)} language={language} />
 
       {/* Onboarding Overlay */}
       <AnimatePresence>
@@ -158,14 +159,14 @@ function AppContent() {
                       <div key={step} className={`h-2 w-8 rounded-full ${step <= onboardingStep ? 'bg-gov-navy' : 'bg-slate-200 dark:bg-slate-700'}`} />
                     ))}
                   </div>
-                  <button onClick={() => { localStorage.setItem('jaldrishti_onboarding', 'true'); setShowOnboarding(false); }} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm font-medium">Skip</button>
+                  <button onClick={() => { localStorage.setItem('jaldrishti_onboarding', 'true'); setShowOnboarding(false); }} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm font-medium">{language === 'en' ? 'Skip' : 'छोड़ें'}</button>
                 </div>
 
                 {onboardingStep === 1 && (
                   <div className="space-y-4">
                     <div className="h-16 w-16 bg-blue-50 dark:bg-blue-900/50 rounded-2xl flex items-center justify-center text-3xl mb-6">🌐</div>
-                    <h2 className="text-2xl font-bold text-gov-navy dark:text-white font-display">Select Language</h2>
-                    <p className="text-slate-600 dark:text-slate-400 mb-4">Please select your preferred language.</p>
+                    <h2 className="text-2xl font-bold text-gov-navy dark:text-white font-display">{language === 'en' ? 'Select Language' : 'भाषा चुनें'}</h2>
+                    <p className="text-slate-600 dark:text-slate-400 mb-4">{language === 'en' ? 'Please select your preferred language.' : 'कृपया अपनी पसंदीदा भाषा चुनें।'}</p>
                     <div className="grid grid-cols-2 gap-3">
                       <button 
                         onClick={() => setLanguage('en')}
@@ -186,16 +187,16 @@ function AppContent() {
                 {onboardingStep === 2 && (
                   <div className="space-y-4">
                     <div className="h-16 w-16 bg-blue-50 dark:bg-blue-900/50 rounded-2xl flex items-center justify-center text-3xl mb-6">👋</div>
-                    <h2 className="text-2xl font-bold text-gov-navy dark:text-white font-display">Welcome to JalDrishti</h2>
-                    <p className="text-slate-600 dark:text-slate-400">Your personal water quality assistant. We help you analyze, understand, and improve the water you drink every day.</p>
+                    <h2 className="text-2xl font-bold text-gov-navy dark:text-white font-display">{language === 'en' ? 'Welcome to JalDrishti' : 'जल दृष्टि में आपका स्वागत है'}</h2>
+                    <p className="text-slate-600 dark:text-slate-400">{language === 'en' ? 'Your personal water quality assistant. We help you analyze, understand, and improve the water you drink every day.' : 'आपका व्यक्तिगत जल गुणवत्ता सहायक। हम आपको हर दिन पीने वाले पानी का विश्लेषण करने, समझने और सुधारने में मदद करते हैं।'}</p>
                   </div>
                 )}
 
                 {onboardingStep === 3 && (
                   <div className="space-y-4">
                     <div className="h-16 w-16 bg-blue-50 dark:bg-blue-900/50 rounded-2xl flex items-center justify-center text-3xl mb-6">💧</div>
-                    <h2 className="text-2xl font-bold text-gov-navy dark:text-white font-display">Tell us about your water</h2>
-                    <p className="text-slate-600 dark:text-slate-400 mb-4">What is your primary source of drinking water?</p>
+                    <h2 className="text-2xl font-bold text-gov-navy dark:text-white font-display">{language === 'en' ? 'Tell us about your water' : 'हमें अपने पानी के बारे में बताएं'}</h2>
+                    <p className="text-slate-600 dark:text-slate-400 mb-4">{language === 'en' ? 'What is your primary source of drinking water?' : 'आपके पीने के पानी का प्राथमिक स्रोत क्या है?'}</p>
                     <div className="grid grid-cols-2 gap-3">
                       {['Borewell', 'Municipal', 'Tanker', 'Other'].map(src => (
                         <button 
@@ -203,7 +204,7 @@ function AppContent() {
                           onClick={() => setUserSource(src)}
                           className={`p-3 rounded-xl border font-medium transition-all ${userSource === src ? 'bg-blue-50 border-blue-500 text-blue-700 dark:bg-blue-900/30 dark:border-blue-500 dark:text-blue-300' : 'bg-gov-card border-slate-200 text-slate-700 hover:border-blue-300 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'}`}
                         >
-                          {src}
+                          {language === 'hi' ? (src === 'Borewell' ? 'बोरवेल' : src === 'Municipal' ? 'नगरपालिका' : src === 'Tanker' ? 'टैंकर' : 'अन्य') : src}
                         </button>
                       ))}
                     </div>
@@ -213,21 +214,21 @@ function AppContent() {
                 {onboardingStep === 4 && (
                   <div className="space-y-4">
                     <div className="h-16 w-16 bg-blue-50 dark:bg-blue-900/50 rounded-2xl flex items-center justify-center text-3xl mb-6">📍</div>
-                    <h2 className="text-2xl font-bold text-gov-navy dark:text-white font-display">Where are you?</h2>
-                    <p className="text-slate-600 dark:text-slate-400 mb-4">Water quality varies greatly by region. Select your state to get personalized alerts.</p>
+                    <h2 className="text-2xl font-bold text-gov-navy dark:text-white font-display">{language === 'en' ? 'Where are you?' : 'आप कहां हैं?'}</h2>
+                    <p className="text-slate-600 dark:text-slate-400 mb-4">{language === 'en' ? 'Water quality varies greatly by region. Select your state to get personalized alerts.' : 'पानी की गुणवत्ता क्षेत्र के अनुसार बहुत भिन्न होती है। व्यक्तिगत अलर्ट प्राप्त करने के लिए अपने राज्य का चयन करें।'}</p>
                     <select 
                       value={userState}
                       onChange={(e) => setUserState(e.target.value)}
                       className="w-full p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-blue-500 outline-none"
                     >
-                      <option value="">Select your state...</option>
-                      <option value="Bihar">Bihar</option>
-                      <option value="West Bengal">West Bengal</option>
-                      <option value="Rajasthan">Rajasthan</option>
-                      <option value="Maharashtra">Maharashtra</option>
-                      <option value="Karnataka">Karnataka</option>
-                      <option value="Delhi">Delhi</option>
-                      <option value="Other">Other</option>
+                      <option value="">{language === 'en' ? 'Select your state...' : 'अपना राज्य चुनें...'}</option>
+                      <option value="Bihar">{language === 'en' ? 'Bihar' : 'बिहार'}</option>
+                      <option value="West Bengal">{language === 'en' ? 'West Bengal' : 'पश्चिम बंगाल'}</option>
+                      <option value="Rajasthan">{language === 'en' ? 'Rajasthan' : 'राजस्थान'}</option>
+                      <option value="Maharashtra">{language === 'en' ? 'Maharashtra' : 'महाराष्ट्र'}</option>
+                      <option value="Karnataka">{language === 'en' ? 'Karnataka' : 'कर्नाटक'}</option>
+                      <option value="Delhi">{language === 'en' ? 'Delhi' : 'दिल्ली'}</option>
+                      <option value="Other">{language === 'en' ? 'Other' : 'अन्य'}</option>
                     </select>
                   </div>
                 )}
@@ -240,7 +241,7 @@ function AppContent() {
                     }}
                     className="w-full py-4 bg-gov-navy hover:bg-gov-navy/90 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
                   >
-                    {onboardingStep < 4 ? 'Continue' : 'Get Started'} <ChevronRight size={20} />
+                    {onboardingStep < 4 ? (language === 'en' ? 'Continue' : 'जारी रखें') : (language === 'en' ? 'Get Started' : 'शुरू करें')} <ChevronRight size={20} />
                   </button>
                 </div>
               </div>
@@ -253,52 +254,12 @@ function AppContent() {
       <div className={`fixed bottom-0 left-0 right-0 h-[72px] md:hidden z-50 px-4 flex justify-between items-center backdrop-blur-xl border-t shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transition-colors duration-300 ${darkMode ? 'bg-gov-dark-navy/90 border-white/10' : 'bg-white/90 border-slate-200/50'}`}>
         <NavBtn id="mobile-nav-home" icon={Home} label={t.home} active={activeTab === 'home'} onClick={() => setActiveTab('home')} darkMode={darkMode} />
         <NavBtn id="mobile-nav-analyze" icon={Camera} label={t.analyze} active={activeTab === 'analyze'} onClick={() => setActiveTab('analyze')} darkMode={darkMode} />
-        <NavBtn id="mobile-nav-tools" icon={Calculator} label={t.tools} active={activeTab === 'tools'} onClick={() => setActiveTab('tools')} darkMode={darkMode} />
+        <NavBtn id="mobile-nav-tools" icon={Calculator} label={language === 'en' ? 'Tools' : 'उपकरण'} active={activeTab === 'tools'} onClick={() => setActiveTab('tools')} darkMode={darkMode} />
         {isAdmin && <NavBtn id="mobile-nav-admin" icon={LayoutDashboard} label={t.admin} active={activeTab === 'admin'} onClick={() => setActiveTab('admin')} darkMode={darkMode} />}
         <NavBtn id="mobile-nav-intel" icon={MapIcon} label={t.intel} active={activeTab === 'intel'} onClick={() => setActiveTab('intel')} darkMode={darkMode} />
       </div>
 
-      <Footer onOpenFeedback={() => setIsFeedbackOpen(true)} />
-
-      {/* Global Water Pulse Bar */}
-      <div className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-40 w-[90%] max-w-2xl pointer-events-none">
-        <motion.div 
-          initial={{ y: 100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 2, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="bg-slate-950/80 backdrop-blur-xl border border-white/10 rounded-[2rem] p-3 shadow-2xl pointer-events-auto flex items-center justify-between gap-6"
-        >
-          <div className="flex items-center gap-3 px-2">
-            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-            <div className="flex flex-col">
-              <span className="text-[8px] font-bold text-white/40 uppercase tracking-[0.2em]">Global Pulse</span>
-              <span className="text-[10px] font-bold text-white tracking-wider">LIVE WATER METRICS</span>
-            </div>
-          </div>
-
-          <div className="h-8 w-[1px] bg-white/10"></div>
-
-          <div className="flex items-center gap-8 overflow-hidden">
-            <div className="flex flex-col">
-              <span className="text-[8px] font-bold text-white/40 uppercase tracking-widest">Avg pH</span>
-              <span className="text-xs font-mono text-emerald-400">7.2</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-[8px] font-bold text-white/40 uppercase tracking-widest">TDS (Avg)</span>
-              <span className="text-xs font-mono text-blue-400">240</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-[8px] font-bold text-white/40 uppercase tracking-widest">Reports</span>
-              <span className="text-xs font-mono text-amber-400">1.2k</span>
-            </div>
-          </div>
-
-          <div className="hidden sm:flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-xl border border-white/5">
-            <span className="text-[8px] font-bold text-white/60 uppercase tracking-widest">Status</span>
-            <span className="text-[10px] font-bold text-emerald-400">STABLE</span>
-          </div>
-        </motion.div>
-      </div>
+      <Footer onOpenFeedback={() => setIsFeedbackOpen(true)} language={language} />
     </motion.div>
   );
 }

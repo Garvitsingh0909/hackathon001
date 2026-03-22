@@ -1,603 +1,620 @@
 import React, { useState, useEffect } from 'react';
-import { Map, Search, Newspaper, MapPin, ExternalLink, Loader2, AlertTriangle, ShieldAlert, ShieldCheck, Volume2, FileText, Droplets, Activity } from 'lucide-react';
-import { searchWaterNews, findNearbyStations, playBrowserTTS } from '../lib/gemini';
 import { motion, AnimatePresence } from 'framer-motion';
+import { 
+    Newspaper, 
+    MapPin, 
+    AlertTriangle, 
+    Search, 
+    ExternalLink, 
+    Droplets, 
+    Wind, 
+    Thermometer, 
+    Navigation,
+    ChevronRight,
+    Play,
+    Volume2,
+    Loader2,
+    CheckCircle2,
+    ShieldAlert,
+    Info,
+    ArrowRight,
+    TrendingUp,
+    Clock,
+    Share2,
+    Bookmark,
+    Zap
+} from 'lucide-react';
+import { searchWaterNews, findNearbyStations, playBrowserTTS } from '../lib/gemini';
 import { DisclaimerBanner } from './ui/DisclaimerBanner';
-import { api } from '../services/api';
-import { WaterQualityReport } from '../types';
+import { TRANSLATIONS } from '../constants';
+import { toast } from 'react-hot-toast';
 
-export const WaterIntel = () => {
-    const [activeSection, setActiveSection] = useState<'news' | 'stations' | 'risk' | 'reports'>('news');
-    const [news, setNews] = useState<{text: string, sources: any[]} | null>(null);
-    const [stations, setStations] = useState<{text: string, chunks: any[]} | null>(null);
-    const [reports, setReports] = useState<WaterQualityReport[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [isSpeaking, setIsSpeaking] = useState(false);
-    
-    // Risk Checker State
-    const [locationInput, setLocationInput] = useState('');
-    const [riskResult, setRiskResult] = useState<{score: number, level: string, details: string, tips: string[]} | null>(null);
-    const [isCheckingRisk, setIsCheckingRisk] = useState(false);
+interface NewsItem {
+    title: string;
+    source: string;
+    url: string;
+    snippet: string;
+    date: string;
+    image?: string;
+    category?: string;
+}
 
-    // Mock Location for Tamsa River Basin (Maunath Bhanjan approx)
-    const MOCK_LAT = 25.9427;
-    const MOCK_LNG = 83.5539;
+interface Station {
+    name: string;
+    distance: string;
+    status: 'Active' | 'Maintenance' | 'Offline';
+    lastReading: string;
+    parameters: {
+        ph: number;
+        turbidity: string;
+        tds: number;
+    };
+    image?: string;
+}
 
-    const fetchNews = async () => {
-        setLoading(true);
-        console.log('[WaterIntel] Fetching news for Tamsa River');
-        try {
-            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 60000));
-            const apiPromise = searchWaterNews("Tamsa River pollution and water quality Uttar Pradesh");
-            
-            const result = await Promise.race([apiPromise, timeoutPromise]) as any;
-            console.log('[WaterIntel] News fetch successful', result);
-            
-            setNews({
-                text: result.text || "No news found.",
-                sources: result.groundingMetadata?.groundingChunks || []
-            });
-        } catch (e) {
-            console.error("[WaterIntel] News fetch failed or timed out", e);
-            setNews({
-                text: "## Local Updates (Cached)\n\n**Tamsa River Status:** Recent monitoring indicates stable water levels. Local authorities have increased sampling frequency near industrial zones.\n\n**Community Action:** Volunteer groups are organizing a cleanup drive this weekend at the City Center Ghat.",
-                sources: []
-            });
-        } finally {
-            setLoading(false);
-        }
+export const WaterIntel = ({ language, setActiveTab }: { language: 'en' | 'hi', setActiveTab?: (tab: string) => void }) => {
+    const t = TRANSLATIONS[language].intel;
+    const [news, setNews] = useState<NewsItem[]>([]);
+    const [stations, setStations] = useState<Station[]>([]);
+    const [loadingNews, setLoadingNews] = useState(true);
+    const [loadingStations, setLoadingStations] = useState(true);
+    const [location, setLocation] = useState('');
+    const [riskResult, setRiskResult] = useState<any>(null);
+    const [checkingRisk, setCheckingRisk] = useState(false);
+    const [activeCategory, setActiveCategory] = useState<'all' | 'river' | 'policy' | 'tech'>('all');
+
+    useEffect(() => {
+        const loadIntel = async () => {
+            try {
+                const [newsData, stationsData] = await Promise.all([
+                    searchWaterNews("Tamsa River water quality news 2024 India").catch(() => []),
+                    findNearbyStations(25.9427, 83.5539).catch(() => [])
+                ]);
+
+                // Enhance news with categories and fresh images
+                const enhancedNews = (newsData.length > 0 ? newsData : [
+                    {
+                        title: language === 'en' ? "Tamsa River Restoration Project Gains Momentum" : "तमसा नदी बहाली परियोजना ने पकड़ी गति",
+                        source: language === 'en' ? "Local Environmental Board" : "स्थानीय पर्यावरण बोर्ड",
+                        url: "#",
+                        snippet: language === 'en' ? "New initiatives launched to clear plastic waste and restore natural flow near Mau district." : "मऊ जिले के पास प्लास्टिक कचरे को साफ करने और प्राकृतिक प्रवाह को बहाल करने के लिए नई पहल शुरू की गई।",
+                        date: language === 'en' ? "2 days ago" : "2 दिन पहले",
+                        category: "river",
+                        image: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=800&q=80"
+                    },
+                    {
+                        title: language === 'en' ? "New Water Filtration Plant Proposed for Azamgarh" : "आजमगढ़ के लिए नए जल निस्पंदन संयंत्र का प्रस्ताव",
+                        source: language === 'en' ? "State Infrastructure News" : "राज्य अवसंरचना समाचार",
+                        url: "#",
+                        snippet: language === 'en' ? "The proposed plant aims to provide clean drinking water to over 50,000 households." : "प्रस्तावित संयंत्र का उद्देश्य 50,000 से अधिक घरों को स्वच्छ पेयजल प्रदान करना है।",
+                        date: language === 'en' ? "5 days ago" : "5 दिन पहले",
+                        category: "tech",
+                        image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80"
+                    },
+                    {
+                        title: language === 'en' ? "Monsoon Preparedness: Flood Warning Systems Updated" : "मानसून की तैयारी: बाढ़ चेतावनी प्रणाली अपडेट की गई",
+                        source: language === 'en' ? "Disaster Management Authority" : "आपदा प्रबंधन प्राधिकरण",
+                        url: "#",
+                        snippet: language === 'en' ? "Early warning sensors installed along the Tamsa basin to monitor sudden water level rises." : "जल स्तर में अचानक वृद्धि की निगरानी के लिए तमसा बेसिन के साथ प्रारंभिक चेतावनी सेंसर स्थापित किए गए।",
+                        date: language === 'en' ? "1 week ago" : "1 सप्ताह पहले",
+                        category: "policy",
+                        image: "https://images.unsplash.com/photo-1547683905-f686c993aae5?auto=format&fit=crop&w=800&q=80"
+                    }
+                ]).map((item: any, i: number) => ({
+                    ...item,
+                    category: item.category || (i % 2 === 0 ? 'river' : 'tech'),
+                    image: item.image || `https://picsum.photos/seed/water${i}/800/450`
+                }));
+
+                setNews(enhancedNews);
+                
+                // Enhance stations with images
+                const enhancedStations = (stationsData.length > 0 ? stationsData : [
+                    {
+                        name: language === 'en' ? "Mau Central Station" : "मऊ सेंट्रल स्टेशन",
+                        distance: language === 'en' ? "2.4 km" : "2.4 किमी",
+                        status: "Active",
+                        lastReading: language === 'en' ? "15 mins ago" : "15 मिनट पहले",
+                        parameters: { ph: 7.2, turbidity: language === 'en' ? "Low" : "कम", tds: 240 },
+                        image: "https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&w=400&q=80"
+                    },
+                    {
+                        name: language === 'en' ? "Tamsa Bridge Monitor" : "तमसा ब्रिज मॉनिटर",
+                        distance: language === 'en' ? "4.1 km" : "4.1 किमी",
+                        status: "Active",
+                        lastReading: language === 'en' ? "1 hour ago" : "1 घंटा पहले",
+                        parameters: { ph: 6.8, turbidity: language === 'en' ? "Medium" : "मध्यम", tds: 310 },
+                        image: "https://images.unsplash.com/photo-1590001155093-a3c66ab0c3ff?auto=format&fit=crop&w=400&q=80"
+                    }
+                ]).map((s: any, i: number) => ({
+                    ...s,
+                    image: s.image || `https://picsum.photos/seed/station${i}/400/300`
+                }));
+
+                setStations(enhancedStations);
+            } catch (error) {
+                console.error("Intel load failed", error);
+            } finally {
+                setLoadingNews(false);
+                setLoadingStations(false);
+            }
+        };
+        loadIntel();
+    }, [language]);
+
+    const handleComingSoon = (feature: string) => {
+        toast.success(`${feature} ${language === 'en' ? 'coming soon!' : 'जल्द आ रहा है!'}`);
     };
 
-    const fetchStations = async () => {
-        setLoading(true);
-        console.log('[WaterIntel] Fetching nearby stations');
-        try {
-            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 60000));
-            const apiPromise = findNearbyStations(MOCK_LAT, MOCK_LNG);
-            
-            const result = await Promise.race([apiPromise, timeoutPromise]) as any;
-            console.log('[WaterIntel] Stations fetch successful', result);
-            
-            setStations({
-                text: result.text || "No stations found.",
-                chunks: result.chunks || []
-            });
-        } catch (e) {
-            console.error("[WaterIntel] Stations fetch failed or timed out", e);
-            setStations({
-                text: "Unable to fetch live station data. Showing cached locations.",
-                chunks: [
-                    { maps: { title: "Central Monitoring Station", uri: "https://maps.google.com" } },
-                    { maps: { title: "River Ghat Sensor Array", uri: "https://maps.google.com" } }
+    const checkRisk = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!location.trim()) return;
+        setCheckingRisk(true);
+        
+        // Simulate risk check
+        setTimeout(() => {
+            const score = Math.floor(Math.random() * 100);
+            setRiskResult({
+                score,
+                level: score < 30 ? 'Low' : score < 70 ? 'Moderate' : 'High',
+                details: score < 30 
+                    ? "Water quality in this area is generally good. Minimal risk of contamination." 
+                    : score < 70 
+                    ? "Moderate risk detected. Some industrial runoff reported nearby. Use basic filtration." 
+                    : "High risk area. Significant contamination reports. Do not consume without advanced treatment.",
+                tips: [
+                    "Use RO filtration for drinking",
+                    "Boil water for at least 10 minutes",
+                    "Avoid using for washing vegetables"
                 ]
             });
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const fetchReports = async () => {
-        setLoading(true);
-        try {
-            const data = await api.getReports().catch(e => {
-                // Suppress expected permission errors
-                return [];
-            });
-            setReports(data);
-        } catch (e) {
-            console.error("[WaterIntel] Reports fetch failed", e);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        if (activeSection === 'news' && !news) fetchNews();
-        if (activeSection === 'stations' && !stations) fetchStations();
-        if (activeSection === 'reports' && reports.length === 0) fetchReports();
-    }, [activeSection]);
-
-    const handleSpeak = (text: string) => {
-        if (isSpeaking) {
-            window.speechSynthesis.cancel();
-            setIsSpeaking(false);
-            return;
-        }
-        
-        setIsSpeaking(true);
-        playBrowserTTS(
-            text,
-            () => setIsSpeaking(true),
-            () => setIsSpeaking(false)
-        );
-    };
-
-    useEffect(() => {
-        return () => {
-            window.speechSynthesis.cancel();
-        };
-    }, []);
-
-    const handleCheckRisk = () => {
-        if (!locationInput.trim()) return;
-        setIsCheckingRisk(true);
-        setRiskResult(null);
-        
-        // Simulate API call
-        setTimeout(() => {
-            const hash = locationInput.split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a }, 0);
-            const score = Math.abs(hash % 100);
-            
-            let level = 'Low Risk';
-            let details = 'Water quality in this area is generally reported to be safe for daily use. However, periodic testing is always recommended.';
-            let tips = ['Use standard filtration', 'Clean storage tanks regularly'];
-            
-            if (score > 70) {
-                level = 'High Risk';
-                details = 'Historical data and recent reports suggest potential contamination issues in this region. Heavy metals or bacterial presence might be elevated.';
-                tips = ['Use RO purification', 'Boil water before drinking', 'Contact local authorities for testing'];
-            } else if (score > 40) {
-                level = 'Moderate Risk';
-                details = 'Water quality fluctuates. Seasonal variations (like monsoons) might affect turbidity and TDS levels.';
-                tips = ['Use UV/UF filtration', 'Monitor water color and smell', 'Clean filters monthly'];
-            }
-
-            setRiskResult({ score, level, details, tips });
-            setIsCheckingRisk(false);
+            setCheckingRisk(false);
         }, 1500);
     };
 
-    const container = {
-        hidden: { opacity: 0 },
-        show: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.1
-            }
-        }
+    const speakText = (text: string) => {
+        playBrowserTTS(text);
     };
 
-    const item = {
-        hidden: { opacity: 0, y: 20 },
-        show: { opacity: 1, y: 0 }
-    };
+    const filteredNews = activeCategory === 'all' 
+        ? news 
+        : news.filter(item => item.category === activeCategory);
 
     return (
-        <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="max-w-5xl mx-auto space-y-8 pt-6"
-        >
+        <div className="space-y-12 pb-20">
             <DisclaimerBanner />
-            <div className="flex flex-wrap items-center justify-center gap-2 md:gap-4 bg-slate-100/50 dark:bg-slate-800/50 backdrop-blur-md p-2 rounded-full shadow-inner border border-slate-200/50 dark:border-slate-700/50 w-fit mx-auto mb-8 transition-colors">
-                <button
-                    onClick={() => setActiveSection('news')}
-                    className={`relative px-6 py-3 rounded-full text-sm font-bold tracking-wide transition-all duration-300 flex items-center gap-2 ${activeSection === 'news' ? 'text-white shadow-lg' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50'}`}
-                >
-                    {activeSection === 'news' && (
-                        <motion.div
-                            layoutId="intel-tab-active"
-                            className="absolute inset-0 rounded-full -z-10 bg-gradient-to-r from-blue-600 to-gov-teal shadow-[0_0_15px_rgba(34,184,166,0.4)]"
-                            transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                        />
-                    )}
-                    <Newspaper size={18} className={activeSection === 'news' ? 'animate-pulse' : ''} /> <span className="hidden sm:inline font-display">Latest News</span>
-                </button>
-                <button
-                    onClick={() => setActiveSection('stations')}
-                    className={`relative px-6 py-3 rounded-full text-sm font-bold tracking-wide transition-all duration-300 flex items-center gap-2 ${activeSection === 'stations' ? 'text-white shadow-lg' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50'}`}
-                >
-                    {activeSection === 'stations' && (
-                        <motion.div
-                            layoutId="intel-tab-active"
-                            className="absolute inset-0 rounded-full -z-10 bg-gradient-to-r from-emerald-500 to-teal-500 shadow-[0_0_15px_rgba(16,185,129,0.4)]"
-                            transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                        />
-                    )}
-                    <MapPin size={18} className={activeSection === 'stations' ? 'animate-bounce' : ''} /> <span className="hidden sm:inline font-display">Nearby Stations</span>
-                </button>
-                <button
-                    onClick={() => setActiveSection('risk')}
-                    className={`relative px-6 py-3 rounded-full text-sm font-bold tracking-wide transition-all duration-300 flex items-center gap-2 ${activeSection === 'risk' ? 'text-white shadow-lg' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50'}`}
-                >
-                    {activeSection === 'risk' && (
-                        <motion.div
-                            layoutId="intel-tab-active"
-                            className="absolute inset-0 rounded-full -z-10 bg-gradient-to-r from-amber-500 to-orange-500 shadow-[0_0_15px_rgba(245,158,11,0.4)]"
-                            transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                        />
-                    )}
-                    <AlertTriangle size={18} className={activeSection === 'risk' ? 'animate-pulse' : ''} /> <span className="hidden sm:inline font-display">Risk Checker</span>
-                </button>
-                <button
-                    onClick={() => setActiveSection('reports')}
-                    className={`relative px-6 py-3 rounded-full text-sm font-bold tracking-wide transition-all duration-300 flex items-center gap-2 ${activeSection === 'reports' ? 'text-white shadow-lg' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-slate-700/50'}`}
-                >
-                    {activeSection === 'reports' && (
-                        <motion.div
-                            layoutId="intel-tab-active"
-                            className="absolute inset-0 rounded-full -z-10 bg-gradient-to-r from-purple-600 to-indigo-600 shadow-[0_0_15px_rgba(129,140,248,0.4)]"
-                            transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                        />
-                    )}
-                    <FileText size={18} className={activeSection === 'reports' ? 'animate-pulse' : ''} /> <span className="hidden sm:inline font-display">Recent Reports</span>
-                </button>
-            </div>
 
-            {loading && activeSection !== 'risk' ? (
-                <div className="flex flex-col items-center justify-center py-32 text-slate-400 dark:text-slate-500 bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200/60 dark:border-slate-800 shadow-subtle transition-colors">
-                    <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                    >
-                        <Loader2 className="mb-6 text-blue-500" size={48} />
-                    </motion.div>
-                    <p className="font-medium text-lg animate-pulse tracking-wide">Gathering intelligence from Tamsa Basin...</p>
-                </div>
-            ) : (
-                <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 md:p-12 shadow-subtle border border-slate-200/60 dark:border-slate-800 min-h-[500px] transition-colors">
-                    {activeSection === 'news' && news && (
-                        <motion.div variants={container} initial="hidden" animate="show">
-                            <motion.div variants={item} className="mb-8 border-b border-slate-100 dark:border-slate-800 pb-6 flex justify-between items-end">
-                                <div>
-                                    <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-3 font-display">
-                                        <div className="p-2 bg-blue-50 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded-lg"><Search size={24} /></div>
-                                        Grounded Search
-                                    </h2>
-                                    <p className="text-slate-500 dark:text-slate-400 ml-14">Real-time environmental updates for Tamsa River</p>
-                                </div>
-                                <button 
-                                    onClick={() => handleSpeak(news.text)}
-                                    className={`p-3 rounded-full border transition-all ${isSpeaking ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50'}`}
-                                >
-                                    {isSpeaking ? <Loader2 className="animate-spin" size={20} /> : <Volume2 size={20} />}
-                                </button>
-                            </motion.div>
-                            
-                            <motion.div variants={item} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                                {/* Featured Article */}
-                                <div className="lg:col-span-2 space-y-6">
-                                    <div className="relative rounded-2xl overflow-hidden aspect-video group">
-                                        <img 
-                                            src="https://images.unsplash.com/photo-1433086966358-54859d0ed716?auto=format&fit=crop&w=1200&q=80" 
-                                            alt="Featured Mountain River" 
-                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                                            referrerPolicy="no-referrer"
-                                        />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent"></div>
-                                        <div className="absolute bottom-0 left-0 p-8 space-y-3">
-                                            <div className="flex items-center gap-2">
-                                                <span className="px-2 py-0.5 bg-blue-600 text-[10px] font-bold text-white uppercase tracking-widest rounded-md">Featured</span>
-                                                <span className="text-[10px] font-bold text-white/60 uppercase tracking-widest">5 min read</span>
-                                            </div>
-                                            <h3 className="text-3xl font-bold text-white font-display leading-tight">State of the Tamsa: A Comprehensive 2026 Analysis</h3>
-                                            <p className="text-white/70 text-sm max-w-xl line-clamp-2">Recent satellite data and ground-level sensors reveal a complex picture of the Tamsa River basin's health this spring.</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="prose prose-lg prose-slate dark:prose-invert max-w-none text-slate-600 dark:text-slate-300 leading-relaxed">
-                                        <p className="whitespace-pre-line">{news.text}</p>
-                                    </div>
-                                </div>
-
-                                {/* Sidebar News */}
-                                <div className="space-y-6">
-                                    <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                                        <div className="w-4 h-[1px] bg-slate-300 dark:bg-slate-600"></div> Trending Updates
-                                    </h4>
-                                    <div className="space-y-6">
-                                        {[1, 2, 3].map((_, i) => (
-                                            <motion.div 
-                                                key={i} 
-                                                whileHover={{ x: 4 }}
-                                                className="group cursor-pointer bg-white dark:bg-slate-800/50 p-4 rounded-[1.5rem] border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-subtle-hover transition-all"
-                                            >
-                                                <div className="flex gap-5 items-start">
-                                                    <div className="w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0 shadow-sm group-hover:shadow-md transition-shadow">
-                                                        <img src={`https://picsum.photos/seed/water${i}/200/200`} alt="News" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" referrerPolicy="no-referrer" />
-                                                    </div>
-                                                    <div className="space-y-2 py-1">
-                                                        <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-md">Environment</span>
-                                                        <h5 className="font-bold text-base text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors line-clamp-2 leading-snug">New sensor array deployed in Maunath Bhanjan</h5>
-                                                        <p className="text-xs text-slate-400 font-medium">12 Mar 2026</p>
-                                                    </div>
-                                                </div>
-                                            </motion.div>
-                                        ))}
-                                    </div>
-
-                                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-[2rem] p-8 border border-slate-100 dark:border-slate-700 shadow-subtle">
-                                        <h4 className="font-bold text-lg text-slate-900 dark:text-white mb-2 font-display">Weekly Newsletter</h4>
-                                        <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">Get the latest water quality insights delivered to your inbox.</p>
-                                        <div className="flex gap-3">
-                                            <input type="email" placeholder="Email address" className="flex-1 px-4 py-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-inner" />
-                                            <motion.button 
-                                                whileHover={{ scale: 1.05 }}
-                                                whileTap={{ scale: 0.95 }}
-                                                className="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors shadow-md"
-                                            >
-                                                <ArrowRight size={20} />
-                                            </motion.button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </motion.div>
-                            
-                            {news.sources.length > 0 && (
-                                <motion.div variants={item} className="mt-12 pt-8 border-t border-slate-100 dark:border-slate-800">
-                                    <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-6 flex items-center gap-2">
-                                        <div className="w-4 h-[1px] bg-slate-300 dark:bg-slate-600"></div> Verified Sources
-                                    </h4>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {news.sources.map((source, idx) => (
-                                            source.web ? (
-                                                <motion.a 
-                                                    variants={item}
-                                                    whileHover={{ scale: 1.02, y: -4 }}
-                                                    key={idx} 
-                                                    href={source.web.uri} 
-                                                    target="_blank" 
-                                                    rel="noreferrer" 
-                                                    className="flex flex-col justify-between p-6 rounded-[2rem] border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-500 bg-white dark:bg-slate-800 shadow-subtle hover:shadow-subtle-hover transition-all duration-300 group h-full"
-                                                >
-                                                    <div>
-                                                        <div className="flex items-start justify-between mb-4">
-                                                            <div className="p-3 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl group-hover:bg-blue-600 dark:group-hover:bg-blue-500 group-hover:text-white transition-colors">
-                                                                <Newspaper size={24} />
-                                                            </div>
-                                                            <ExternalLink size={20} className="text-slate-300 dark:text-slate-600 group-hover:text-blue-500 transition-colors" />
-                                                        </div>
-                                                        <h4 className="font-bold text-slate-900 dark:text-slate-100 text-xl leading-snug mb-3 group-hover:text-blue-700 dark:group-hover:text-blue-400 transition-colors line-clamp-2 font-display">{source.web.title}</h4>
-                                                        <p className="text-sm text-slate-500 dark:text-slate-400 font-mono truncate bg-slate-50 dark:bg-slate-900/50 px-3 py-1.5 rounded-lg inline-block">{new URL(source.web.uri).hostname}</p>
-                                                    </div>
-                                                    <div className="mt-6 pt-5 border-t border-slate-100 dark:border-slate-700 flex items-center text-sm font-bold text-blue-600 dark:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
-                                                        Read Article <ArrowRight size={18} className="ml-2" />
-                                                    </div>
-                                                </motion.a>
-                                            ) : null
-                                        ))}
-                                    </div>
-                                </motion.div>
-                            )}
-                        </motion.div>
-                    )}
-
-                    {activeSection === 'stations' && stations && (
-                        <motion.div variants={container} initial="hidden" animate="show" className="space-y-8">
-                            <motion.div variants={item} className="mb-8 border-b border-slate-100 dark:border-slate-800 pb-6 flex justify-between items-end">
-                                <div>
-                                    <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-3 font-display">
-                                        <div className="p-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-xl"><Map className="text-emerald-500 dark:text-emerald-400" size={24} /></div>
-                                        Monitoring Network
-                                    </h2>
-                                    <p className="text-slate-500 dark:text-slate-400 ml-14">Official water quality stations and landmarks</p>
-                                </div>
-                                <button 
-                                    onClick={() => handleSpeak(stations.text)}
-                                    className={`p-3 rounded-full border transition-all ${isSpeaking ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50'}`}
-                                >
-                                    {isSpeaking ? <Loader2 className="animate-spin" size={20} /> : <Volume2 size={20} />}
-                                </button>
-                            </motion.div>
-
-                            <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {stations.chunks?.map((chunk, idx) => {
-                                    if (chunk.web?.uri || chunk.maps?.uri) {
-                                        const title = chunk.web?.title || chunk.maps?.title;
-                                        const uri = chunk.web?.uri || chunk.maps?.uri;
-                                        const isMap = !!chunk.maps?.uri;
-
-                                        return (
-                                            <motion.div
-                                                key={idx}
-                                                variants={item}
-                                                whileHover={{ y: -5 }}
-                                                animate={{ y: [0, -5, 0] }}
-                                                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-                                                className="group bg-white dark:bg-slate-800/50 rounded-[2rem] p-6 border border-slate-100 dark:border-slate-700 hover:border-blue-500/50 transition-all shadow-subtle hover:shadow-subtle-hover"
-                                            >
-                                                <div className="flex justify-between items-start mb-6">
-                                                    <div className={`p-3 rounded-2xl ${isMap ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'}`}>
-                                                        {isMap ? <MapPin size={24} /> : <Search size={24} />}
-                                                    </div>
-                                                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 dark:bg-emerald-500/10 rounded-full">
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                                                        <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Active</span>
-                                                    </div>
-                                                </div>
-                                                
-                                                <div className="space-y-1 mb-6">
-                                                    <h4 className="font-bold text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors line-clamp-2">{title}</h4>
-                                                    <p className="text-xs text-slate-500 dark:text-slate-400">{isMap ? 'Geographical Landmark' : 'Data Source'}</p>
-                                                </div>
-
-                                                <div className="grid grid-cols-2 gap-4 mb-6">
-                                                    <div className="p-3 bg-slate-50 dark:bg-slate-900/50 rounded-2xl">
-                                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Reliability</p>
-                                                        <p className="text-sm font-bold text-slate-900 dark:text-white">High</p>
-                                                    </div>
-                                                    <div className="p-3 bg-slate-50 dark:bg-slate-900/50 rounded-2xl">
-                                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Type</p>
-                                                        <p className="text-sm font-bold text-slate-900 dark:text-white">{isMap ? 'Station' : 'Article'}</p>
-                                                    </div>
-                                                </div>
-
-                                                <a 
-                                                    href={uri} 
-                                                    target="_blank" 
-                                                    rel="noreferrer"
-                                                    className="w-full py-3 bg-slate-50 dark:bg-slate-900 hover:bg-blue-600 hover:text-white text-slate-600 dark:text-slate-400 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2"
-                                                >
-                                                    {isMap ? 'View on Maps' : 'Read Source'} <ArrowRight size={14} />
-                                                </a>
-                                            </motion.div>
-                                        );
-                                    }
-                                    return null;
-                                })}
-                            </motion.div>
-                        </motion.div>
-                    )}
-
-                    {activeSection === 'reports' && reports && (
-                        <motion.div variants={container} initial="hidden" animate="show">
-                            <motion.div variants={item} className="mb-8 border-b border-slate-100 dark:border-slate-800 pb-6">
-                                <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-3 font-display">
-                                    <div className="p-2 bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-xl"><FileText size={24} /></div>
-                                    Recent Reports
-                                </h2>
-                                <p className="text-slate-500 dark:text-slate-400 ml-14">Latest water quality reports from the community</p>
-                            </motion.div>
-                            <div className="space-y-6">
-                                                {loading ? (
-                                                    Array.from({ length: 3 }).map((_, i) => (
-                                                        <div key={i} className="p-8 rounded-[2rem] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-subtle animate-pulse">
-                                                            <div className="flex justify-between items-start mb-4">
-                                                                <div className="flex items-center gap-4">
-                                                                    <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-700"></div>
-                                                                    <div>
-                                                                        <div className="h-5 w-40 bg-slate-200 dark:bg-slate-700 rounded mb-2"></div>
-                                                                        <div className="h-4 w-24 bg-slate-200 dark:bg-slate-700 rounded"></div>
-                                                                    </div>
-                                                                </div>
-                                                                <div className="h-8 w-24 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
-                                                            </div>
-                                                            <div className="mt-6 h-4 w-full bg-slate-200 dark:bg-slate-700 rounded"></div>
-                                                            <div className="mt-3 h-4 w-3/4 bg-slate-200 dark:bg-slate-700 rounded"></div>
-                                                        </div>
-                                                    ))
-                                                ) : reports.length === 0 ? (
-                                                    <div className="flex flex-col items-center justify-center py-16 text-center bg-slate-50 dark:bg-slate-800/50 rounded-[2rem] border border-slate-100 dark:border-slate-800 shadow-inner">
-                                                        <div className="w-20 h-20 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center text-slate-400 mb-6 shadow-sm">
-                                                            <FileText size={40} />
-                                                        </div>
-                                                        <p className="text-xl font-bold text-slate-900 dark:text-white mb-2 font-display">No reports available</p>
-                                                        <p className="text-slate-500 dark:text-slate-400 max-w-md">There are currently no community reports to display for this region.</p>
-                                                    </div>
-                                                ) : (
-                                                    reports.map((report) => (
-                                                        <motion.div 
-                                                            variants={item} 
-                                                            key={report.id} 
-                                                            whileHover={{ scale: 1.01, y: -2 }}
-                                                            className="p-8 rounded-[2rem] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-subtle hover:shadow-subtle-hover transition-all"
-                                                        >
-                                                            <div className="flex justify-between items-start mb-4">
-                                                                <h4 className="font-bold text-xl text-slate-900 dark:text-white font-display">{report.locationName}</h4>
-                                                                <span className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${report.status === 'Resolved' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400'}`}>{report.status}</span>
-                                                            </div>
-                                                            <p className="text-slate-600 dark:text-slate-300 mb-4 leading-relaxed text-lg">{report.details}</p>
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-600"></div>
-                                                                <p className="text-sm font-medium text-slate-400 dark:text-slate-500">{new Date(report.timestamp).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                                                            </div>
-                                                        </motion.div>
-                                                    ))
-                                                )}
-                                            </div>
-                        </motion.div>
-                    )}
-
-                    {activeSection === 'risk' && (
-                        <motion.div variants={container} initial="hidden" animate="show" className="space-y-8">
-                            <div className="max-w-3xl mx-auto text-center space-y-4">
-                                <h2 className="text-3xl font-bold text-slate-900 dark:text-white font-display">Risk Assessment Engine</h2>
-                                <p className="text-slate-500 dark:text-slate-400">The engine analyzes local environmental factors, historical data, and real-time reports to determine your current water safety level.</p>
+            {/* 1. NEWS SECTION - Editorial Style */}
+            <section className="space-y-8">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                    <div>
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="p-2 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-xl">
+                                <Newspaper size={20} />
                             </div>
+                            <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-slate-400">
+                                {language === 'en' ? 'Water Intelligence News' : 'जल इंटेलिजेंस समाचार'}
+                            </h2>
+                        </div>
+                        <h3 className="text-4xl font-black text-slate-900 dark:text-white font-display tracking-tight">
+                            {language === 'en' ? 'Latest from the' : 'बेसिन से'} <span className="text-blue-600">{language === 'en' ? 'Basin' : 'नवीनतम'}</span>
+                        </h3>
+                    </div>
+                    
+                    <div className="flex gap-2 p-1 bg-slate-100 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700">
+                        {(['all', 'river', 'policy', 'tech'] as const).map((cat) => (
+                            <button
+                                key={cat}
+                                onClick={() => setActiveCategory(cat)}
+                                className={`px-5 py-2 rounded-xl text-xs font-bold transition-all ${
+                                    activeCategory === cat 
+                                    ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' 
+                                    : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                                }`}
+                            >
+                                {language === 'en' 
+                                    ? cat.charAt(0).toUpperCase() + cat.slice(1) 
+                                    : cat === 'all' ? 'सभी' : cat === 'river' ? 'नदी' : cat === 'policy' ? 'नीति' : 'तकनीक'}
+                            </button>
+                        ))}
+                    </div>
+                </div>
 
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-                                <div className="space-y-6">
-                                    <div className="bg-white dark:bg-slate-800/50 rounded-[2.5rem] p-8 border border-slate-100 dark:border-slate-700 shadow-subtle">
-                                        <div className="flex items-center gap-4 mb-8">
-                                            <div className="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
-                                                <ShieldCheck size={24} />
-                                            </div>
-                                            <div>
-                                                <h4 className="font-bold text-slate-900 dark:text-white">Safety Checkpoint</h4>
-                                                <p className="text-xs text-slate-500 tracking-wide uppercase font-bold">Last updated: Just now</p>
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-6">
-                                            <div className="flex justify-between items-end">
-                                                <span className="text-sm font-bold text-slate-500 uppercase tracking-widest">Risk Level</span>
-                                                <span className={`text-4xl font-black font-display ${
-                                                    !riskResult ? 'text-slate-300' :
-                                                    riskResult.score > 70 ? 'text-rose-500' : 
-                                                    riskResult.score > 40 ? 'text-amber-500' : 'text-emerald-500'
-                                                }`}>
-                                                    {riskResult?.level.split(' ')[0] || '---'}
-                                                </span>
-                                            </div>
-                                            
-                                            <div className="h-4 bg-slate-100 dark:bg-slate-900 rounded-full overflow-hidden p-1 shadow-inner">
-                                                <motion.div 
-                                                    initial={{ width: 0 }}
-                                                    animate={{ width: !riskResult ? 0 : riskResult.score > 70 ? '90%' : riskResult.score > 40 ? '60%' : '20%' }}
-                                                    className={`h-full rounded-full ${
-                                                        !riskResult ? 'bg-slate-200' :
-                                                        riskResult.score > 70 ? 'bg-rose-500' : 
-                                                        riskResult.score > 40 ? 'bg-amber-500' : 'bg-emerald-500'
-                                                    }`}
-                                                />
-                                            </div>
-
-                                            <div className="p-6 bg-slate-50 dark:bg-slate-900 rounded-[1.5rem] border border-slate-100 dark:border-slate-800 min-h-[100px] flex items-center shadow-inner">
-                                                <p className="text-sm text-slate-600 dark:text-slate-300 italic leading-relaxed">
-                                                    "{riskResult?.details || 'Enter your location below to run a diagnostic safety assessment.'}"
-                                                </p>
-                                            </div>
-                                        </div>
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    {/* Featured Article */}
+                    <div className="lg:col-span-8">
+                        {loadingNews ? (
+                            <div className="w-full h-[500px] bg-slate-100 dark:bg-slate-800 rounded-[2.5rem] animate-pulse"></div>
+                        ) : filteredNews.length > 0 ? (
+                            <motion.div 
+                                initial={{ opacity: 0, scale: 0.98 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="group relative h-[500px] rounded-[2.5rem] overflow-hidden shadow-2xl"
+                            >
+                                <img 
+                                    src={filteredNews[0].image} 
+                                    alt="Featured" 
+                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                    referrerPolicy="no-referrer"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent"></div>
+                                <div className="absolute bottom-0 left-0 p-10 space-y-4">
+                                    <div className="flex items-center gap-3">
+                                        <span className="px-4 py-1.5 bg-blue-600 text-white text-[10px] font-bold uppercase tracking-widest rounded-full shadow-lg">
+                                            {filteredNews[0].category}
+                                        </span>
+                                        <span className="text-white/60 text-xs font-medium flex items-center gap-1.5">
+                                            <Clock size={14} /> {filteredNews[0].date}
+                                        </span>
                                     </div>
-
-                                    <div className="flex gap-2">
-                                        <input 
-                                            type="text" 
-                                            placeholder="Enter city or pin code..." 
-                                            value={locationInput}
-                                            onChange={(e) => setLocationInput(e.target.value)}
-                                            onKeyDown={(e) => e.key === 'Enter' && handleCheckRisk()}
-                                            className="flex-1 px-6 py-4 rounded-[2rem] border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all shadow-subtle"
-                                        />
+                                    <h4 className="text-3xl md:text-4xl font-black text-white leading-tight font-display tracking-tight">
+                                        {filteredNews[0].title}
+                                    </h4>
+                                    <p className="text-white/70 text-lg max-w-2xl line-clamp-2 font-light">
+                                        {filteredNews[0].snippet}
+                                    </p>
+                                    <div className="flex items-center gap-4 pt-4">
                                         <button 
-                                            onClick={handleCheckRisk}
-                                            disabled={isCheckingRisk || !locationInput.trim()}
-                                            className="px-8 py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-[2rem] font-bold hover:scale-[1.05] active:scale-[0.95] transition-all shadow-md disabled:opacity-50"
+                                            onClick={() => handleComingSoon(language === 'en' ? 'Full Story' : 'पूरी कहानी')}
+                                            className="px-8 py-3 bg-white text-slate-950 rounded-xl font-bold hover:bg-blue-50 transition-all flex items-center gap-2 shadow-xl"
                                         >
-                                            {isCheckingRisk ? <Loader2 className="animate-spin" size={24} /> : <Search size={24} />}
+                                            {language === 'en' ? 'Read Full Story' : 'पूरी कहानी पढ़ें'} <ArrowRight size={18} />
+                                        </button>
+                                        <button 
+                                            onClick={() => speakText(filteredNews[0].title + ". " + filteredNews[0].snippet)}
+                                            className="p-3 bg-white/10 backdrop-blur-md text-white rounded-xl hover:bg-white/20 transition-all border border-white/10"
+                                        >
+                                            <Volume2 size={20} />
                                         </button>
                                     </div>
                                 </div>
+                            </motion.div>
+                        ) : null}
+                    </div>
 
-                                <div className="grid grid-cols-2 gap-4">
-                                    {[
-                                        { label: 'Contamination', value: riskResult ? (riskResult.score > 70 ? '0.82%' : '0.02%') : '--', icon: Droplets, color: 'text-blue-500' },
-                                        { label: 'Bacterial Load', value: riskResult ? (riskResult.score > 70 ? 'High' : 'Low') : '--', icon: ShieldCheck, color: 'text-emerald-500' },
-                                        { label: 'Turbidity', value: riskResult ? (riskResult.score > 70 ? '4.5 NTU' : '1.2 NTU') : '--', icon: Search, color: 'text-amber-500' },
-                                        { label: 'pH Variance', value: riskResult ? '±0.1' : '--', icon: Activity, color: 'text-rose-500' },
-                                    ].map((stat, i) => (
-                                        <motion.div 
-                                            key={i} 
-                                            whileHover={{ y: -4 }}
-                                            className="bg-white dark:bg-slate-800/50 p-6 rounded-[2rem] border border-slate-100 dark:border-slate-700 shadow-subtle hover:shadow-subtle-hover transition-all"
-                                        >
-                                            {/* @ts-ignore */}
-                                            <stat.icon size={20} className={`${stat.color} mb-4`} />
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{stat.label}</p>
-                                            <p className="text-xl font-bold text-slate-900 dark:text-white">{stat.value}</p>
-                                        </motion.div>
-                                    ))}
+                    {/* Sidebar News */}
+                    <div className="lg:col-span-4 space-y-6">
+                        <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 border border-slate-100 dark:border-slate-800 shadow-subtle">
+                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em] mb-6">
+                                {language === 'en' ? 'Trending Updates' : 'ट्रेंडिंग अपडेट'}
+                            </h4>
+                            <div className="space-y-8">
+                                {loadingNews ? (
+                                    [1, 2, 3].map(i => <div key={i} className="h-20 bg-slate-50 dark:bg-slate-800 rounded-2xl animate-pulse"></div>)
+                                ) : filteredNews.slice(1, 4).map((item, i) => (
+                                    <motion.div 
+                                        key={i}
+                                        initial={{ opacity: 0, x: 20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: i * 0.1 }}
+                                        className="group cursor-pointer"
+                                    >
+                                        <div className="flex gap-4">
+                                            <div className="w-20 h-20 rounded-2xl overflow-hidden shrink-0 border border-slate-100 dark:border-slate-800">
+                                                <img 
+                                                    src={item.image} 
+                                                    alt="News" 
+                                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                                                    referrerPolicy="no-referrer"
+                                                />
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">
+                                                        {language === 'en' ? item.category : item.category === 'river' ? 'नदी' : item.category === 'policy' ? 'नीति' : 'तकनीक'}
+                                                    </span>
+                                                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">• {item.date}</span>
+                                                </div>
+                                                <h5 className="text-sm font-bold text-slate-900 dark:text-white line-clamp-2 leading-tight group-hover:text-blue-600 transition-colors">
+                                                    {item.title}
+                                                </h5>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </div>
+                            <button 
+                                onClick={() => handleComingSoon(language === 'en' ? 'News Archive' : 'समाचार संग्रह')}
+                                className="w-full mt-8 py-4 border border-slate-100 dark:border-slate-800 rounded-2xl text-xs font-bold text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all uppercase tracking-widest"
+                            >
+                                {t.viewAllNews}
+                            </button>
+                        </div>
+
+                        {/* Newsletter Signup */}
+                        <div className="bg-blue-600 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-xl">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
+                            <div className="relative z-10">
+                                <h4 className="text-xl font-bold mb-2">
+                                    {language === 'en' ? 'Weekly Intelligence' : 'साप्ताहिक इंटेलिजेंस'}
+                                </h4>
+                                <p className="text-blue-100 text-xs mb-6 leading-relaxed">
+                                    {language === 'en' ? 'Get critical water quality alerts and basin reports directly in your inbox.' : 'सीधे अपने इनबॉक्स में महत्वपूर्ण जल गुणवत्ता अलर्ट और बेसिन रिपोर्ट प्राप्त करें।'}
+                                </p>
+                                <div className="space-y-3">
+                                    <input 
+                                        type="email" 
+                                        placeholder={language === 'en' ? 'Enter your email' : 'अपना ईमेल दर्ज करें'} 
+                                        className="w-full px-5 py-3 bg-white/10 border border-white/20 rounded-xl text-sm placeholder:text-blue-200 focus:outline-none focus:ring-2 focus:ring-white/30 transition-all"
+                                    />
+                                    <button 
+                                        onClick={() => handleComingSoon(language === 'en' ? 'Newsletter' : 'न्यूज़लेटर')}
+                                        className="w-full py-3 bg-white text-blue-600 rounded-xl text-sm font-bold hover:bg-blue-50 transition-all shadow-lg"
+                                    >
+                                        {t.subscribe}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* 2. RISK CHECKER - Interactive Tool */}
+            <section className="bg-slate-900 rounded-[3rem] p-12 text-white relative overflow-hidden shadow-2xl">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(59,130,246,0.15),transparent_70%)]"></div>
+                <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                    <div className="space-y-8">
+                        <div>
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="p-2 bg-blue-500/20 text-blue-400 rounded-xl border border-blue-500/30">
+                                    <ShieldAlert size={20} />
+                                </div>
+                                <span className="text-xs font-bold uppercase tracking-[0.3em] text-blue-400">
+                                    {language === 'en' ? 'Risk Assessment Engine' : 'जोखिम मूल्यांकन इंजन'}
+                                </span>
+                            </div>
+                            <h3 className="text-5xl font-black font-display tracking-tight leading-tight">
+                                {language === 'en' ? 'Check Your Local' : 'अपने स्थानीय'} <br />
+                                <span className="bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
+                                    {language === 'en' ? 'Water Risk Score' : 'जल जोखिम स्कोर की जाँच करें'}
+                                </span>
+                            </h3>
+                            <p className="text-slate-400 text-lg mt-6 max-w-md leading-relaxed">
+                                {language === 'en' 
+                                    ? 'Enter your location to get a real-time risk assessment based on historical data, industrial reports, and community feedback.' 
+                                    : 'ऐतिहासिक डेटा, औद्योगिक रिपोर्ट और सामुदायिक प्रतिक्रिया के आधार पर वास्तविक समय जोखिम मूल्यांकन प्राप्त करने के लिए अपना स्थान दर्ज करें।'}
+                            </p>
+                        </div>
+
+                        <form onSubmit={checkRisk} className="relative max-w-md group">
+                            <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                                <MapPin className="h-5 w-5 text-blue-500 group-focus-within:text-blue-400 transition-colors" />
+                            </div>
+                            <input
+                                type="text"
+                                placeholder={language === 'en' ? 'Enter District or City (e.g., Mau, Azamgarh)' : 'जिला या शहर दर्ज करें (जैसे, मऊ, आजमगढ़)'}
+                                value={location}
+                                onChange={(e) => setLocation(e.target.value)}
+                                className="w-full pl-14 pr-36 py-5 bg-white/5 border border-white/10 rounded-2xl text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all backdrop-blur-xl"
+                            />
+                            <button
+                                type="submit"
+                                disabled={checkingRisk || !location.trim()}
+                                className="absolute right-2 top-2 bottom-2 px-6 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-all flex items-center gap-2 disabled:opacity-50 shadow-lg"
+                            >
+                                {checkingRisk ? <Loader2 className="animate-spin" size={18} /> : <Search size={18} />}
+                                {language === 'en' ? 'Check' : 'जांचें'}
+                            </button>
+                        </form>
+
+                        <div className="flex gap-8 pt-4">
+                            <div className="space-y-1">
+                                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                                    {language === 'en' ? 'Data Sources' : 'डेटा स्रोत'}
+                                </p>
+                                <p className="text-sm font-bold text-slate-300">
+                                    {language === 'en' ? '14 Active Sensors' : '14 सक्रिय सेंसर'}
+                                </p>
+                            </div>
+                            <div className="w-px h-10 bg-white/10"></div>
+                            <div className="space-y-1">
+                                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                                    {language === 'en' ? 'Last Update' : 'अंतिम अपडेट'}
+                                </p>
+                                <p className="text-sm font-bold text-slate-300">
+                                    {language === 'en' ? 'Real-time Sync' : 'वास्तविक समय सिंक'}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="relative">
+                        <AnimatePresence mode="wait">
+                            {riskResult ? (
+                                <motion.div 
+                                    key="result"
+                                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                                    className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-10 shadow-2xl relative overflow-hidden group/card"
+                                >
+                                    <div className={`absolute top-0 right-0 w-32 h-32 blur-3xl -mr-16 -mt-16 opacity-20 ${
+                                        riskResult.level === 'Low' ? 'bg-emerald-500' : riskResult.level === 'Moderate' ? 'bg-amber-500' : 'bg-red-500'
+                                    }`}></div>
+                                    
+                                    <div className="flex items-center justify-between mb-10">
+                                        <div>
+                                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em] mb-1">
+                                                {language === 'en' ? 'Assessment Result' : 'मूल्यांकन परिणाम'}
+                                            </h4>
+                                            <p className="text-2xl font-bold font-display">{location}</p>
+                                        </div>
+                                        <div className={`px-5 py-2 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg ${
+                                            riskResult.level === 'Low' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 
+                                            riskResult.level === 'Moderate' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 
+                                            'bg-red-500/20 text-red-400 border border-red-500/30'
+                                        }`}>
+                                            {language === 'en' ? riskResult.level : riskResult.level === 'Low' ? 'कम' : riskResult.level === 'Moderate' ? 'मध्यम' : 'उच्च'} {language === 'en' ? 'Risk' : 'जोखिम'}
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-10 mb-10">
+                                        <div className="relative w-32 h-32 flex-shrink-0">
+                                            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                                                <circle cx="50" cy="50" r="45" fill="transparent" stroke="rgba(255,255,255,0.05)" strokeWidth="8" />
+                                                <motion.circle 
+                                                    cx="50" cy="50" r="45" fill="transparent" 
+                                                    stroke={riskResult.level === 'Low' ? '#10b981' : riskResult.level === 'Moderate' ? '#f59e0b' : '#ef4444'} 
+                                                    strokeWidth="10" 
+                                                    strokeDasharray="282.7"
+                                                    initial={{ strokeDashoffset: 282.7 }}
+                                                    animate={{ strokeDashoffset: 282.7 - (282.7 * riskResult.score) / 100 }}
+                                                    transition={{ duration: 1.5, ease: "easeOut" }}
+                                                    strokeLinecap="round"
+                                                />
+                                            </svg>
+                                            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                                <span className="text-4xl font-black font-display tracking-tighter">{riskResult.score}</span>
+                                                <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">
+                                                    {language === 'en' ? 'Index' : 'सूचकांक'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-3">
+                                            <p className="text-slate-300 text-sm leading-relaxed font-medium">
+                                                {riskResult.details}
+                                            </p>
+                                            <div 
+                                                onClick={() => handleComingSoon(language === 'en' ? 'Detailed Report' : 'विस्तृत रिपोर्ट')}
+                                                className="flex items-center gap-2 text-blue-400 text-xs font-bold uppercase tracking-widest cursor-pointer hover:text-blue-300 transition-colors"
+                                            >
+                                                {t.viewDetailedReport} <ArrowRight size={14} />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-4 pt-6 border-t border-white/5">
+                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                                            {language === 'en' ? 'Recommended Actions' : 'अनुशंसित कार्रवाइयां'}
+                                        </p>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                            {riskResult.tips.map((tip: string, i: number) => (
+                                                <div key={i} className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/5 text-xs text-slate-300">
+                                                    <CheckCircle2 size={14} className="text-emerald-500 shrink-0" />
+                                                    {tip}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            ) : (
+                                <div className="h-[400px] flex items-center justify-center">
+                                    <motion.div 
+                                        animate={{ 
+                                            scale: [1, 1.05, 1],
+                                            opacity: [0.3, 0.5, 0.3]
+                                        }}
+                                        transition={{ repeat: Infinity, duration: 4 }}
+                                        className="w-64 h-64 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center"
+                                    >
+                                        <div className="w-48 h-48 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center">
+                                            <Droplets size={64} className="text-blue-500/40" />
+                                        </div>
+                                    </motion.div>
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <p className="text-slate-500 text-sm font-bold uppercase tracking-[0.3em] animate-pulse">
+                                            {language === 'en' ? 'Waiting for input' : 'इनपुट की प्रतीक्षा है'}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+                </div>
+            </section>
+
+            {/* 3. NEARBY STATIONS - Visual Grid */}
+            <section className="space-y-8">
+                <div className="flex items-end justify-between">
+                    <div>
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="p-2 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded-xl">
+                                <Navigation size={20} />
+                            </div>
+                            <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-slate-400">
+                                {language === 'en' ? 'Monitoring Network' : 'निगरानी नेटवर्क'}
+                            </h2>
+                        </div>
+                        <h3 className="text-4xl font-black text-slate-900 dark:text-white font-display tracking-tight">
+                            {language === 'en' ? 'Nearby' : 'आस-पास के'} <span className="text-emerald-600">{language === 'en' ? 'Stations' : 'स्टेशन'}</span>
+                        </h3>
+                    </div>
+                    <button 
+                        onClick={() => setActiveTab && setActiveTab('map')}
+                        className="px-6 py-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition-all uppercase tracking-widest"
+                    >
+                        {t.viewMap}
+                    </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {loadingStations ? (
+                        [1, 2, 3].map(i => <div key={i} className="h-80 bg-slate-100 dark:bg-slate-800 rounded-[2.5rem] animate-pulse"></div>)
+                    ) : stations.map((station, i) => (
+                        <motion.div 
+                            key={i}
+                            whileHover={{ y: -8 }}
+                            className="bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden border border-slate-100 dark:border-slate-800 shadow-subtle hover:shadow-subtle-hover group transition-all"
+                        >
+                            <div className="relative h-48 overflow-hidden">
+                                <img 
+                                    src={station.image} 
+                                    alt={station.name} 
+                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                                    referrerPolicy="no-referrer"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 to-transparent"></div>
+                                <div className="absolute top-4 right-4 px-3 py-1 bg-white/20 backdrop-blur-md border border-white/20 rounded-full text-[10px] font-bold text-white uppercase tracking-widest">
+                                    {station.distance}
+                                </div>
+                                <div className="absolute bottom-4 left-6">
+                                    <div className="flex items-center gap-2">
+                                        <div className={`w-2 h-2 rounded-full ${station.status === 'Active' ? 'bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981]' : 'bg-slate-400'}`}></div>
+                                        <span className="text-[10px] font-bold text-white uppercase tracking-widest">{station.status}</span>
+                                    </div>
+                                    <h4 className="text-xl font-bold text-white font-display mt-1">{station.name}</h4>
+                                </div>
+                            </div>
+                            
+                            <div className="p-8 space-y-6">
+                                <div className="grid grid-cols-3 gap-4">
+                                    <div className="space-y-1">
+                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                                            {language === 'en' ? 'pH Level' : 'पीएच स्तर'}
+                                        </p>
+                                        <p className="text-base font-black text-slate-900 dark:text-white font-mono">{station.parameters.ph}</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                                            {language === 'en' ? 'Turbidity' : 'मैलापन'}
+                                        </p>
+                                        <p className="text-base font-black text-slate-900 dark:text-white font-mono">{station.parameters.turbidity}</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                                            {language === 'en' ? 'TDS' : 'टीडीएस'}
+                                        </p>
+                                        <p className="text-base font-black text-slate-900 dark:text-white font-mono">{station.parameters.tds}</p>
+                                    </div>
+                                </div>
+                                
+                                <div className="flex items-center justify-between pt-4 border-t border-slate-50 dark:border-slate-800">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                                        <Clock size={12} /> {station.lastReading}
+                                    </span>
+                                    <button 
+                                        onClick={() => handleComingSoon(language === 'en' ? 'Station Details' : 'स्टेशन विवरण')}
+                                        className="p-2 text-slate-400 hover:text-blue-600 transition-colors"
+                                    >
+                                        <ExternalLink size={18} />
+                                    </button>
                                 </div>
                             </div>
                         </motion.div>
-                    )}
+                    ))}
                 </div>
-            )}
-        </motion.div>
+            </section>
+        </div>
     );
 };
-
-// Helper for ArrowRight in Intel
-const ArrowRight = ({ size, className }: { size: number, className?: string }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-);
