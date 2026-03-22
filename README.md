@@ -71,12 +71,12 @@ Recommends:
 
 | Category | Technology |
 |---------|------------|
-| Frontend | React |
+| Frontend | Next.js |
 | Styling | Tailwind CSS |
 | Backend | Firebase |
 | Database | Firestore |
 | Auth | Firebase Auth |
-| AI | Gemini API |
+| AI | Claude API |
 | Voice | Web Speech API |
 | Hosting | Vercel / Firebase |
 
