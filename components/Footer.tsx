@@ -49,7 +49,7 @@ export const Footer = ({ onOpenFeedback, language }: { onOpenFeedback: () => voi
                         </button>
                         <div className="text-center md:text-right">
                             <p className="text-sm text-slate-300 font-medium">{language === 'en' ? 'Built by The OG Boys' : 'द ओजी बॉयज़ द्वारा निर्मित'}</p>
-                            <p className="text-xs text-slate-500 mt-1">TRAE RE{VIBE} </p>
+                            <p className="text-xs text-slate-500 mt-1">------- </p>
                         </div>
                     </div>
                 </div>
