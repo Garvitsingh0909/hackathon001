@@ -15,7 +15,7 @@ export const Footer = ({ onOpenFeedback, language }: { onOpenFeedback: () => voi
                     <div className="hidden md:block w-px h-4 bg-slate-300 dark:bg-slate-600"></div>
                     <div className="flex items-center gap-2 text-[#546E7A] dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">
                         <Bot size={16} />
-                        <span>{language === 'en' ? 'Powered by Claude' : 'Claude द्वारा संचालित'}</span>
+                        <span>{language === 'en' ? 'Powered by Claude Opus 4.6' : 'Claude Opus 4.6 द्वारा संचालित'}</span>
                     </div>
                     <div className="hidden md:block w-px h-4 bg-slate-300 dark:bg-slate-600"></div>
                     <div className="flex items-center gap-2 text-[#546E7A] dark:text-slate-400 text-xs font-semibold uppercase tracking-wider">
