@@ -85,7 +85,7 @@ Recommends:
 ## 📊 Project Status
 
 ### ✅ Completed
-- React frontend
+- Next.js frontend
 - Chat UI
 - Voice input
 - Water parameter analyzer
@@ -94,14 +94,14 @@ Recommends:
 - Hindi/Hinglish detection
 - Mobile responsive design
 - Rule-based AI chatbot
-
-### 🔧 In Progress
-- Firebase setup
+-  Firebase setup
 - Authentication
-- Gemini AI integration
+- AI integration
 - Save chat history
 - User dashboard
 - Deployment
+
+### 🔧 In Progress
 - PWA support
 
 ---
