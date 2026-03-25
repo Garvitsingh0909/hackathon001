@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Upload, 
@@ -30,6 +30,7 @@ import { toast } from 'react-hot-toast';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../src/firebase';
 import { TRANSLATIONS } from '../constants';
+import { handleFirestoreError, OperationType } from '../services/api';
 
 interface AnalysisResult {
     score: number;
@@ -46,7 +47,55 @@ interface AnalysisResult {
 export const AnalysisModule = ({ language, setActiveTab }: { language: 'en' | 'hi', setActiveTab?: (tab: string) => void }) => {
     const [image, setImage] = useState<string | null>(null);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [analysisStep, setAnalysisStep] = useState(0);
     const [result, setResult] = useState<AnalysisResult | null>(null);
+    const [reportId, setReportId] = useState('');
+    const [displayedDetails, setDisplayedDetails] = useState('');
+
+    const analysisSteps = language === 'en' ? [
+        "Uploading high-resolution sample...",
+        "Calibrating AI vision sensors...",
+        "Scanning for visual contaminants...",
+        "Analyzing water clarity & turbidity...",
+        "Evaluating color & sediment levels...",
+        "Cross-referencing with safety standards...",
+        "Finalizing quality report..."
+    ] : [
+        "उच्च-रिज़ॉल्यूशन नमूना अपलोड किया जा रहा है...",
+        "एआई विजन सेंसर को कैलिब्रेट किया जा रहा है...",
+        "दृश्य संदूषकों की जांच की जा रही है...",
+        "पानी की स्पष्टता और मैलापन का विश्लेषण किया जा रहा है...",
+        "रंग और तलछट के स्तर का मूल्यांकन किया जा रहा है...",
+        "सुरक्षा मानकों के साथ क्रॉस-रेफरेंसिंग...",
+        "गुणवत्ता रिपोर्ट को अंतिम रूप दिया जा रहा है..."
+    ];
+
+    useEffect(() => {
+        let interval: any;
+        if (isAnalyzing) {
+            setAnalysisStep(0);
+            interval = setInterval(() => {
+                setAnalysisStep(prev => (prev < analysisSteps.length - 1 ? prev + 1 : prev));
+            }, 1800);
+        } else {
+            setAnalysisStep(0);
+        }
+        return () => clearInterval(interval);
+    }, [isAnalyzing, analysisSteps.length]);
+
+    useEffect(() => {
+        if (result?.details) {
+            let i = 0;
+            setDisplayedDetails('');
+            const interval = setInterval(() => {
+                setDisplayedDetails(result.details.slice(0, i));
+                i++;
+                if (i > result.details.length) clearInterval(interval);
+            }, 10);
+            return () => clearInterval(interval);
+        }
+    }, [result?.details]);
+
     const [showFAQ, setShowFAQ] = useState(false);
     const [location, setLocation] = useState('');
     const [showActionModal, setShowActionModal] = useState(false);
@@ -58,8 +107,35 @@ export const AnalysisModule = ({ language, setActiveTab }: { language: 'en' | 'h
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                setImage(reader.result as string);
-                setResult(null);
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 800;
+                    const MAX_HEIGHT = 800;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx?.drawImage(img, 0, 0, width, height);
+                    const resizedImage = canvas.toDataURL('image/jpeg', 0.7);
+                    setImage(resizedImage);
+                    setResult(null);
+                };
+                img.src = reader.result as string;
             };
             reader.readAsDataURL(file);
         }
@@ -68,23 +144,31 @@ export const AnalysisModule = ({ language, setActiveTab }: { language: 'en' | 'h
     const runAnalysis = async () => {
         if (!image) return;
         setIsAnalyzing(true);
+        setResult(null);
+        setDisplayedDetails('');
         try {
             const analysis = await analyzeWaterImage(image);
+            setReportId(`JD-${Math.random().toString(36).substr(2, 9).toUpperCase()}`);
             setResult(analysis);
             
             if (analysis.status === 'Unsafe') {
                 setShowActionModal(true);
-                await addDoc(collection(db, 'reports'), {
-                    location: location || 'Unknown Location',
-                    description: `Automated AI Analysis: ${analysis.details}`,
-                    status: 'pending',
-                    imageUrl: image,
-                    analysis: {
-                        score: analysis.score,
-                        status: analysis.status
-                    },
-                    createdAt: serverTimestamp()
-                });
+                try {
+                    await addDoc(collection(db, 'reports'), {
+                        location: location || 'Unknown Location',
+                        description: `Automated AI Analysis: ${analysis.details}`,
+                        status: 'pending',
+                        imageUrl: image,
+                        analysis: {
+                            score: analysis.score,
+                            status: analysis.status
+                        },
+                        createdAt: serverTimestamp()
+                    });
+                } catch (error) {
+                    console.error('Failed to create report in Firebase (local dev?):', error);
+                    // Do not throw here, so the analysis result is still shown to the user
+                }
             }
             toast.success(language === 'en' ? 'Analysis complete!' : 'विश्लेषण पूरा हुआ!');
         } catch (error) {
@@ -263,10 +347,20 @@ export const AnalysisModule = ({ language, setActiveTab }: { language: 'en' | 'h
                                     className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition-all shadow-xl shadow-blue-500/20 flex items-center justify-center gap-2.5 disabled:opacity-50 group text-sm"
                                 >
                                     {isAnalyzing ? (
-                                        <>
-                                            <Loader2 className="animate-spin" size={18} />
-                                            {t.analysis.analyzing}
-                                        </>
+                                        <div className="flex flex-col items-center gap-1">
+                                            <div className="flex items-center gap-2.5">
+                                                <Loader2 className="animate-spin" size={18} />
+                                                <span>{t.analysis.analyzing}</span>
+                                            </div>
+                                            <motion.p 
+                                                key={analysisStep}
+                                                initial={{ opacity: 0, y: 5 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                className="text-[9px] text-blue-200 font-normal italic"
+                                            >
+                                                {analysisSteps[analysisStep]}
+                                            </motion.p>
+                                        </div>
                                     ) : (
                                         <>
                                             {t.analysis.startAnalysis}
@@ -327,13 +421,18 @@ export const AnalysisModule = ({ language, setActiveTab }: { language: 'en' | 'h
                                             <Droplets size={32} className="text-blue-500 animate-bounce" />
                                         </motion.div>
                                     </div>
-                                    <div className="text-center space-y-1">
-                                        <p className="text-base font-bold text-slate-900 dark:text-white">
+                                    <div className="text-center space-y-2">
+                                        <p className="text-base font-black text-slate-900 dark:text-white font-display uppercase tracking-widest">
                                             {t.analysis.scanning}
                                         </p>
-                                        <p className="text-xs text-slate-500">
-                                            {t.analysis.processing}
-                                        </p>
+                                        <motion.p 
+                                            key={analysisStep}
+                                            initial={{ opacity: 0, y: 5 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className="text-xs text-blue-500 font-bold italic"
+                                        >
+                                            {analysisSteps[analysisStep]}
+                                        </motion.p>
                                     </div>
                                 </motion.div>
                             ) : result ? (
@@ -343,6 +442,16 @@ export const AnalysisModule = ({ language, setActiveTab }: { language: 'en' | 'h
                                     animate={{ opacity: 1, scale: 1 }}
                                     className="space-y-8"
                                 >
+                                    <div className="flex items-center justify-between text-[9px] text-slate-400 font-mono uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 pb-2">
+                                        <div className="flex items-center gap-2">
+                                            <Activity size={10} className="text-blue-500" />
+                                            <span>Report ID: {reportId}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Clock size={10} />
+                                            <span>{new Date().toLocaleString()}</span>
+                                        </div>
+                                    </div>
                                     <div className="flex flex-col md:flex-row items-center gap-8">
                                         <div className="relative w-32 h-32 flex-shrink-0">
                                             <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
@@ -376,12 +485,17 @@ export const AnalysisModule = ({ language, setActiveTab }: { language: 'en' | 'h
                                                     ? `${result.status} Quality Detected` 
                                                     : `${result.status === 'Safe' ? 'सुरक्षित' : result.status === 'Moderate' ? 'मध्यम' : 'असुरक्षित'} गुणवत्ता पाई गई`}
                                             </div>
-                                            <h4 className="text-xl font-black text-slate-900 dark:text-white font-display leading-tight">
-                                                {result.details}
+                                            <h4 className="text-xl font-black text-slate-900 dark:text-white font-display leading-tight min-h-[3rem]">
+                                                {displayedDetails}
+                                                <motion.span 
+                                                    animate={{ opacity: [0, 1, 0] }}
+                                                    transition={{ repeat: Infinity, duration: 0.8 }}
+                                                    className="inline-block w-1 h-5 bg-blue-500 ml-1 align-middle"
+                                                />
                                             </h4>
                                             <p className="text-slate-500 dark:text-slate-400 text-xs leading-relaxed">
                                                 {language === 'en' 
-                                                    ? `Based on visual analysis, this sample shows characteristics typical of ${result.status.toLowerCase()} water.`
+                                                    ? `Based on visual analysis, this sample shows characteristics typical of ${(result.status || '').toLowerCase()} water.`
                                                     : `दृश्य विश्लेषण के आधार पर, यह नमूना ${result.status === 'Safe' ? 'सुरक्षित' : result.status === 'Moderate' ? 'मध्यम' : 'असुरक्षित'} पानी की विशिष्ट विशेषताएं दिखाता है।`}
                                             </p>
                                         </div>
@@ -389,9 +503,9 @@ export const AnalysisModule = ({ language, setActiveTab }: { language: 'en' | 'h
 
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                         {[
-                                            { label: t.analysis.clarity, value: result.parameters.clarity, icon: Search, color: 'text-blue-500' },
-                                            { label: t.analysis.color, value: result.parameters.color, icon: Droplets, color: 'text-purple-500' },
-                                            { label: t.analysis.sediment, value: result.parameters.sediment, icon: AlertCircle, color: 'text-amber-500' },
+                                            { label: t.analysis.clarity, value: result.parameters?.clarity || 'N/A', icon: Search, color: 'text-blue-500' },
+                                            { label: t.analysis.color, value: result.parameters?.color || 'N/A', icon: Droplets, color: 'text-purple-500' },
+                                            { label: t.analysis.sediment, value: result.parameters?.sediment || 'N/A', icon: AlertCircle, color: 'text-amber-500' },
                                         ].map((p, i) => (
                                             <div key={i} className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700">
                                                 <div className="flex items-center justify-between mb-2">
@@ -408,7 +522,7 @@ export const AnalysisModule = ({ language, setActiveTab }: { language: 'en' | 'h
                                             {t.analysis.recommendedActions}
                                         </h4>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                            {result.recommendations.map((rec, i) => (
+                                            {(result.recommendations || []).map((rec, i) => (
                                                 <div key={i} className="flex items-center gap-4 p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 text-sm text-slate-600 dark:text-slate-400">
                                                     <CheckCircle2 size={18} className="text-emerald-500 shrink-0" />
                                                     {rec}

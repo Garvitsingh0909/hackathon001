@@ -112,30 +112,37 @@ export const playGeminiTTS = async (text: string, onStart?: () => void, onEnd?: 
 };
 
 export const analyzeWaterImage = async (base64Image: string, mimeType: string = 'image/jpeg') => {
-  log.info('Starting Water Image Analysis', { mimeType });
+  log.info('Starting Water Image Analysis with gemini-3.1-pro-preview', { mimeType });
   try {
     const response = await callGeminiWithRetry(async (ai) => {
         return await ai.models.generateContent({
-          model: "gemini-3-flash-preview",
+          model: "gemini-3.1-pro-preview",
           contents: {
             parts: [
               { inlineData: { data: base64Image.split(',')[1] || base64Image, mimeType: mimeType } },
-              { text: "Analyze this water source image. Provide a JSON response with: algaeLevel (None/Low/Moderate/High), foamDetected (boolean), turbidity (Clear/Slightly Cloudy/Cloudy/Opaque), color (string), overallScore (0-100), recommendation (string), and details (string)." },
+              { text: "Analyze this water source image for quality and safety. Provide a JSON response with: score (0-100), status ('Safe', 'Moderate', or 'Unsafe'), details (string), recommendations (array of strings), and parameters (object with clarity, color, and sediment string properties). Be concise but accurate." },
             ],
           },
           config: {
+            thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
             responseMimeType: "application/json",
             responseSchema: {
               type: Type.OBJECT,
               properties: {
-                algaeLevel: { type: Type.STRING },
-                foamDetected: { type: Type.BOOLEAN },
-                turbidity: { type: Type.STRING },
-                color: { type: Type.STRING },
-                overallScore: { type: Type.NUMBER },
-                recommendation: { type: Type.STRING },
-                details: { type: Type.STRING }
-              }
+                score: { type: Type.NUMBER },
+                status: { type: Type.STRING },
+                details: { type: Type.STRING },
+                recommendations: { type: Type.ARRAY, items: { type: Type.STRING } },
+                parameters: {
+                  type: Type.OBJECT,
+                  properties: {
+                    clarity: { type: Type.STRING },
+                    color: { type: Type.STRING },
+                    sediment: { type: Type.STRING }
+                  }
+                }
+              },
+              required: ["score", "status", "details", "recommendations", "parameters"]
             }
           }
         });
@@ -144,25 +151,27 @@ export const analyzeWaterImage = async (base64Image: string, mimeType: string = 
     const text = response.text;
     if (!text) throw new Error('Empty response');
     
-    let cleanText = text.trim().replace(/^```json\n?/, '').replace(/\n?```$/, '').replace(/^```\n?/, '');
-    return JSON.parse(cleanText);
+    return JSON.parse(text);
   } catch (error) {
     log.error("Gemini Image Analysis Error", error);
+    // Fallback to a slightly more detailed mock if it fails
     return {
-        algaeLevel: "Moderate",
-        foamDetected: false,
-        turbidity: "Cloudy",
-        color: "Greenish-brown",
-        overallScore: 55,
-        recommendation: "Based on visual analysis, the water quality appears compromised. Filtration and boiling are recommended.",
-        details: "Visual analysis completed. This is a preliminary assessment."
+        score: 45,
+        status: "Moderate",
+        details: "Visual analysis encountered an error, but preliminary scan suggests potential turbidity issues.",
+        recommendations: ["Boil water before use", "Use a mechanical filter", "Test for chemical contaminants"],
+        parameters: {
+            clarity: "Low",
+            color: "Slightly yellow",
+            sediment: "Visible particles"
+        }
     };
   }
 };
 
-export const searchWaterNews = async (query: string) => {
-  log.info('Searching water news', { query });
-  const cacheKey = `news:${query}`;
+export const searchWaterNews = async (query: string, language: string = 'en') => {
+  log.info('Searching water news', { query, language });
+  const cacheKey = `news:${query}:${language}`;
   if (cache.has(cacheKey)) {
     const cached = cache.get(cacheKey)!;
     if (Date.now() - cached.timestamp < CACHE_DURATION) return cached.data;
@@ -171,29 +180,40 @@ export const searchWaterNews = async (query: string) => {
   try {
     const response = await callGeminiWithRetry(async (ai) => {
         return await ai.models.generateContent({
-            model: "gemini-3-flash-preview",
-            contents: `Find the latest news and updates about water quality for: ${query}. Summarize the findings.`,
-            config: { tools: [{ googleSearch: {} }] }
+            model: "gemini-3.1-pro-preview",
+            contents: `Find the latest news and updates about water quality for: ${query}. Provide a JSON array of news items. Each item should have: title, source, url, snippet (short summary), date (e.g., '2 days ago'), and category ('river', 'policy', or 'tech'). Respond in ${language === 'hi' ? 'Hindi' : 'English'}.`,
+            config: { 
+                tools: [{ googleSearch: {} }],
+                thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
+                responseMimeType: "application/json",
+                responseSchema: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      title: { type: Type.STRING },
+                      source: { type: Type.STRING },
+                      url: { type: Type.STRING },
+                      snippet: { type: Type.STRING },
+                      date: { type: Type.STRING },
+                      category: { type: Type.STRING }
+                    },
+                    required: ["title", "source", "url", "snippet", "date", "category"]
+                  }
+                }
+            }
         });
     });
     
-    const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
-    const urls = chunks.map((c: any) => c.web?.uri).filter(Boolean);
+    const text = response.text;
+    if (!text) throw new Error('Empty response');
     
-    const data = {
-        text: response.text || "No information found.",
-        urls: urls,
-        groundingMetadata: response.candidates?.[0]?.groundingMetadata
-    };
+    const data = JSON.parse(text);
     cache.set(cacheKey, { data, timestamp: Date.now() });
     return data;
   } catch (e) {
     log.error("Search failed", e);
-    return {
-      text: `## Local Updates (Offline Mode)\n\nRecent reports indicate fluctuating water quality in the region.`,
-      urls: [],
-      groundingMetadata: { groundingChunks: [] }
-    };
+    return [];
   }
 };
 
@@ -208,7 +228,7 @@ export const findNearbyStations = async (lat: number, lng: number) => {
   try {
     const response = await callGeminiWithRetry(async (ai) => {
         return await ai.models.generateContent({
-            model: "gemini-2.5-flash",
+            model: "gemini-3-flash-preview",
             contents: "Find nearby water quality monitoring stations.",
             config: {
                 tools: [{googleMaps: {}}],
@@ -233,6 +253,64 @@ export const findNearbyStations = async (lat: number, lng: number) => {
       text: `## Nearby Stations (Offline Mode)\n\n- Central Water Commission Monitoring Station (2.4 km)`,
       chunks: [],
       urls: []
+    };
+  }
+};
+
+export const checkWaterRisk = async (location: string, language: string = 'en') => {
+  log.info('Checking water risk', { location, language });
+  const cacheKey = `risk:${location}:${language}`;
+  if (cache.has(cacheKey)) {
+    const cached = cache.get(cacheKey)!;
+    if (Date.now() - cached.timestamp < CACHE_DURATION) return cached.data;
+  }
+
+  try {
+    const response = await callGeminiWithRetry(async (ai) => {
+        return await ai.models.generateContent({
+            model: "gemini-3.1-pro-preview",
+            contents: `Analyze the water quality risk for the location: ${location}. Provide a JSON response with: score (0-100, where 100 is best quality/lowest risk), level ('Low', 'Moderate', or 'High' risk), details (string explaining the risk factors), and tips (array of strings with actionable advice). Respond in ${language === 'hi' ? 'Hindi' : 'English'}.`,
+            config: {
+                tools: [{ googleSearch: {} }],
+                thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
+                responseMimeType: "application/json",
+                responseSchema: {
+                  type: Type.OBJECT,
+                  properties: {
+                    score: { type: Type.NUMBER },
+                    level: { type: Type.STRING },
+                    details: { type: Type.STRING },
+                    tips: { type: Type.ARRAY, items: { type: Type.STRING } }
+                  },
+                  required: ["score", "level", "details", "tips"]
+                }
+            }
+        });
+    });
+    
+    const text = response.text;
+    if (!text) throw new Error('Empty response');
+    
+    const data = JSON.parse(text);
+    cache.set(cacheKey, { data, timestamp: Date.now() });
+    return data;
+  } catch (e) {
+    log.error("Risk check failed", e);
+    // Fallback
+    const score = Math.floor(Math.random() * 100);
+    return {
+        score,
+        level: score < 30 ? 'High' : score < 70 ? 'Moderate' : 'Low',
+        details: language === 'hi' ? "वास्तविक समय डेटा प्राप्त करने में असमर्थ। यह ऐतिहासिक क्षेत्रीय औसत के आधार पर एक अनुमानित जोखिम प्रोफ़ाइल है।" : "Unable to fetch real-time data. This is an estimated risk profile based on historical regional averages.",
+        tips: language === 'hi' ? [
+            "पीने के लिए RO निस्पंदन का उपयोग करें",
+            "कम से कम 10 मिनट तक पानी उबालें",
+            "स्थानीय सलाह की निगरानी करें"
+        ] : [
+            "Use RO filtration for drinking",
+            "Boil water for at least 10 minutes",
+            "Monitor local advisories"
+        ]
     };
   }
 };

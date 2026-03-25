@@ -14,6 +14,7 @@ interface NavbarProps {
     user?: any;
     isAdmin?: boolean;
     onLogin?: () => void;
+    onDemoLogin?: () => void;
     onLogout?: () => void;
     onOpenFeedback: () => void;
 }
@@ -35,7 +36,7 @@ const TIPS = {
     ]
 };
 
-export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, language, setLanguage, darkMode, toggleDarkMode, user, isAdmin, onLogin, onLogout, onOpenFeedback }) => {
+export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, language, setLanguage, darkMode, toggleDarkMode, user, isAdmin, onLogin, onDemoLogin, onLogout, onOpenFeedback }) => {
   const t = TRANSLATIONS[language].nav;
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
@@ -47,7 +48,9 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, languag
       { id: 'map', label: t.map, icon: MapPin },
       { id: 'faq', label: t.faq, icon: HelpCircle },
       { id: 'feedback', label: t.feedback, icon: MessageSquare },
-      ...(isAdmin ? [{ id: 'admin', label: t.admin, icon: Map }] : []),
+      ...(isAdmin ? [
+          { id: 'admin', label: language === 'en' ? 'Admin Center' : 'एडमिन केंद्र', icon: LayoutGrid }
+      ] : []),
   ];
 
   return (
@@ -169,12 +172,20 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, languag
                                 </AnimatePresence>
                             </div>
                         ) : (
-                            <button 
-                                onClick={onLogin}
-                                className="h-10 px-5 bg-slate-900 dark:bg-blue-600 text-white text-xs font-bold rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-slate-900/10 dark:shadow-blue-600/20"
-                            >
-                                {t.signIn}
-                            </button>
+                            <div className="flex items-center gap-2">
+                                <button 
+                                    onClick={onDemoLogin}
+                                    className="h-10 px-4 bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 text-xs font-bold rounded-xl hover:bg-blue-500/20 transition-all border border-blue-500/20"
+                                >
+                                    Demo
+                                </button>
+                                <button 
+                                    onClick={onLogin}
+                                    className="h-10 px-5 bg-slate-900 dark:bg-blue-600 text-white text-xs font-bold rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-slate-900/10 dark:shadow-blue-600/20"
+                                >
+                                    {t.signIn}
+                                </button>
+                            </div>
                         )}
                     </div>
                 </div>

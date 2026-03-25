@@ -1,25 +1,17 @@
 export interface WaterQualityReport {
     id: string;
-    userId: string;
-    locationName: string;
-    coordinates: { lat: number; lng: number };
-    algaeLevel: 'None' | 'Low' | 'Moderate' | 'High' | 'Critical' | 'Unknown';
-    foamDetected: boolean;
-    turbidity: 'Clear' | 'Slightly Cloudy' | 'Cloudy' | 'Opaque' | 'Unknown';
-    overallScore: number;
-    recommendation: string;
-    details: string;
-    timestamp: string;
-    status: 'Pending' | 'In Review' | 'Action Taken' | 'Resolved';
+    userId?: string;
+    location: string;
+    description: string;
+    status: 'pending' | 'reviewed' | 'resolved' | 'Safe' | 'Moderate' | 'Unsafe';
     imageUrl?: string;
-    color?: string;
-    // Granular Data for Charts
-    ph?: number;
-    dissolvedOxygen?: number; // mg/L
-    chlorophyll?: number; // µg/L
-    nitrogen?: number; // mg/L
-    phosphorus?: number; // mg/L
-    historicalData?: { date: string; value: number }[];
+    analysis?: {
+        score: number;
+        status: string;
+    };
+    createdAt: string;
+    lat?: number;
+    lng?: number;
 }
 
 export interface ChatMessage {

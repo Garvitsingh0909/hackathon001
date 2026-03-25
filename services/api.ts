@@ -2,7 +2,7 @@ import { WaterQualityReport, RiverSegment } from '../types';
 import { db, auth } from '../src/firebase';
 import { collection, getDocs, addDoc, query, orderBy, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
 
-enum OperationType {
+export enum OperationType {
   CREATE = 'create',
   UPDATE = 'update',
   DELETE = 'delete',
@@ -30,7 +30,7 @@ interface FirestoreErrorInfo {
   }
 }
 
-function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
   const errInfo: FirestoreErrorInfo = {
     error: error instanceof Error ? error.message : String(error),
     authInfo: {
@@ -70,11 +70,24 @@ export const getReports = async (): Promise<WaterQualityReport[]> => {
     try {
         const q = query(collection(db, 'reports'), orderBy('createdAt', 'desc'));
         const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...(doc.data() as Omit<WaterQualityReport, 'id'>),
-            createdAt: doc.data().createdAt?.toDate().toISOString()
-        })) as WaterQualityReport[];
+        return snapshot.docs.map(doc => {
+            const data = doc.data();
+            let createdAtStr = new Date().toISOString();
+            if (data.createdAt) {
+                if (typeof data.createdAt.toDate === 'function') {
+                    createdAtStr = data.createdAt.toDate().toISOString();
+                } else if (typeof data.createdAt === 'string') {
+                    createdAtStr = data.createdAt;
+                } else if (data.createdAt.seconds) {
+                    createdAtStr = new Date(data.createdAt.seconds * 1000).toISOString();
+                }
+            }
+            return {
+                id: doc.id,
+                ...data,
+                createdAt: createdAtStr
+            };
+        }) as WaterQualityReport[];
     } catch (error) {
         handleFirestoreError(error, OperationType.LIST, 'reports');
         return [];
@@ -89,7 +102,7 @@ export const getTrends = async (): Promise<{name: string, value: number}[]> => {
     }));
 };
 
-export const submitReport = async (report: Omit<WaterQualityReport, 'id' | 'timestamp' | 'status'>): Promise<WaterQualityReport> => {
+export const submitReport = async (report: Omit<WaterQualityReport, 'id' | 'createdAt' | 'status'>): Promise<WaterQualityReport> => {
     if (!auth.currentUser) {
         throw new Error('Must be logged in to submit a report');
     }
@@ -97,14 +110,14 @@ export const submitReport = async (report: Omit<WaterQualityReport, 'id' | 'time
         const reportData = {
             ...report,
             createdAt: serverTimestamp(),
-            status: 'Pending'
+            status: 'pending' as const
         };
         const docRef = await addDoc(collection(db, 'reports'), reportData);
         return {
             ...report,
             id: docRef.id,
-            timestamp: new Date().toISOString(),
-            status: 'Pending'
+            createdAt: new Date().toISOString(),
+            status: 'pending'
         } as WaterQualityReport;
     } catch (error) {
         handleFirestoreError(error, OperationType.CREATE, 'reports');

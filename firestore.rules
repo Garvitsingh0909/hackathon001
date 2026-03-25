@@ -38,17 +38,10 @@ service cloud.firestore {
     }
 
     function isValidReport(data) {
-      return data.keys().hasAll(['userId', 'overallScore', 'timestamp', 'locationName', 'algaeLevel', 'foamDetected', 'turbidity', 'recommendation', 'details', 'status']) &&
-             data.userId is string &&
-             data.overallScore is number &&
-             data.timestamp is string &&
-             data.locationName is string &&
-             data.algaeLevel in ['None', 'Low', 'Moderate', 'High', 'Critical', 'Unknown'] &&
-             data.foamDetected is bool &&
-             data.turbidity in ['Clear', 'Slightly Cloudy', 'Cloudy', 'Opaque', 'Unknown'] &&
-             data.recommendation is string &&
-             data.details is string &&
-             data.status in ['Pending', 'In Review', 'Action Taken', 'Resolved'];
+      return data.keys().hasAll(['location', 'description', 'status', 'createdAt']) &&
+             data.location is string &&
+             data.description is string &&
+             data.status is string;
     }
 
     // ===============================================================
@@ -63,14 +56,14 @@ service cloud.firestore {
 
     match /reports/{reportId} {
       allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && isValidReport(request.resource.data);
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
+      allow create: if isAuthenticated() && isValidReport(request.resource.data);
+      allow update, delete: if isAdmin();
     }
 
     match /feedback/{feedbackId} {
-      allow create: if isAuthenticated() && request.resource.data.message is string && request.resource.data.message.size() > 0 && request.resource.data.message.size() < 2000;
       allow read: if isAdmin();
+      allow create: if isAuthenticated();
+      allow update, delete: if isAdmin();
     }
 
     match /{path=**} {

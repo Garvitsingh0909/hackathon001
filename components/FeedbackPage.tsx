@@ -19,6 +19,8 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../src/firebase';
 import { toast } from 'react-hot-toast';
 
+import { handleFirestoreError, OperationType } from '../services/api';
+
 type FeedbackCategory = 'suggestion' | 'bug' | 'compliment' | 'other';
 
 export const FeedbackPage = ({ language }: { language: 'en' | 'hi' }) => {
@@ -55,6 +57,7 @@ export const FeedbackPage = ({ language }: { language: 'en' | 'hi' }) => {
         } catch (error) {
             console.error('Feedback submission failed:', error);
             toast.error(language === 'en' ? 'Failed to submit feedback' : 'प्रतिक्रिया सबमिट करने में विफल');
+            handleFirestoreError(error, OperationType.CREATE, 'feedback');
         } finally {
             setIsSubmitting(false);
         }

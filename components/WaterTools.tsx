@@ -6,9 +6,9 @@ export const WaterTools = ({ language }: { language: 'en' | 'hi' }) => {
     const [activeTool, setActiveTool] = useState<'tds' | 'boil' | 'usage'>('tds');
 
     const tools = [
-        { id: 'tds', label: language === 'en' ? 'TDS Checker' : 'टीडीएस चेकर', icon: Calculator },
-        { id: 'boil', label: language === 'en' ? 'Boiling Timer' : 'उबालने का समय', icon: Clock },
-        { id: 'usage', label: language === 'en' ? 'Usage Tracker' : 'उपयोग ट्रैकर', icon: Droplets },
+        { id: 'tds', label: language === 'en' ? 'TDS Checker' : 'टीडीएस चेकर', purpose: language === 'en' ? 'Check water quality' : 'पानी की गुणवत्ता जांचें', icon: Calculator },
+        { id: 'boil', label: language === 'en' ? 'Boiling Timer' : 'उबालने का समय', purpose: language === 'en' ? 'Safe purification' : 'सुरक्षित शुद्धिकरण', icon: Clock },
+        { id: 'usage', label: language === 'en' ? 'Usage Tracker' : 'उपयोग ट्रैकर', purpose: language === 'en' ? 'Daily hydration' : 'दैनिक हाइड्रेशन', icon: Droplets },
     ];
 
     return (
@@ -28,14 +28,17 @@ export const WaterTools = ({ language }: { language: 'en' | 'hi' }) => {
                         <button
                             key={tool.id}
                             onClick={() => setActiveTool(tool.id as any)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                            className={`flex flex-col items-start gap-1 px-4 py-2 rounded-lg transition-all ${
                                 activeTool === tool.id 
                                 ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm' 
                                 : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
                             }`}
                         >
-                            <tool.icon size={14} />
-                            {tool.label}
+                            <div className="flex items-center gap-2 text-sm font-bold">
+                                <tool.icon size={16} />
+                                {tool.label}
+                            </div>
+                            <span className="text-[10px] opacity-70 font-medium">{tool.purpose}</span>
                         </button>
                     ))}
                 </div>

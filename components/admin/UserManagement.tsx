@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 import { Users, Shield, User } from 'lucide-react';
 
-export const UserManagement = ({ language }: { language: 'en' | 'hi' }) => {
+export const UserManagement = ({ language, embedded = false }: { language: 'en' | 'hi', embedded?: boolean }) => {
     const [users, setUsers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -34,10 +34,12 @@ export const UserManagement = ({ language }: { language: 'en' | 'hi' }) => {
     if (loading) return <div className="p-8 text-center">Loading users...</div>;
 
     return (
-        <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-subtle border border-slate-200 dark:border-slate-800 p-8">
-            <h2 className="text-2xl font-bold font-display mb-6 flex items-center gap-2">
-                <Users className="text-gov-teal" /> User Management
-            </h2>
+        <div className={embedded ? "" : "bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-subtle border border-slate-200 dark:border-slate-800 p-8"}>
+            {!embedded && (
+                <h2 className="text-2xl font-bold font-display mb-6 flex items-center gap-2">
+                    <Users className="text-gov-teal" /> User Management
+                </h2>
+            )}
             <table className="w-full text-left">
                 <thead>
                     <tr className="text-slate-400 text-xs uppercase tracking-wider">

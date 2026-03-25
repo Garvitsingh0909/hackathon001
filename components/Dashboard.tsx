@@ -380,7 +380,7 @@ export const Dashboard = ({ language, setActiveTab }: { language: 'en' | 'hi', s
                         <div className="space-y-4">
                             {loading ? (
                                 [1, 2, 3].map(i => <div key={i} className="h-14 bg-slate-50 dark:bg-slate-800 rounded-xl animate-pulse"></div>)
-                            ) : reports.map((report: any, i: number) => (
+                            ) : (reports || []).map((report: any, i: number) => (
                                 <motion.div 
                                     key={i}
                                     initial={{ opacity: 0, x: 15 }}

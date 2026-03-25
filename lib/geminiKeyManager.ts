@@ -2,7 +2,10 @@ import { GoogleGenAI } from "@google/genai";
 
 export const getAiInstance = () => {
   // Try to get the key from Vite env (for Vercel), then process.env (for AI Studio), then fallback
-  const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || 'AIzaSyDrlBNp75rLAZ5JuMu4EcljMPk1NjmNMDA';
+  const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error('GEMINI_API_KEY is not set');
+  }
   return new GoogleGenAI({ apiKey });
 };
 

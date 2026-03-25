@@ -24,7 +24,7 @@ import {
     Bookmark,
     Zap
 } from 'lucide-react';
-import { searchWaterNews, findNearbyStations, playBrowserTTS } from '../lib/gemini';
+import { searchWaterNews, findNearbyStations, playBrowserTTS, checkWaterRisk } from '../lib/gemini';
 import { DisclaimerBanner } from './ui/DisclaimerBanner';
 import { TRANSLATIONS } from '../constants';
 import { toast } from 'react-hot-toast';
@@ -67,7 +67,7 @@ export const WaterIntel = ({ language, setActiveTab }: { language: 'en' | 'hi', 
         const loadIntel = async () => {
             try {
                 const [newsData, stationsData] = await Promise.all([
-                    searchWaterNews("Tamsa River water quality news 2024 India").catch(() => []),
+                    searchWaterNews("Tamsa River water quality news 2024 India", language).catch(() => []),
                     findNearbyStations(25.9427, 83.5539).catch(() => [])
                 ]);
 
@@ -151,25 +151,15 @@ export const WaterIntel = ({ language, setActiveTab }: { language: 'en' | 'hi', 
         if (!location.trim()) return;
         setCheckingRisk(true);
         
-        // Simulate risk check
-        setTimeout(() => {
-            const score = Math.floor(Math.random() * 100);
-            setRiskResult({
-                score,
-                level: score < 30 ? 'Low' : score < 70 ? 'Moderate' : 'High',
-                details: score < 30 
-                    ? "Water quality in this area is generally good. Minimal risk of contamination." 
-                    : score < 70 
-                    ? "Moderate risk detected. Some industrial runoff reported nearby. Use basic filtration." 
-                    : "High risk area. Significant contamination reports. Do not consume without advanced treatment.",
-                tips: [
-                    "Use RO filtration for drinking",
-                    "Boil water for at least 10 minutes",
-                    "Avoid using for washing vegetables"
-                ]
-            });
+        try {
+            const result = await checkWaterRisk(location, language);
+            setRiskResult(result);
+        } catch (error) {
+            console.error("Risk check failed", error);
+            toast.error(language === 'en' ? "Failed to check risk. Please try again." : "जोखिम जांचने में विफल। कृपया पुनः प्रयास करें।");
+        } finally {
             setCheckingRisk(false);
-        }, 1500);
+        }
     };
 
     const speakText = (text: string) => {
@@ -489,7 +479,7 @@ export const WaterIntel = ({ language, setActiveTab }: { language: 'en' | 'hi', 
                                             {language === 'en' ? 'Recommended Actions' : 'अनुशंसित कार्रवाइयां'}
                                         </p>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                            {riskResult.tips.map((tip: string, i: number) => (
+                                            {(riskResult.tips || []).map((tip: string, i: number) => (
                                                 <div key={i} className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/5 text-xs text-slate-300">
                                                     <CheckCircle2 size={14} className="text-emerald-500 shrink-0" />
                                                     {tip}

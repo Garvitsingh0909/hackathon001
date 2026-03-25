@@ -23,7 +23,7 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './src/AuthContext';
 
 function AppContent() {
-  const { user, login, logout, isAdmin } = useAuth();
+  const { user, login, demoLogin, logout, isAdmin } = useAuth();
   const [activeTab, setActiveTab] = useState('home');
   const [language, setLanguage] = useState<'en' | 'hi'>('en');
   const [darkMode, setDarkMode] = useState(true);
@@ -79,14 +79,7 @@ function AppContent() {
       case 'faq': return <WaterFAQ language={language} />;
       case 'feedback': return <FeedbackPage language={language} />;
       case 'admin': 
-        return isAdmin ? (
-          <div className="space-y-8">
-            <AdminDashboard />
-            <AdminMap language={language} />
-          </div>
-        ) : <Dashboard language={language} setActiveTab={setActiveTab} />;
-      case 'admin-users':
-        return isAdmin ? <UserManagement language={language} /> : <Dashboard language={language} setActiveTab={setActiveTab} />;
+        return isAdmin ? <AdminDashboard language={language} /> : <Dashboard language={language} setActiveTab={setActiveTab} />;
       default: 
         return <Dashboard language={language} setActiveTab={setActiveTab} />;
     }
@@ -110,6 +103,7 @@ function AppContent() {
         user={user}
         isAdmin={isAdmin}
         onLogin={login}
+        onDemoLogin={demoLogin}
         onLogout={logout}
         onOpenFeedback={() => setIsFeedbackOpen(true)}
       />

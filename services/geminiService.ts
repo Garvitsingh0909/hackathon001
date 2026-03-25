@@ -2,7 +2,9 @@ import { GoogleGenAI } from "@google/genai";
 
 export const geminiService = {
   chat: async (message: string, language: 'en' | 'hi') => {
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+    const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+    if (!apiKey) throw new Error("GEMINI_API_KEY is not set");
+    const ai = new GoogleGenAI({ apiKey });
     
     const systemInstruction = `You are JalDrishti, a water governance assistant for India.
 
@@ -80,6 +82,66 @@ Respond in ${language === "hi" ? "Hindi (Devanagari script)" : "English"}.`;
     } catch (error) {
       console.error("Gemini API Error:", error);
       return "I'm sorry, I'm having trouble connecting to the water intelligence system right now.";
+    }
+  },
+
+  getSearchInsights: async (location: string, language: 'en' | 'hi') => {
+    const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+    if (!apiKey) throw new Error("GEMINI_API_KEY is not set");
+    const ai = new GoogleGenAI({ apiKey });
+    try {
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: `Find the latest news, environmental alerts, or water quality reports for ${location}, India. Summarize the top 3 most relevant recent events or issues regarding water pollution, river health, or government actions in this area. Respond in ${language === 'en' ? 'English' : 'Hindi'}. Format as a concise bulleted list.`,
+        config: {
+          tools: [{ googleSearch: {} }],
+        },
+      });
+      
+      const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
+      const urls = chunks ? chunks.map((c: any) => c.web?.uri).filter(Boolean) : [];
+      
+      return {
+        text: response.text,
+        urls: urls
+      };
+    } catch (error) {
+      console.error("Gemini Search Error:", error);
+      return { text: "Failed to fetch search insights.", urls: [] };
+    }
+  },
+
+  getMapInsights: async (location: string, lat: number, lng: number, language: 'en' | 'hi') => {
+    const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+    if (!apiKey) throw new Error("GEMINI_API_KEY is not set");
+    const ai = new GoogleGenAI({ apiKey });
+    try {
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: `Find nearby water treatment plants, pollution control board offices, or environmental NGOs near ${location}. Respond in ${language === 'en' ? 'English' : 'Hindi'}. Format as a concise bulleted list.`,
+        config: {
+          tools: [{ googleMaps: {} }],
+          toolConfig: {
+            retrievalConfig: {
+              latLng: {
+                latitude: lat,
+                longitude: lng
+              }
+            }
+          }
+        },
+      });
+      
+      const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
+      const urls = chunks ? chunks.map((c: any) => c.maps?.uri || c.maps?.placeAnswerSources?.reviewSnippets?.[0]?.uri).filter(Boolean) : [];
+      
+      return {
+        text: response.text,
+        urls: urls
+      };
+    } catch (error) {
+      console.error("Gemini Maps Error:", error);
+      return { text: "Failed to fetch map insights.", urls: [] };
     }
   }
 };

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Send, Loader2 } from 'lucide-react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from '../src/firebase';
+import { handleFirestoreError, OperationType } from '../services/api';
 
 interface FeedbackModalProps {
     isOpen: boolean;
@@ -31,6 +32,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose, l
             onClose();
         } catch (error) {
             console.error('Error submitting feedback:', error);
+            handleFirestoreError(error, OperationType.CREATE, 'feedback');
         } finally {
             setLoading(false);
         }

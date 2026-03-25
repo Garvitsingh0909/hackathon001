@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { AdminMap } from './AdminMap';
+import { UserManagement } from './admin/UserManagement';
 import { 
     LayoutDashboard, 
     FileText, 
@@ -26,7 +28,8 @@ import {
     RefreshCw,
     Eye,
     ChevronRight,
-    Star
+    Star,
+    Map
 } from 'lucide-react';
 import { collection, query, orderBy, onSnapshot, updateDoc, doc, deleteDoc, getDocs, where } from 'firebase/firestore';
 import { db } from '../src/firebase';
@@ -45,6 +48,8 @@ import {
     PieChart,
     Pie
 } from 'recharts';
+
+import { handleFirestoreError, OperationType } from '../services/api';
 
 interface Report {
     id: string;
@@ -71,14 +76,15 @@ interface Feedback {
     createdAt: any;
 }
 
-export const AdminDashboard = () => {
-    const [activeTab, setActiveTab] = useState<'overview' | 'reports' | 'feedback'>('overview');
+export const AdminDashboard = ({ language }: { language: 'en' | 'hi' }) => {
+    const [activeTab, setActiveTab] = useState<'overview' | 'reports' | 'feedback' | 'map' | 'users'>('overview');
     const [reports, setReports] = useState<Report[]>([]);
     const [feedback, setFeedback] = useState<Feedback[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedItem, setSelectedItem] = useState<any>(null);
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const [showParameters, setShowParameters] = useState(false);
 
     useEffect(() => {
         const qReports = query(collection(db, 'reports'), orderBy('createdAt', 'desc'));
@@ -87,10 +93,14 @@ export const AdminDashboard = () => {
         const unsubReports = onSnapshot(qReports, (snapshot) => {
             setReports(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Report)));
             setLoading(false);
+        }, (error) => {
+            handleFirestoreError(error, OperationType.GET, 'reports');
         });
 
         const unsubFeedback = onSnapshot(qFeedback, (snapshot) => {
             setFeedback(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Feedback)));
+        }, (error) => {
+            handleFirestoreError(error, OperationType.GET, 'feedback');
         });
 
         return () => {
@@ -105,6 +115,7 @@ export const AdminDashboard = () => {
             toast.success(`Status updated to ${status}`);
         } catch (error) {
             toast.error('Failed to update status');
+            handleFirestoreError(error, OperationType.UPDATE, `${type}/${id}`);
         }
     };
 
@@ -115,6 +126,7 @@ export const AdminDashboard = () => {
             toast.success('Item deleted successfully');
         } catch (error) {
             toast.error('Failed to delete item');
+            handleFirestoreError(error, OperationType.DELETE, `${type}/${id}`);
         }
     };
 
@@ -209,8 +221,10 @@ export const AdminDashboard = () => {
                 <div className="flex border-b border-slate-100 dark:border-slate-800 px-8">
                     {[
                         { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+                        { id: 'map', label: 'Command Map', icon: Map },
                         { id: 'reports', label: 'Reports', icon: FileText },
                         { id: 'feedback', label: 'Feedback', icon: MessageSquare },
+                        { id: 'users', label: 'Users', icon: Users },
                     ].map((tab) => (
                         <button
                             key={tab.id}
@@ -318,6 +332,26 @@ export const AdminDashboard = () => {
                             </motion.div>
                         )}
 
+                        {activeTab === 'map' && (
+                            <motion.div 
+                                key="map"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                            >
+                                <AdminMap language={language} embedded={true} />
+                            </motion.div>
+                        )}
+
+                        {activeTab === 'users' && (
+                            <motion.div 
+                                key="users"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                            >
+                                <UserManagement language={language} embedded={true} />
+                            </motion.div>
+                        )}
+
                         {activeTab === 'reports' && (
                             <motion.div 
                                 key="reports"
@@ -355,7 +389,7 @@ export const AdminDashboard = () => {
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
-                                            {reports.filter(r => r.location.toLowerCase().includes(searchQuery.toLowerCase())).map((report) => (
+                                            {(reports || []).filter(r => (r.location || '').toLowerCase().includes((searchQuery || '').toLowerCase())).map((report) => (
                                                 <tr key={report.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
                                                     <td className="py-6">
                                                         <div className="flex items-center gap-4">
@@ -414,7 +448,10 @@ export const AdminDashboard = () => {
                                                     <td className="py-6 text-right">
                                                         <div className="flex items-center justify-end gap-2">
                                                             <button 
-                                                                onClick={() => setSelectedItem(report)}
+                                                                onClick={() => {
+                                                                    setSelectedItem(report);
+                                                                    setShowParameters(false);
+                                                                }}
                                                                 className="p-2 text-slate-400 hover:text-blue-600 transition-colors"
                                                             >
                                                                 <Eye size={18} />
@@ -442,7 +479,7 @@ export const AdminDashboard = () => {
                                 animate={{ opacity: 1 }}
                                 className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
                             >
-                                {feedback.map((item) => (
+                                {(feedback || []).map((item) => (
                                     <motion.div 
                                         key={item.id}
                                         whileHover={{ y: -5 }}
@@ -560,15 +597,51 @@ export const AdminDashboard = () => {
                                 </div>
 
                                 {selectedItem.analysis && (
-                                    <div className="p-6 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700 grid grid-cols-2 gap-6">
-                                        <div>
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">AI Score</p>
-                                            <p className="text-2xl font-black text-slate-900 dark:text-white font-mono">{selectedItem.analysis.score}</p>
+                                    <div className="p-6 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700 flex flex-col gap-4">
+                                        <div className="grid grid-cols-2 gap-6">
+                                            <div>
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">AI Score</p>
+                                                <p className="text-2xl font-black text-slate-900 dark:text-white font-mono">{selectedItem.analysis.score || selectedItem.analysis.overallScore || 'N/A'}</p>
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">AI Status</p>
+                                                <p className="text-lg font-bold text-blue-600">{selectedItem.analysis.status || selectedItem.analysis.recommendation || 'Analyzed'}</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">AI Status</p>
-                                            <p className="text-lg font-bold text-blue-600">{selectedItem.analysis.status}</p>
-                                        </div>
+
+                                        {Object.keys({
+                                            ...(selectedItem.analysis.parameters || {}),
+                                            ...(selectedItem.analysis.algaeLevel ? { algaeLevel: selectedItem.analysis.algaeLevel } : {}),
+                                            ...(selectedItem.analysis.foamDetected !== undefined ? { foamDetected: selectedItem.analysis.foamDetected ? 'Yes' : 'No' } : {}),
+                                            ...(selectedItem.analysis.turbidity ? { turbidity: selectedItem.analysis.turbidity } : {}),
+                                            ...(selectedItem.analysis.color ? { color: selectedItem.analysis.color } : {})
+                                        }).length > 0 && (
+                                            <>
+                                                <button 
+                                                    onClick={() => setShowParameters(!showParameters)}
+                                                    className="text-sm font-bold text-blue-600 text-left flex items-center gap-1 mt-2"
+                                                >
+                                                    {showParameters ? 'Hide Parameters' : 'View Analyzed Parameters'}
+                                                </button>
+                                                
+                                                {showParameters && (
+                                                    <div className="pt-4 border-t border-slate-200 dark:border-slate-700 grid grid-cols-2 gap-4">
+                                                        {Object.entries({
+                                                            ...(selectedItem.analysis.parameters || {}),
+                                                            ...(selectedItem.analysis.algaeLevel ? { algaeLevel: selectedItem.analysis.algaeLevel } : {}),
+                                                            ...(selectedItem.analysis.foamDetected !== undefined ? { foamDetected: selectedItem.analysis.foamDetected ? 'Yes' : 'No' } : {}),
+                                                            ...(selectedItem.analysis.turbidity ? { turbidity: selectedItem.analysis.turbidity } : {}),
+                                                            ...(selectedItem.analysis.color ? { color: selectedItem.analysis.color } : {})
+                                                        }).map(([key, value]) => (
+                                                            <div key={key}>
+                                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{key.replace(/([A-Z])/g, ' $1').trim()}</p>
+                                                                <p className="text-sm font-medium text-slate-900 dark:text-white">{String(value)}</p>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </>
+                                        )}
                                     </div>
                                 )}
 

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { auth, googleProvider, signInWithPopup, signOut, onAuthStateChanged, db } from './firebase';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { handleFirestoreError, OperationType } from '../services/api';
 
 interface UserProfile {
     uid: string;
@@ -15,6 +16,7 @@ interface AuthContextType {
     user: UserProfile | null;
     loading: boolean;
     login: () => Promise<void>;
+    demoLogin: () => void;
     logout: () => Promise<void>;
     isAdmin: boolean;
 }
@@ -24,6 +26,19 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
+
+    const demoLogin = () => {
+        const demoUser: UserProfile = {
+            uid: 'demo-user-id',
+            email: 'devansh0547@gmail.com',
+            displayName: 'Devansh (Demo)',
+            photoURL: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Devansh',
+            role: 'admin',
+            createdAt: new Date().toISOString()
+        };
+        setUser(demoUser);
+        setLoading(false);
+    };
 
     useEffect(() => {
         console.log("AuthContext: Initializing onAuthStateChanged");
@@ -46,7 +61,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         } catch (error) {
                             retries++;
                             console.warn(`AuthContext: Failed to fetch user profile, retry ${retries}/${maxRetries}`);
-                            if (retries >= maxRetries) throw error;
+                            if (retries >= maxRetries) {
+                                handleFirestoreError(error, OperationType.GET, `users/${firebaseUser.uid}`);
+                            }
                             await new Promise(resolve => setTimeout(resolve, 1000 * retries));
                         }
                     }
@@ -68,10 +85,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                             role: 'user',
                             createdAt: new Date().toISOString()
                         };
-                        await setDoc(userRef, {
-                            ...newUser,
-                            createdAt: serverTimestamp()
-                        });
+                        try {
+                            await setDoc(userRef, {
+                                ...newUser,
+                                createdAt: serverTimestamp()
+                            });
+                        } catch (error) {
+                            handleFirestoreError(error, OperationType.CREATE, `users/${firebaseUser.uid}`);
+                        }
                         console.log("AuthContext: User profile created");
                         setUser(newUser);
                     }
@@ -111,7 +132,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, logout, isAdmin: user?.role === 'admin' || user?.email === 'devansh0547@gmail.com' }}>
+        <AuthContext.Provider value={{ user, loading, login, demoLogin, logout, isAdmin: user?.role === 'admin' || user?.email === 'devansh0547@gmail.com' }}>
             {children}
         </AuthContext.Provider>
     );

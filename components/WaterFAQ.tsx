@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Markdown from 'react-markdown';
 import { 
     HelpCircle, 
     BookOpen, 
@@ -81,6 +82,126 @@ const faqs: FAQItem[] = [
             en: "It is recommended to clean and disinfect your water storage tank at least once every six months to prevent the growth of bacteria and algae.",
             hi: "बैक्टीरिया और शैवाल के विकास को रोकने के लिए हर छह महीने में कम से कम एक बार अपने पानी के भंडारण टैंक को साफ और कीटाणुरहित करने की सिफारिश की जाती है।"
         }
+    },
+    {
+        id: '6',
+        category: 'technical',
+        question: {
+            en: "What is the acceptable pH level for drinking water?",
+            hi: "पीने के पानी के लिए स्वीकार्य पीएच (pH) स्तर क्या है?"
+        },
+        answer: {
+            en: "According to Indian standards (BIS), the acceptable pH range for drinking water is between 6.5 and 8.5. Water outside this range may be corrosive or have a bitter taste.",
+            hi: "भारतीय मानकों (BIS) के अनुसार, पीने के पानी के लिए स्वीकार्य पीएच सीमा 6.5 और 8.5 के बीच है। इस सीमा के बाहर का पानी संक्षारक हो सकता है या उसका स्वाद कड़वा हो सकता है।"
+        }
+    },
+    {
+        id: '7',
+        category: 'safety',
+        question: {
+            en: "How can I check if my tap water is safe to drink at home?",
+            hi: "मैं कैसे जांच सकता हूं कि मेरे घर के नल का पानी पीने के लिए सुरक्षित है?"
+        },
+        answer: {
+            en: "You can use a basic TDS meter to check dissolved solids, or buy a home water testing kit to check for pH, hardness, and chlorine. For a complete safety check, send a sample to a certified local laboratory.",
+            hi: "आप घुले हुए ठोस पदार्थों की जांच के लिए एक बुनियादी टीडीएस मीटर का उपयोग कर सकते हैं, या पीएच, कठोरता और क्लोरीन की जांच के लिए होम वाटर टेस्टिंग किट खरीद सकते हैं। पूर्ण सुरक्षा जांच के लिए, एक प्रमाणित स्थानीय प्रयोगशाला में नमूना भेजें।"
+        }
+    },
+    {
+        id: '8',
+        category: 'community',
+        question: {
+            en: "What should I do if I notice a major water leak or pipeline burst in my neighborhood?",
+            hi: "यदि मैं अपने पड़ोस में पानी का बड़ा रिसाव या पाइपलाइन फटना देखूं तो मुझे क्या करना चाहिए?"
+        },
+        answer: {
+            en: "Immediately report it to your local municipal corporation or Jal Board helpline. You can also use the 'Report' feature in this app to notify authorities with the exact GPS location to prevent water wastage.",
+            hi: "तुरंत अपने स्थानीय नगर निगम या जल बोर्ड हेल्पलाइन को इसकी सूचना दें। पानी की बर्बादी को रोकने के लिए सटीक जीपीएस स्थान के साथ अधिकारियों को सूचित करने के लिए आप इस ऐप में 'रिपोर्ट' सुविधा का भी उपयोग कर सकते हैं।"
+        }
+    },
+    {
+        id: '9',
+        category: 'general',
+        question: {
+            en: "Why does my tap water sometimes look cloudy or milky?",
+            hi: "मेरे नल का पानी कभी-कभी धुंधला या दूधिया क्यों दिखता है?"
+        },
+        answer: {
+            en: "Cloudy water is usually caused by tiny air bubbles trapped in the pipes, especially during winter. If the water clears up after sitting in a glass for a few minutes, it is completely safe to drink.",
+            hi: "धुंधला पानी आमतौर पर पाइपों में फंसी हवा के छोटे बुलबुले के कारण होता है, खासकर सर्दियों के दौरान। यदि एक गिलास में कुछ मिनट रखने के बाद पानी साफ हो जाता है, तो यह पीने के लिए पूरी तरह से सुरक्षित है।"
+        }
+    },
+    {
+        id: '10',
+        category: 'community',
+        question: {
+            en: "How does the Jal Jeevan Mission help rural areas?",
+            hi: "जल जीवन मिशन ग्रामीण क्षेत्रों की कैसे मदद करता है?"
+        },
+        answer: {
+            en: "The Jal Jeevan Mission aims to provide safe and adequate drinking water through individual household tap connections to all households in rural India, significantly improving health and ease of living.",
+            hi: "जल जीवन मिशन का उद्देश्य ग्रामीण भारत के सभी घरों में व्यक्तिगत घरेलू नल कनेक्शन के माध्यम से सुरक्षित और पर्याप्त पेयजल उपलब्ध कराना है, जिससे स्वास्थ्य और जीवन यापन में काफी सुधार होता है।"
+        }
+    },
+    {
+        id: '11',
+        category: 'community',
+        question: {
+            en: "How can I file a grievance regarding water supply or quality to the central government?",
+            hi: "मैं केंद्र सरकार को जल आपूर्ति या गुणवत्ता के संबंध में शिकायत कैसे दर्ज कर सकता हूं?"
+        },
+        answer: {
+            en: "You can file a grievance through the Centralized Public Grievance Redress and Monitoring System (CPGRAMS) portal at [pgportal.gov.in](https://pgportal.gov.in). It directs your complaint to the concerned ministry or department.",
+            hi: "आप केंद्रीकृत लोक शिकायत निवारण और निगरानी प्रणाली (CPGRAMS) पोर्टल [pgportal.gov.in](https://pgportal.gov.in) के माध्यम से शिकायत दर्ज कर सकते हैं। यह आपकी शिकायत को संबंधित मंत्रालय या विभाग को निर्देशित करता है।"
+        }
+    },
+    {
+        id: '12',
+        category: 'technical',
+        question: {
+            en: "Where can I find data about groundwater levels and quality in my area?",
+            hi: "मैं अपने क्षेत्र में भूजल स्तर और गुणवत्ता के बारे में डेटा कहां पा सकता हूं?"
+        },
+        answer: {
+            en: "The Central Ground Water Board (CGWB) monitors groundwater across India. You can access reports, data, and guidelines on their official website at [cgwb.gov.in](https://cgwb.gov.in).",
+            hi: "केंद्रीय भूजल बोर्ड (CGWB) पूरे भारत में भूजल की निगरानी करता है। आप उनकी आधिकारिक वेबसाइट [cgwb.gov.in](https://cgwb.gov.in) पर रिपोर्ट, डेटा और दिशानिर्देश प्राप्त कर सकते हैं।"
+        }
+    },
+    {
+        id: '13',
+        category: 'safety',
+        question: {
+            en: "Is rainwater harvesting safe for drinking?",
+            hi: "क्या वर्षा जल संचयन पीने के लिए सुरक्षित है?"
+        },
+        answer: {
+            en: "Rainwater is generally safe, but it can pick up pollutants from your roof or atmosphere. It should be properly filtered and disinfected (e.g., boiled or UV treated) before drinking.",
+            hi: "वर्षा जल आमतौर पर सुरक्षित होता है, लेकिन यह आपकी छत या वायुमंडल से प्रदूषक तत्व ले सकता है। पीने से पहले इसे ठीक से फ़िल्टर और कीटाणुरहित (जैसे, उबालना या यूवी उपचारित) किया जाना चाहिए।"
+        }
+    },
+    {
+        id: '14',
+        category: 'technical',
+        question: {
+            en: "What is the difference between RO and UV water purifiers?",
+            hi: "आरओ (RO) और यूवी (UV) वाटर प्यूरीफायर में क्या अंतर है?"
+        },
+        answer: {
+            en: "RO (Reverse Osmosis) removes dissolved impurities and heavy metals, ideal for high TDS water. UV (Ultraviolet) kills bacteria and viruses but doesn't remove dissolved solids, suitable for low TDS municipal water.",
+            hi: "आरओ (RO) घुली हुई अशुद्धियों और भारी धातुओं को हटाता है, जो उच्च टीडीएस पानी के लिए आदर्श है। यूवी (UV) बैक्टीरिया और वायरस को मारता है लेकिन घुले हुए ठोस पदार्थों को नहीं हटाता है, जो कम टीडीएस वाले नगरपालिका के पानी के लिए उपयुक्त है।"
+        }
+    },
+    {
+        id: '15',
+        category: 'general',
+        question: {
+            en: "How can I reduce water wastage at home?",
+            hi: "मैं घर पर पानी की बर्बादी कैसे कम कर सकता हूँ?"
+        },
+        answer: {
+            en: "Fix leaking taps immediately, use a bucket instead of a hose for washing vehicles, install water-efficient showerheads, and reuse RO reject water for mopping or watering plants.",
+            hi: "टपकते नलों को तुरंत ठीक करें, वाहन धोने के लिए पाइप के बजाय बाल्टी का उपयोग करें, पानी बचाने वाले शावरहेड स्थापित करें, और आरओ से निकलने वाले बेकार पानी का उपयोग पोंछा लगाने या पौधों को पानी देने के लिए करें।"
+        }
     }
 ];
 
@@ -93,8 +214,8 @@ export const WaterFAQ = ({ language }: { language: 'en' | 'hi' }) => {
     const filteredFaqs = useMemo(() => {
         return faqs.filter(faq => {
             const matchesSearch = 
-                faq.question[language].toLowerCase().includes(searchQuery.toLowerCase()) ||
-                faq.answer[language].toLowerCase().includes(searchQuery.toLowerCase());
+                (faq.question[language] || '').toLowerCase().includes((searchQuery || '').toLowerCase()) ||
+                (faq.answer[language] || '').toLowerCase().includes((searchQuery || '').toLowerCase());
             const matchesCategory = activeCategory === 'all' || faq.category === activeCategory;
             return matchesSearch && matchesCategory;
         });
@@ -230,9 +351,9 @@ export const WaterFAQ = ({ language }: { language: 'en' | 'hi' }) => {
                                         >
                                             <div className="px-8 pb-8 pt-2">
                                                 <div className="pl-12 border-l-2 border-blue-100 dark:border-blue-900/40">
-                                                    <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-lg">
-                                                        {faq.answer[language]}
-                                                    </p>
+                                                    <div className="text-slate-600 dark:text-slate-400 leading-relaxed text-lg prose prose-slate dark:prose-invert max-w-none prose-a:text-blue-600 hover:prose-a:text-blue-700 prose-p:m-0">
+                                                        <Markdown>{faq.answer[language]}</Markdown>
+                                                    </div>
                                                     <div className="mt-6 flex items-center gap-4">
                                                         <button className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1.5 uppercase tracking-widest">
                                                             {t.helpful}
